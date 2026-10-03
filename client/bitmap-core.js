@@ -1,4 +1,3 @@
-/* PaperFig for Illustrator 0.6.0 — small, independently testable helpers. See LICENSE. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) { module.exports = api; }

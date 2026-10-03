@@ -71,7 +71,7 @@
         <button id="applyBtn" class="primary" data-i18n="apply" data-i18n-title="applyTitle" title="写出全分辨率文件并重新链接。面板预览即时更新；画板在 Apply 或画板预览后更新。">应用</button>
         <button id="inspectBtn" data-i18n="refresh" data-i18n-title="refreshTitle" title="重新检查选区并刷新面板预览">刷新</button>
         <button id="resetBtn" data-i18n="reset" data-i18n-title="resetTitle" title="重置调整为默认">重置</button>
-        <button id="restoreBtn" class="hidden" disabled hidden data-i18n="restore" data-i18n-title="restoreTitle" title="面板文件还原已于 0.5.6 移除 — 请用 Illustrator 撤销 Ctrl/Cmd+Z">还原</button>
+
       </section>
       <details class="artboard-preview-details" id="artboardPreviewDetails">
         <summary class="artboard-preview-summary">
@@ -306,7 +306,7 @@
         </section>
 
         <section class="group" id="insetGroup" aria-labelledby="insetHeading">
-          <h2 id="insetHeading" data-i18n="insetHeading">放大插图 11</h2>
+          <h2 id="insetHeading" data-i18n="insetHeading">放大插图</h2>
           <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintInset">在预览上框选区域（与裁剪同一套<strong>文件像素</strong>坐标）。也可在画板上画矩形，与图像一起选中后点「读取画板矩形」。框选完成后点上方「应用」放置不重采样的放大子图、原图矢量框，以及可选引线。已标定则按同一 µm/px 在插图上加标尺。</p></details>
           <div class="button-row">
             <button type="button" id="insetDrawBtn" data-i18n="insetDraw" data-i18n-title="marqueeModeInsetTitle" aria-pressed="false" title="预览拖拽只编辑放大框（裁剪框隐藏）">框选区域</button>
@@ -408,7 +408,7 @@
 
         <section class="group export-grid" aria-labelledby="exportHeading">
           <h2 id="exportHeading" data-i18n="export">导出</h2>
-          <label class="backup-option hidden" hidden><input id="extraBackup" type="checkbox"> Extra file backup (removed in 0.5.6 — use Undo)</label>
+
           <p id="exportCapability" class="hint-line export-cap" data-i18n="exportCap">写出 8 位展示图：PNG、JPEG，或未压缩 RGBA8 TIFF。DPI 只写入打印元数据，不是空间标定。</p>
           <label for="format"><span data-i18n="format">格式</span>
             <select id="format"><option>PNG</option><option>JPEG</option><option>TIFF</option></select>

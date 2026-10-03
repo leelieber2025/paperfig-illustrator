@@ -577,7 +577,7 @@ assert.equal(sizeBelow.height, 80, 'below inset height from crop aspect');
    assert(/applyInsetAspect\(chosen\)/.test(panelMarquee));
    assert(/window\.__pfAspectChosen = function/.test(panelMarquee));
    assert(/liveOverlay\.width > 0/.test(panelMarquee));
-   assert(/function updateInsetOverlay[\s\S]*placeMarqueeOverlay\(overlay/.test(panelMarquee));
+   assert(/function updateInsetOverlay[\s\S]*overlay\.classList\.add\('hidden'\)/.test(panelMarquee));
    assert(/function keepCalibrationAfterCrop/.test(fs.readFileSync(path.join(root,'client/scientific-panel.js'),'utf8')));
    assert(/scale = sw \/ iw/.test(panelMarquee));
    assert(/lockInsetFileAspect/.test(panelMarquee));

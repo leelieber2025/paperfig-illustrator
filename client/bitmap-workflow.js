@@ -1,4 +1,3 @@
-/* PaperFig for Illustrator 0.9.8: reproducible RGB recipes + keep-channel, per-channel levels, baseline TIFF. See LICENSE. */
 (function(root,factory){var api=factory();if(typeof module==='object'&&module.exports){module.exports=api;}if(root){root.SciBitmapWorkflow=api;}}(typeof window!=='undefined'?window:null,function(){
 'use strict';
 function clone(x){return JSON.parse(JSON.stringify(x));}

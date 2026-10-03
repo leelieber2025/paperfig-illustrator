@@ -79,7 +79,7 @@ function sciBitmapScaleBar(lockJson,specJson) {
     }catch(e){if(group){try{group.remove();}catch(ignore){}}return sciBitmapFailure(e);}
 }
 /*
- * Inset / zoom box (0.9.0). Crops are already written in source-file pixels.
+ * Inset. Crops are already written in source-file pixels.
  * Places a new linked image (no resample of µm/px), a vector frame on the
  * original quad, optional leaders, and an optional scale bar on the inset.
  * Replaces a previous SCI_INSET_V1 group for the same parent objectKey.

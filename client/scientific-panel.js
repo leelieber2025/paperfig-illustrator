@@ -1,6 +1,5 @@
 /* Scientific workflow controller, separated from legacy RGB panel. See LICENSE. */
 (function(root){'use strict';
-/* 0.8.2: runBatch returns the batch promise so callers can await completion. */
 var batchPromise=null;root.SciScientificPanel={create:function(a){
  var S=root.SciScientific,fs=root.require('fs'),path=root.require('path'),$=a.byId,bridge=root.SciRawBridge.create(a.extensionPath,a.fiji),dataset=null,owner='',source='',stamp='',boundDisplay='',previewEdge=800,rows=[],locked=null,batch=null,stop=false,picking=false,points=[],framePending=false;
  function syncPickCursor(on){var st=$('previewStage');if(st){st.classList.toggle('endpoint-pick',!!on);st.classList.toggle('pick-mode',!!on);if(on)st.classList.remove('hand-pan');}if(a.syncHand)a.syncHand();}

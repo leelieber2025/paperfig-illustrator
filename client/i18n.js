@@ -610,7 +610,7 @@
       "errConfigureFijiBioFormats": " · 请为此布局配置 Fiji + Bio-Formats。",
       "errConfigureFijiRaw": "请配置 Fiji 以读取原始数据",
 
-      "insetHeading": "放大插图 11",
+      "insetHeading": "放大插图",
       "hintInset": "在预览上框选区域（与裁剪同一套<strong>文件像素</strong>坐标）。也可在画板上画矩形，与图像一起选中后点「读取画板矩形」。框选完成后点上方「应用」放置不重采样的放大子图、原图矢量框，以及可选引线。已标定则按同一 µm/px 在插图上加标尺。",
       "marqueeModeHeading": "预览框选工具",
       "marqueeModeAria": "框选工具",
@@ -1272,7 +1272,7 @@
       "errConfigureFijiBioFormats": " · Configure Fiji + Bio-Formats for this layout.",
       "errConfigureFijiRaw": "Configure Fiji for raw data",
 
-      "insetHeading": "Inset / zoom 11",
+      "insetHeading": "Inset",
       "hintInset": "Draw a region on the preview (same <strong>file-pixel</strong> coordinates as crop). Or draw a rectangle on the artboard, select it with the image, and use Read artboard rectangle. Apply places an unresampled magnified crop, a vector frame, and optional leaders. A saved calibration adds a scale bar on the inset at the same µm/px.",
       "marqueeModeHeading": "Preview marquee tool",
       "marqueeModeAria": "Marquee tool",

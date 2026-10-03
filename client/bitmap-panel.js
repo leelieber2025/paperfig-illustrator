@@ -67,7 +67,6 @@
   var DECODED_IMAGE_CACHE_MAX = 2; /* full-res Image elements reused by Apply after preview */
   var decodedImageCache = {};
   var decodedImageCacheOrder = [];
-  /* 0.5.6: durable out + place-replace verify; no panel backup */
   var applyReadyCache = null; /* { fingerprint, canvas, imageData, width, height, source, stamp, method } */
   var applyReadyWarmToken = 0;
   var APPLY_WARM_MAX_MP = 25; /* skip background warm above ~25 MP */
@@ -117,7 +116,6 @@
     format: 'PNG', /* lossless + compressed; TIFF remains available (uncompressed RGBA, slower/larger) */
     dpi: 300,
     fijiPath: '',
-    /* 0.5.6: panel file backup removed */
   };
   var settings = {};
   var cs = null;
@@ -342,12 +340,6 @@
     }
     populateInsetStyle();
     byId('format').value = settings.format;
-    if (byId('extraBackup')) {
-      byId('extraBackup').checked = false;
-      byId('extraBackup').disabled = true;
-      if (byId('extraBackup').parentElement) { byId('extraBackup').parentElement.hidden = true; }
-    }
-    if (byId('restoreBtn')) { byId('restoreBtn').hidden = true; byId('restoreBtn').disabled = true; }
     byId('dpi').value = settings.dpi;
     byId('fijiPath').value = settings.fijiPath;
     updateAdjustmentDisplay();
@@ -717,7 +709,6 @@
     notice(t('autoLevelsDone', { low: low, high: high }));
   }
 
-  /* Per-plane Auto Levels (0.9.0): independent Low/High for R, G, B from previewBase. */
   function autoLevelsPerChannelFromPreview() {
     var base = previewBase;
     var plane;
@@ -4045,7 +4036,6 @@
     });
     Array.prototype.forEach.call(document.querySelectorAll('.group input, .group select'), function(el) { el.disabled=busy; });
     if (!busy) { updateAdjustmentDisplay(); }
-    if (byId('restoreBtn')) { byId('restoreBtn').disabled = true; byId('restoreBtn').hidden = true; }
 
     syncBatchButtons();
     if(science)science.updateBusy();
@@ -4713,7 +4703,6 @@
     }
   }
 
-  // 0.4.0 reproducible, fixed-parameter workflow.
   var W=window.SciBitmapWorkflow;
   var RECIPE_MAP_KEY='sci_bitmap_recipes_v1', PRESETS_KEY='sci_bitmap_presets_v1';
   var draftKey='', draftPath='', drafts={}, batchReview=null, batchStop=false, batchBusy=false;

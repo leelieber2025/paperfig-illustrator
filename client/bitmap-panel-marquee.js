@@ -1052,46 +1052,9 @@
 
   function updateInsetOverlay() {
     var overlay = api.byId('insetOverlay');
-    var rect;
-    var layout;
-    var contain;
-    var iw;
-    var ih;
-    var left;
-    var top;
-    var width;
-    var height;
-    var disp;
-    var boxLeft;
-    var boxTop;
     if (!overlay) { return; }
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
-    return;
-    if (!api.previewIsSource || api.marqueeMode !== 'inset') {
-    }
-    rect = readInsetRect();
-    layout = api.getPreviewLayoutSize();
-    contain = getSourceContainLayout();
-    iw = (layout && layout.width) || (api.lastImageSize && api.lastImageSize.width);
-    ih = (layout && layout.height) || (api.lastImageSize && api.lastImageSize.height);
-    if (!iw || !ih || !(rect.width > 0 && rect.height > 0)) {
-      if (!(api.insetDrag && api.insetDrag.liveOverlay && api.insetDrag.liveOverlay.width > 0)) {
-        overlay.classList.add('hidden');
-        return;
-      }
-    }
-    left = rect.left; top = rect.top; width = rect.width; height = rect.height;
-    if (api.insetDrag && api.insetDrag.liveOverlay && api.insetDrag.liveOverlay.width > 0) {
-      left = api.insetDrag.liveOverlay.left;
-      top = api.insetDrag.liveOverlay.top;
-      width = api.insetDrag.liveOverlay.width;
-      height = api.insetDrag.liveOverlay.height;
-    }
-    if (!(width > 0 && height > 0)) { overlay.classList.add('hidden'); return; }
-    placeMarqueeOverlay(overlay, left, top, width, height, iw, ih, contain);
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
   }
 
   function abortMarqueeDrags() {
@@ -1106,15 +1069,7 @@
       api.cropDrag = null;
       api.cropStartRect = null;
     }
-    if (api.insetDrag) {
-      try {
-        document.removeEventListener('mousemove', onInsetPointerMove);
-        document.removeEventListener('mouseup', onInsetPointerUp);
-        window.removeEventListener('blur', onInsetPointerUp);
-        document.removeEventListener('keydown', onInsetEscape);
-      } catch (ignoreInset) {}
-      api.insetDrag = null;
-    }
+    api.insetDrag = null;
     if (stage) { stage.classList.remove('crop-drawing'); }
   }
 
@@ -1234,174 +1189,6 @@
     var ih = layout && layout.height;
     if (!(rect.width > 0 && rect.height > 0) || !iw || !ih) { return null; }
     return sourceRectToOverlayRect(rect, iw, ih);
-  }
-
-  function onInsetPointerDown(event) {
-    var stage = api.byId('previewStage');
-    var dispPt;
-    var src;
-    var aspect;
-    var dispRect;
-    var hit;
-    var slop;
-    var mode;
-    var handle;
-    var attr = event.target && event.target.getAttribute && event.target.getAttribute('data-inset-handle');
-    if (api.applyRunning || api.artboardPreviewRunning || api.panelProxyRunning || api.liveGeomBusy || !api.previewIsSource || !getCropSourceSize()) { return; }
-    if (api.insetDrag) { onInsetPointerUp(); }
-    src = getCropSourceSize();
-    dispPt = pointerToDisplayPx(event.clientX, event.clientY);
-    if (!dispPt) { return; }
-    event.preventDefault();
-    aspect = getActiveInsetAspect();
-    dispRect = insetOverlayRectForHit();
-    slop = 8;
-    if (dispPt.boxW > 0) { slop = Math.max(4, (dispPt.iw / dispPt.boxW) * 8); }
-    if (dispRect && dispRect.width > 0) {
-      slop = Math.min(slop, Math.max(3, Math.min(dispRect.width, dispRect.height) * 0.22));
-    }
-    hit = (dispRect && api.Core.hitTestCrop) ? api.Core.hitTestCrop(dispPt.x, dispPt.y, dispRect, slop, true) : null;
-    if (attr) { mode = 'resize'; handle = attr; }
-    else if (hit && hit.mode !== 'draw') { mode = hit.mode; handle = hit.handle || null; }
-    else { mode = 'draw'; handle = null; }
-    if (mode === 'resize' && handle && dispRect) {
-      api.insetDrag = { mode: 'resize', handle: handle, startX: dispPt.x, startY: dispPt.y, orig: dispRect };
-    } else if (mode === 'move' && dispRect) {
-      api.insetDrag = { mode: 'move', startX: dispPt.x, startY: dispPt.y, orig: dispRect };
-    } else {
-      api.insetDrag = {
-        mode: 'draw',
-        startX: dispPt.x,
-        startY: dispPt.y,
-        startClientX: event.clientX,
-        startClientY: event.clientY,
-        aspect: aspect,
-        orig: null
-      };
-      if (stage) { stage.classList.add('crop-drawing'); }
-    }
-    document.addEventListener('mousemove', onInsetPointerMove);
-    document.addEventListener('mouseup', onInsetPointerUp);
-    window.addEventListener('blur', onInsetPointerUp);
-    document.addEventListener('keydown', onInsetEscape);
-  }
-
-  function paintInsetDrag(x0, y0, x1, y1, aspect, pt) {
-    var stage = api.byId('previewStage');
-    var overlay = api.byId('insetOverlay');
-    var sr;
-    var dx;
-    var dy;
-    var signX;
-    var signY;
-    var w;
-    var h;
-    var left;
-    var top;
-    var contain;
-    var boxLeft;
-    var boxTop;
-    var lx;
-    var ly;
-    var lw;
-    var lh;
-    if (!stage || !overlay) { return; }
-    sr = stage.getBoundingClientRect();
-    dx = x1 - x0;
-    dy = y1 - y0;
-    signX = dx < 0 ? -1 : 1;
-    signY = dy < 0 ? -1 : 1;
-    w = Math.abs(dx);
-    h = Math.abs(dy);
-    if (aspect > 0) {
-      if (!(h > 0) || w / h > aspect) { h = w / aspect; }
-      else { w = h * aspect; }
-    }
-    w = Math.max(1, w);
-    h = Math.max(1, h);
-    left = (signX < 0 ? x0 - w : x0) - sr.left;
-    top = (signY < 0 ? y0 - h : y0) - sr.top;
-    pinOverlayStyle(overlay, 'left', Math.round(left) + 'px');
-    pinOverlayStyle(overlay, 'top', Math.round(top) + 'px');
-    pinOverlayStyle(overlay, 'width', Math.round(w) + 'px');
-    pinOverlayStyle(overlay, 'height', Math.round(h) + 'px');
-    pinOverlayStyle(overlay, 'right', 'auto');
-    pinOverlayStyle(overlay, 'bottom', 'auto');
-    pinOverlayStyle(overlay, 'margin', '0');
-    pinOverlayStyle(overlay, 'transform', 'none');
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    contain = getSourceContainLayout();
-    if (contain && contain.boxW > 0 && contain.boxH > 0 && pt && pt.iw > 0 && pt.ih > 0) {
-      boxLeft = (sr.width - contain.boxW) / 2 + (contain.panX || 0);
-      boxTop = (sr.height - contain.boxH) / 2 + (contain.panY || 0);
-      lx = ((left - boxLeft) / contain.boxW) * pt.iw;
-      ly = ((top - boxTop) / contain.boxH) * pt.ih;
-      lw = (w / contain.boxW) * pt.iw;
-      lh = (h / contain.boxH) * pt.ih;
-      api.byId('insetLeft').value = Math.round(lx);
-      api.byId('insetTop').value = Math.round(ly);
-      api.byId('insetWidth').value = Math.max(1, Math.round(lw));
-      api.byId('insetHeight').value = Math.max(1, Math.round(lh));
-    }
-  }
-
-  function onInsetPointerMove(event) {
-    var pt;
-    var aspect;
-    var next;
-    var o;
-    var dx;
-    var dy;
-    var moved;
-    if (!api.insetDrag) { return; }
-    pt = pointerToDisplayPx(event.clientX, event.clientY);
-    if (!pt) { return; }
-    event.preventDefault();
-    aspect = api.insetDrag.aspect > 0 || api.insetDrag.aspect === 0 ? api.insetDrag.aspect : getActiveInsetAspect();
-    if (api.insetDrag.mode === 'draw') {
-      paintInsetDrag(api.insetDrag.startClientX, api.insetDrag.startClientY, event.clientX, event.clientY, aspect, pt);
-      return;
-    }
-    o = api.insetDrag.orig;
-    dx = pt.x - api.insetDrag.startX;
-    dy = pt.y - api.insetDrag.startY;
-    if (api.insetDrag.mode === 'move') {
-      moved = api.Core.moveCropBox(o.left + dx, o.top + dy, o.width, o.height, pt.iw, pt.ih);
-      writeInsetFromOverlay(moved, { quiet: true, keepCropSize: true });
-      return;
-    }
-    next = api.Core.constrainResizeRect(o, api.insetDrag.handle, dx, dy, aspect > 0 ? aspect : 0, pt.iw, pt.ih);
-    writeInsetFromOverlay(next, { quiet: true });
-  }
-
-  function onInsetPointerUp() {
-    var rect;
-    if (!api.insetDrag) { return; }
-    if (api.byId('previewStage')) { api.byId('previewStage').classList.remove('crop-drawing'); }
-    api.insetDrag = null;
-    document.removeEventListener('mousemove', onInsetPointerMove);
-    document.removeEventListener('mouseup', onInsetPointerUp);
-    window.removeEventListener('blur', onInsetPointerUp);
-    document.removeEventListener('keydown', onInsetEscape);
-    rect = readInsetRect();
-    writeInsetRect(rect.left, rect.top, rect.width, rect.height);
-    if (rect.width > 0 && rect.height > 0) {
-      api.notice(api.t('insetSet', { rect: rect.left + ',' + rect.top + ' ' + rect.width + '×' + rect.height }));
-    }
-  }
-
-  function onInsetEscape(event) {
-    if ((event.key === 'Escape' || event.keyCode === 27) && api.insetDrag) {
-      if (api.byId('previewStage')) { api.byId('previewStage').classList.remove('crop-drawing'); }
-      api.insetDrag = null;
-      document.removeEventListener('mousemove', onInsetPointerMove);
-      document.removeEventListener('mouseup', onInsetPointerUp);
-      window.removeEventListener('blur', onInsetPointerUp);
-      document.removeEventListener('keydown', onInsetEscape);
-      clearInsetRegionQuiet();
-      api.notice(api.t('insetDragCancelled'));
-    }
   }
 
   function onInsetNumeric(changed) {
@@ -1749,7 +1536,6 @@
     });
     /* Boot / late api.bind: clear inset if the restored tab is not Geometry. */
     exitInsetMarqueeIfNeeded();
-    /* 0.9.2: Create inset is the main Apply button in inset marquee mode; legacy #insetApply removed. */
     if (api.byId('insetApply')) {
       api.byId('insetApply').addEventListener('click', applyInset);
     }
@@ -2107,11 +1893,7 @@
       onCropPointerDown: onCropPointerDown,
       onCropPointerMove: onCropPointerMove,
       onCropPointerUp: onCropPointerUp,
-      onInsetEscape: onInsetEscape,
       onInsetNumeric: onInsetNumeric,
-      onInsetPointerDown: onInsetPointerDown,
-      onInsetPointerMove: onInsetPointerMove,
-      onInsetPointerUp: onInsetPointerUp,
       overlayPointToSource: overlayPointToSource,
       overlayRectToSourceNormCorners: overlayRectToSourceNormCorners,
       overlayRectToSourceRect: overlayRectToSourceRect,

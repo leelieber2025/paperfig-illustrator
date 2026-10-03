@@ -317,7 +317,6 @@ label.dimmed, .dimmed { opacity: 0.45; }
 
 .backup-option { grid-column: 1 / -1; font-size: 11px; }
 
-/* 0.4.0 numerical / repeatable scientific workflow */
 .slider-row { grid-template-columns: 62px minmax(60px,1fr) 64px; }
 .slider-number { width:64px!important; min-width:0; box-sizing:border-box; text-align:right; }
 #presetSelect { width:100%; box-sizing:border-box; margin:4px 0; }
@@ -391,7 +390,6 @@ label.dimmed, .dimmed { opacity: 0.45; }
 #rawSource { width:100%; box-sizing:border-box; }
 #rgbControls.science-active { opacity:0.45; }
 
-/* 0.5.2 sticky preview + tab panes */
 html, body {
   height: 100%;
   overflow: hidden;
@@ -568,7 +566,6 @@ html, body {
 .preview-stage.crop-fixed .crop-handle { display: none; }
 .preview-stage.crop-fixed .crop-overlay { cursor: move; }
 
-/* 0.7.0 fluorescence keep-channel quick picks */
 .channel-keep-row button { font-size:11px; padding:4px 7px; }
 #channelKeepHint, #rawKeepHint { margin:6px 0 2px; }
 
@@ -659,7 +656,6 @@ html, body {
 }
 .fiji-gate-actions button { width: 100%; }
 
-/* 0.9.2 exclusive crop vs inset marquee mode */
 .marquee-mode-row button { flex: 1; }
 .marquee-mode-row button.primary,
 .marquee-mode-row button[aria-pressed="true"] {
@@ -721,7 +717,6 @@ html, body {
   pointer-events: none;
 }
 
-/* 0.9.6: keep primary action rows from growing / wrapping away neighbors */
 .actions-top,
 .actions-top-preview {
   flex-wrap: nowrap;
@@ -742,7 +737,6 @@ html, body {
   margin: 6px 0;
 }
 .scale-include-text input { width: auto; }
-/* 0.9.6: preferred ~400px (1.5–2× Properties); stack grids when narrower */
 .panel { padding: 8px; gap: 7px; }
 .sticky-top { gap: 5px; }
 .crop-grid label { grid-template-columns: minmax(44px, max-content) 1fr; gap: 4px; }
@@ -803,7 +797,6 @@ body.panel-collapsed {
   height: auto;
 }
 
-/* 0.9.6 panel density: one readable control size, compact explanatory copy. */
 :root {
   --font-body: 12px;
   --font-hint: 11px;
@@ -877,7 +870,6 @@ footer, .panel-footer, .footer-status { font-size: var(--font-footer); }
 .actions-top-preview #holdCompareBtn,
 #holdCompareBtn { font-size: var(--font-body); }
 
-/* 0.9.6: compact lower/tab-area controls without shrinking the surrounding copy. */
 .tab-pane button,
 .actions-top button,
 .actions-top-preview button,

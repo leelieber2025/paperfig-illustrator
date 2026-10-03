@@ -156,7 +156,6 @@
         reject(new Error('Fiji timed out after ' + timeoutMs + ' ms.'));
       }, timeoutMs);
 
-      /* 0.8.1: cap captured output; Fiji start-up can be very chatty. */
       proc.stdout.on('data', function (chunk) { stdout = (stdout + chunk.toString()).slice(-MAX_OUTPUT); });
       proc.stderr.on('data', function (chunk) { stderr = (stderr + chunk.toString()).slice(-MAX_OUTPUT); });
       proc.on('error', function (error) {
