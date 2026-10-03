@@ -1,0 +1,16 @@
+{
+  "name": "paperfig-illustrator",
+  "version": "1.0.0",
+  "description": "PaperFig for Illustrator - Adobe Illustrator CEP panel for scientific figure bitmaps",
+  "private": true,
+  "license": "GPL-3.0",
+  "author": "Zhao Li",
+  "scripts": {
+    "test": "node tests/run-suite.js",
+    "pack": "node scripts/pack.js"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.0.9",
+    "sharp": "^0.35.5"
+  }
+}

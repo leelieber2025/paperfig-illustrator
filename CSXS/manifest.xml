@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="7.0"
+  ExtensionBundleId="com.zhaoli.paperfig"
+  ExtensionBundleName="PaperFig for Illustrator"
+  ExtensionBundleVersion="1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Author>Zhao Li</Author>
+  <Abstract>Scientific display derivatives: RGB8 adjustments, uint8/uint16 channel mapping, calibration and vector scale bars</Abstract>
+  <ExtensionList>
+    <Extension Id="com.zhaoli.paperfig.panel" Version="1.0.0" />
+  </ExtensionList>
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="ILST" Version="[19.0,99.9]" />
+    </HostList>
+    <LocaleList>
+      <Locale Code="All" />
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="6.0" />
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+  <DispatchInfoList>
+    <Extension Id="com.zhaoli.paperfig.panel">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./client/index.html</MainPath>
+          <ScriptPath>./jsx/bitmap.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--allow-file-access-from-files</Parameter>
+            <Parameter>--allow-file-access</Parameter>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>PaperFig for Illustrator</Menu>
+          <Geometry>
+            <Size><Width>400</Width><Height>720</Height></Size>
+            <MinSize><Width>280</Width><Height>120</Height></MinSize>
+            <MaxSize><Width>480</Width><Height>1400</Height></MaxSize>
+          </Geometry>
+          <Icons>
+            <Icon Type="Normal">./icons/icon.png</Icon>
+            <Icon Type="RollOver">./icons/icon.png</Icon>
+          </Icons>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

@@ -1,0 +1,7 @@
+'use strict';
+// Independent minimal multi-IFD TIFF fixture writer, little/big endian.
+module.exports=function(options){options=options||{};const le=options.le!==false,w=4,h=2,planes=options.planes||[[0,100,1000,65535,2000,3000,4000,5000],[0,300,2000,60000,100,200,300,400]],n=planes.length,entries=11,ifdSize=2+entries*12+4;
+const xml=options.xml||'<OME><Image ID="Image:0"><Pixels ID="Pixels:0" DimensionOrder="XYCZT" Type="uint16" SizeX="4" SizeY="2" SizeC="'+n+'" SizeZ="1" SizeT="1" PhysicalSizeX="0.25" PhysicalSizeXUnit="µm" PhysicalSizeY="0.5" PhysicalSizeYUnit="µm">'+planes.map((_,i)=>'<Channel ID="Channel:0:'+i+'" Name="C'+(i+1)+'" SamplesPerPixel="1"/>').join('')+'<TiffData/></Pixels></Image></OME>';
+const desc=Buffer.from(xml+'\0'),descriptionOffset=8+n*ifdSize,dataOffset=descriptionOffset+desc.length,b=Buffer.alloc(dataOffset+n*w*h*2);const u16=(v,p)=>le?b.writeUInt16LE(v,p):b.writeUInt16BE(v,p),u32=(v,p)=>le?b.writeUInt32LE(v,p):b.writeUInt32BE(v,p);b.write(le?'II':'MM');u16(42,2);u32(8,4);desc.copy(b,descriptionOffset);
+planes.forEach((values,i)=>{let off=8+i*ifdSize;u16(entries,off);let tags=[[256,4,1,w],[257,4,1,h],[258,3,1,16],[259,3,1,options.compression||1],[262,3,1,1],[270,2,desc.length,descriptionOffset],[273,4,1,dataOffset+i*w*h*2],[277,3,1,1],[278,4,1,h],[279,4,1,w*h*2],[339,3,1,1]];tags.forEach((t,j)=>{let p=off+2+j*12;u16(t[0],p);u16(t[1],p+2);u32(t[2],p+4);if(t[1]===3&&t[2]===1)u16(t[3],p+8);else u32(t[3],p+8);});u32(i+1<n?8+(i+1)*ifdSize:0,off+2+entries*12);values.forEach((v,j)=>u16(v,dataOffset+i*w*h*2+j*2));});return b;
+};

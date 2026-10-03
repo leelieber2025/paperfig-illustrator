@@ -1,0 +1,94 @@
+{
+  "schema": "sci-bitmap-presets",
+  "version": 1,
+  "presets": [
+    {
+      "name": "RGB 原色 · 默认强度",
+      "recipe": {
+        "version": 1,
+        "brightness": 0,
+        "contrast": 0,
+        "cyanRed": 0,
+        "magentaGreen": 0,
+        "yellowBlue": 0,
+        "toneLow": 0,
+        "toneHigh": 255,
+        "grayscale": false,
+        "invert": false,
+        "softBlur": false,
+        "sharpen": false,
+        "lut": "None",
+        "channels": {
+          "enabled": false,
+          "components": [
+            {
+              "name": "R",
+              "color": "#ff0000",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            },
+            {
+              "name": "G",
+              "color": "#00ff00",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            },
+            {
+              "name": "B",
+              "color": "#0000ff",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "红转洋红 · 绿保持绿色 · 蓝保留",
+      "recipe": {
+        "version": 1,
+        "brightness": 0,
+        "contrast": 0,
+        "cyanRed": 0,
+        "magentaGreen": 0,
+        "yellowBlue": 0,
+        "toneLow": 0,
+        "toneHigh": 255,
+        "grayscale": false,
+        "invert": false,
+        "softBlur": false,
+        "sharpen": false,
+        "lut": "None",
+        "channels": {
+          "enabled": true,
+          "components": [
+            {
+              "name": "R",
+              "color": "#ff00ff",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            },
+            {
+              "name": "G",
+              "color": "#00ff00",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            },
+            {
+              "name": "B",
+              "color": "#0000ff",
+              "low": 0,
+              "high": 255,
+              "visible": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

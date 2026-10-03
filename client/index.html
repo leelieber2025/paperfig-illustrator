@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: file:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file: blob:; connect-src 'self' file:">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PaperFig for Illustrator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="panel">
+    <div class="sticky-top">
+      <div class="banner-row">
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.0.0</p>
+        <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
+        <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
+          <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" id="langEn" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
+        </div>
+      </div>
+      <section class="preview-card" data-i18n-aria="previewAria" aria-label="位图预览">
+        <div id="previewStage" class="preview-stage">
+          <div class="checker"></div>
+          <div id="previewTransform" class="preview-transform">
+            <canvas id="previewCanvas" class="preview-canvas hidden" aria-hidden="true"></canvas>
+          </div>
+          <div id="cropOverlay" class="crop-overlay hidden" aria-hidden="true">
+            <span class="crop-handle nw" data-handle="nw"></span>
+            <span class="crop-handle n" data-handle="n"></span>
+            <span class="crop-handle ne" data-handle="ne"></span>
+            <span class="crop-handle e" data-handle="e"></span>
+            <span class="crop-handle se" data-handle="se"></span>
+            <span class="crop-handle s" data-handle="s"></span>
+            <span class="crop-handle sw" data-handle="sw"></span>
+            <span class="crop-handle w" data-handle="w"></span>
+          </div>
+          <div id="insetOverlay" class="inset-overlay hidden" aria-hidden="true">
+            <span class="inset-handle nw" data-inset-handle="nw"></span>
+            <span class="inset-handle n" data-inset-handle="n"></span>
+            <span class="inset-handle ne" data-inset-handle="ne"></span>
+            <span class="inset-handle e" data-inset-handle="e"></span>
+            <span class="inset-handle se" data-inset-handle="se"></span>
+            <span class="inset-handle s" data-inset-handle="s"></span>
+            <span class="inset-handle sw" data-inset-handle="sw"></span>
+            <span class="inset-handle w" data-inset-handle="w"></span>
+          </div>
+          <div id="previewMessage" class="preview-message" data-i18n="previewEmpty">在 Illustrator 中选中图像后，这里显示预览</div>
+          <div id="straightenOverlay" class="straighten-overlay hidden" aria-hidden="true">
+            <svg class="straighten-svg" width="100%" height="100%" preserveAspectRatio="none">
+              <line id="straightenLineSeg" class="straighten-line" x1="0" y1="0" x2="0" y2="0" />
+            </svg>
+          </div>
+          <div id="previewStatus" class="preview-status" role="status" aria-live="polite"></div>
+        </div>
+        <div class="preview-zoom-bar" data-i18n-aria="zoomAria" aria-label="预览缩放">
+          <button type="button" id="previewZoomOut" data-i18n-title="zoomOutTitle" title="缩小">−</button>
+          <button type="button" id="previewZoomFit" data-i18n="zoomFit" data-i18n-title="zoomFitTitle" title="适应预览">适应</button>
+          <span id="previewZoomLabel" data-i18n-title="zoomLabelTitle" title="滚轮/捏合缩放；空格拖或中键拖平移">100%</span>
+          <button type="button" id="previewZoomIn" data-i18n-title="zoomInTitle" title="放大">+</button>
+          <span class="preview-zoom-hint" data-i18n="zoomHint">滚轮/捏合缩放 · 空格拖或中键拖平移</span>
+        </div>
+        <details class="crop-help">
+          <summary><span data-i18n="cropHint">裁剪/标尺端点：需要时放大预览。</span><span class="crop-help-mark" aria-hidden="true">?</span></summary>
+          <p class="crop-help-details" data-i18n="cropHintDetails">旋转预览上画水平裁剪框；框内拖移、用手柄改大小，或在框外重画。Apply 按直立方向写入裁剪像素并重新链接。Esc 取消拖拽；拾取标尺端点前可先放大，空格/中键拖动平移。</p>
+        </details>
+        <div id="metaLine" class="meta-line" data-i18n="metaEmpty">尚未选中位图</div>
+      </section>
+
+      <section class="button-row actions-top" data-i18n-aria="actionsAria" aria-label="操作">
+        <button id="applyBtn" class="primary" data-i18n="apply" data-i18n-title="applyTitle" title="写出全分辨率文件并重新链接。面板预览即时更新；画板在 Apply 或画板预览后更新。">应用</button>
+        <button id="inspectBtn" data-i18n="refresh" data-i18n-title="refreshTitle" title="重新检查选区并刷新面板预览">刷新</button>
+        <button id="resetBtn" data-i18n="reset" data-i18n-title="resetTitle" title="重置调整为默认">重置</button>
+        <button id="restoreBtn" class="hidden" disabled hidden data-i18n="restore" data-i18n-title="restoreTitle" title="面板文件还原已于 0.5.6 移除 — 请用 Illustrator 撤销 Ctrl/Cmd+Z">还原</button>
+      </section>
+      <details class="artboard-preview-details" id="artboardPreviewDetails">
+        <summary class="artboard-preview-summary">
+          <span data-i18n="artboardPreviewTools">画板预览工具</span>
+          <span id="artboardPreviewSummaryStatus" class="artboard-preview-summary-status" aria-live="polite"></span>
+        </summary>
+        <section class="button-row actions-top-preview" data-i18n-aria="artboardPreviewAria" aria-label="画板预览">
+          <button type="button" id="artboardPreviewBtn" data-i18n="artboardPreview" data-i18n-title="artboardPreviewTitle" title="缩小预览临时链接到画板；激活时滑块松开/变更会刷新">画板预览</button>
+          <button type="button" id="cancelPreviewBtn" disabled data-i18n="cancelPreview" data-i18n-title="cancelPreviewTitle" title="重新链接回原始源文件">取消预览</button>
+          <button type="button" id="holdCompareBtn" data-i18n="holdOriginal" data-i18n-title="holdOriginalTitle" title="按住显示未调整原图预览">按住=原图</button>
+        </section>
+      </details>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    </div>
+
+    <nav class="tab-bar" role="tablist" data-i18n-aria="tabsAria" aria-label="面板分区">
+      <button type="button" class="tab-btn active" role="tab" data-tab="adjust" aria-selected="true" data-i18n="tabAdjust" data-i18n-title="tabAdjustTitle" title="RGB8 亮度、色调、颜色、滤镜、预设">调整</button>
+      <button type="button" class="tab-btn" role="tab" data-tab="raw" aria-selected="false" data-i18n="tabRaw" data-i18n-title="tabRawTitle" title="原始通道、直方图、加载">原始</button>
+      <button type="button" class="tab-btn" role="tab" data-tab="scale" aria-selected="false" data-i18n="tabScale" data-i18n-title="tabScaleTitle" title="标定与矢量标尺">标尺</button>
+      <button type="button" class="tab-btn" role="tab" data-tab="geometry" aria-selected="false" data-i18n="tabGeom" data-i18n-title="tabGeomTitle" title="旋转、翻转、裁剪、放大插图">几何</button>
+      <button type="button" class="tab-btn" role="tab" data-tab="export" aria-selected="false" data-i18n="tabExport" data-i18n-title="tabExportTitle" title="导出、批处理、Fiji 设置">导出</button>
+    </nav>
+
+    <div class="tab-panes">
+      <div id="tab-adjust" class="tab-pane active" role="tabpanel" data-pane="adjust">
+        <details class="compact-help"><summary><span data-i18n="helpEdit">&#x7F16;&#x8F91;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintSourceOrient">面板编辑使用<strong>源文件朝向</strong>。画板预览保留 Illustrator 旋转/翻转。取消可恢复原链接；未完成的预览重开后可恢复。</p><p class="hint-line" data-i18n="hintEmbedded">嵌入图：单次 Apply 生成展示 PNG 并转为链接，无法恢复原始显微数据。</p><p id="undoHint" class="hint-line" data-i18n-html="hintUndo">滑块只改面板预览。点 <strong>Apply</strong> 才写出全分辨率文件并重新链接画板。撤销用 Illustrator <strong>Ctrl/Cmd+Z</strong>。</p></details><div class="group" id="rgbControls">
+          <section aria-labelledby="adjustHeading">
+            <h2 id="adjustHeading" data-i18n="adjustments">展示图调整</h2>
+            <label><span data-i18n="preset">预设</span><select id="presetSelect"><option value="" data-i18n="choosePreset">选择预设</option></select></label>
+            <div class="preset-save-row">
+              <label class="preset-name-label" for="presetName"><span data-i18n="presetNameLabel">名称</span></label>
+              <input id="presetName" type="text" maxlength="80" data-i18n-placeholder="presetNamePh" data-i18n-title="saveNewTitle" placeholder="新预设名称（当前调整）" title="输入名称后点「保存当前」：把当前调整页参数存为新预设">
+              <button type="button" id="savePresetBtn" data-i18n="saveNew" data-i18n-title="saveNewTitle" title="把当前调整页参数存为新预设">保存当前</button>
+            </div>
+            <div class="button-row preset-manage-row"><button type="button" id="loadPresetBtn" data-i18n="load" data-i18n-title="loadPresetTitle" title="加载所选预设到调整页">加载</button><button type="button" id="updatePresetBtn" data-i18n="overwrite" data-i18n-title="overwritePresetTitle" title="用当前调整参数覆盖所选预设">覆盖</button><button type="button" id="deletePresetBtn" data-i18n="delete" data-i18n-title="deletePresetTitle" title="删除所选预设">删除</button></div>
+            <div class="button-row"><button id="repeatLastBtn" data-i18n="repeatLast">重用上次</button><button id="importPresetBtn" data-i18n="importJson">导入 JSON</button><button id="exportPresetBtn" data-i18n="exportJson">导出 JSON</button></div>
+            <input id="presetFile" type="file" accept=".json" class="hidden">
+            <details class="compact-help"><summary><span data-i18n="helpDisplay">&#x663E;&#x793A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintPresets">预设含强度与 RGB 颜色；不含裁剪、旋转、输出路径与预览模式。</p></details>
+            <label class="slider-row" for="brightness">
+              <span data-i18n="brightness">亮度</span><input id="brightness" type="range" min="-100" max="100" value="0"><input id="brightnessValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="brightness numeric value">
+            </label>
+            <label class="slider-row" for="contrast">
+              <span data-i18n="contrast">对比</span><input id="contrast" type="range" min="-100" max="100" value="0"><input id="contrastValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="contrast numeric value">
+            </label>
+            <label class="slider-row" for="toneLow">
+              <span data-i18n="toneLow" data-i18n-title="blackPointTitle" title="黑点">低</span><input id="toneLow" type="range" min="0" max="255" value="0"><input id="toneLowValue" class="slider-number" type="number" min="0" max="255" step="1" value="0" aria-label="toneLow numeric value">
+            </label>
+            <label class="slider-row" for="toneHigh">
+              <span data-i18n="toneHigh" data-i18n-title="whitePointTitle" title="白点">高</span><input id="toneHigh" type="range" min="0" max="255" value="255"><input id="toneHighValue" class="slider-number" type="number" min="0" max="255" step="1" value="255" aria-label="toneHigh numeric value">
+            </label>
+            <div class="button-row tone-helpers">
+              <button type="button" id="pickBlackBtn" data-i18n="pickBlack" data-i18n-title="pickBlackTitle" title="下一步在预览上点击采样黑点">取黑点</button>
+              <button type="button" id="pickWhiteBtn" data-i18n="pickWhite" data-i18n-title="pickWhiteTitle" title="下一步在预览上点击采样白点">取白点</button>
+              <button type="button" id="autoLevelsBtn" data-i18n="autoLevels" data-i18n-title="autoLevelsTitle" title="按约 0.5%/99.5% 亮度百分位设置低/高">自动色阶</button>
+            </div>
+            <p id="toneHint" class="hint-line" data-i18n="toneHintDefault">黑/白点。偏离 0–255 时覆盖亮度/对比。</p>
+            <label class="slider-row" for="cyanRed">
+              <span title="Cyan – Red">C–R</span><input id="cyanRed" type="range" min="-100" max="100" value="0"><input id="cyanRedValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="cyanRed numeric value">
+            </label>
+            <label class="slider-row" for="magentaGreen">
+              <span title="Magenta – Green">M–G</span><input id="magentaGreen" type="range" min="-100" max="100" value="0"><input id="magentaGreenValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="magentaGreen numeric value">
+            </label>
+            <label class="slider-row" for="yellowBlue">
+              <span title="Yellow – Blue">Y–B</span><input id="yellowBlue" type="range" min="-100" max="100" value="0"><input id="yellowBlueValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="yellowBlue numeric value">
+            </label>
+            <p class="hint-line" data-i18n="hintColorBalance">色彩平衡（中间调）。在灰度前作用于 RGB。</p>
+            <div class="inline-controls">
+              <label><input id="grayscale" type="checkbox"> <span data-i18n="grayscale">灰度</span></label>
+              <label for="lut" class="hidden">LUT
+                <select id="lut">
+                  <option>None</option><option>Grays</option><option>Fire</option>
+                  <option>Ice</option><option>Spectrum</option><option>Glasbey</option>
+                </select>
+              </label>
+            </div>
+            <div class="inline-controls filter-toggles">
+              <label title="Invert after tone"><input id="invert" type="checkbox"> <span data-i18n="invert">反相</span></label>
+              <label title="3 × 3 box blur"><input id="softBlur" type="checkbox"> <span data-i18n="softBlur">柔化模糊</span></label>
+              <label title="Light Unsharp Mask (r=1, amount=0.4)"><input id="sharpen" type="checkbox"> <span data-i18n="sharpen">锐化</span></label>
+            </div>
+          </section>
+
+          <section aria-labelledby="channelHeading">
+            <h2 id="channelHeading" data-i18n="fluorescence">荧光通道</h2>
+            <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintFluor">RGB 合成面最多 3 通道（R/G/B）。每通道独立<strong>低/高</strong>（黑/白点，0–255），预览与 Apply 在合成前按平面拉伸。勾选<strong>保留</strong>；取消则该平面置零。真正的采集通道 C1/C2/C3 请用「原始」页。</p></details>
+            <label><input id="channelsEnabled" type="checkbox"> <span data-i18n="enableRecolor">启用换色</span></label>
+            <div class="button-row"><button type="button" id="magentaGreenBtn" data-i18n="magentaGreen">R→洋红 · G→绿</button><button type="button" id="identityColorsBtn" data-i18n="resetRgb">重置 RGB</button></div>
+            <p class="hint-line" id="channelKeepHint" data-i18n="channelKeepHint">保留通道。可以只勾选 1 个或 2 个。</p>
+            <div class="button-row channel-keep-row" role="group" data-i18n-aria="keepChannelsAria" aria-label="保留通道">
+              <button type="button" id="keepAllBtn" data-i18n="keepAll" title="Keep R+G+B">全保留</button>
+              <button type="button" id="keepRGBtn" data-i18n="keepRG" title="Keep R+G">仅 R+G</button>
+              <button type="button" id="keepRBBtn" data-i18n="keepRB" title="Keep R+B">仅 R+B</button>
+              <button type="button" id="keepGBBtn" data-i18n="keepGB" title="Keep G+B">仅 G+B</button>
+              <button type="button" id="keepRBtn" data-i18n="keepR" title="Keep R only">仅 R</button>
+              <button type="button" id="keepGBtn" data-i18n="keepG" title="Keep G only">仅 G</button>
+              <button type="button" id="keepBBtn" data-i18n="keepB" title="Keep B only">仅 B</button>
+            </div>
+            <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="channelLevelsHint">各通道 Low/High 按该通道的黑点和白点拉伸（对照 Photoshop 色阶 / ImageJ B&C）。上方「低/高」作用于合成之后的亮度。</p></details>
+            <div class="button-row"><button type="button" id="autoChannelLevelsBtn" data-i18n="autoChannelLevels" data-i18n-title="autoChannelLevelsTitle" title="按各平面约 0.5%/99.5% 百分位设置 Low/High">自动色阶 · 分通道</button></div>
+            <div class="channel-row channel-head channel-meta-head"><span data-i18n="colKeep">保留</span><span data-i18n="colLabel">标签</span><span data-i18n="colColor">颜色</span></div>
+            <p class="hint-line" data-i18n="hintColorPresets">Open a channel Color control for the RGB picker; Fiji / ImageJ Merge Channels presets (red, green, blue, gray, cyan, magenta, yellow) are inside that popup.</p>
+            <div class="channel-block" data-ch="0">
+              <div class="channel-row channel-meta"><label><input id="ch0Show" type="checkbox" checked> R</label><input id="ch0Name" type="text" value="R" maxlength="40" aria-label="R label"><div class="channel-color-wrap"><input id="ch0Color" type="color" value="#ff0000" aria-label="R output color"></div></div>
+              <label class="slider-row channel-level" for="ch0LowSlider"><span data-i18n="toneLow" data-i18n-title="blackPointTitle" title="黑点">低</span><input id="ch0LowSlider" type="range" min="0" max="255" value="0" aria-label="R low"><input id="ch0Low" class="slider-number" type="number" min="0" max="254" value="0" aria-label="R black point"></label>
+              <label class="slider-row channel-level" for="ch0HighSlider"><span data-i18n="toneHigh" data-i18n-title="whitePointTitle" title="白点">高</span><input id="ch0HighSlider" type="range" min="0" max="255" value="255" aria-label="R high"><input id="ch0High" class="slider-number" type="number" min="1" max="255" value="255" aria-label="R white point"></label>
+            </div>
+            <div class="channel-block" data-ch="1">
+              <div class="channel-row channel-meta"><label><input id="ch1Show" type="checkbox" checked> G</label><input id="ch1Name" type="text" value="G" maxlength="40" aria-label="G label"><div class="channel-color-wrap"><input id="ch1Color" type="color" value="#00ff00" aria-label="G output color"></div></div>
+              <label class="slider-row channel-level" for="ch1LowSlider"><span data-i18n="toneLow" data-i18n-title="blackPointTitle" title="黑点">低</span><input id="ch1LowSlider" type="range" min="0" max="255" value="0" aria-label="G low"><input id="ch1Low" class="slider-number" type="number" min="0" max="254" value="0" aria-label="G black point"></label>
+              <label class="slider-row channel-level" for="ch1HighSlider"><span data-i18n="toneHigh" data-i18n-title="whitePointTitle" title="白点">高</span><input id="ch1HighSlider" type="range" min="0" max="255" value="255" aria-label="G high"><input id="ch1High" class="slider-number" type="number" min="1" max="255" value="255" aria-label="G white point"></label>
+            </div>
+            <div class="channel-block" data-ch="2">
+              <div class="channel-row channel-meta"><label><input id="ch2Show" type="checkbox" checked> B</label><input id="ch2Name" type="text" value="B" maxlength="40" aria-label="B label"><div class="channel-color-wrap"><input id="ch2Color" type="color" value="#0000ff" aria-label="B output color"></div></div>
+              <label class="slider-row channel-level" for="ch2LowSlider"><span data-i18n="toneLow" data-i18n-title="blackPointTitle" title="黑点">低</span><input id="ch2LowSlider" type="range" min="0" max="255" value="0" aria-label="B low"><input id="ch2Low" class="slider-number" type="number" min="0" max="254" value="0" aria-label="B black point"></label>
+              <label class="slider-row channel-level" for="ch2HighSlider"><span data-i18n="toneHigh" data-i18n-title="whitePointTitle" title="白点">高</span><input id="ch2HighSlider" type="range" min="0" max="255" value="255" aria-label="B high"><input id="ch2High" class="slider-number" type="number" min="1" max="255" value="255" aria-label="B white point"></label>
+            </div>
+            <label><span data-i18n="previewMode">预览模式</span><select id="channelView"><option value="merged" data-i18n="merged">合成</option><option value="red" data-i18n="grayR">R · 灰度</option><option value="green" data-i18n="grayG">G · 灰度</option><option value="blue" data-i18n="grayB">B · 灰度</option></select></label>
+            <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintKeepPreview">保留勾选和分通道 Low/High 同时用于预览与 Apply。未勾选的平面置 0。只留一个通道时，再开灰度得到灰度图。「预览模式」里的灰度只影响预览。洋红/绿换色可以留下 B（例如 DAPI）。加色合成可能裁到 255。</p></details>
+          </section>
+        </div>
+      </div>
+
+      <div id="tab-raw" class="tab-pane" role="tabpanel" data-pane="raw" hidden>
+        <section class="group science" id="scienceGroup">
+          <h2 data-i18n="rawHeading">原始通道</h2>
+          <details class="compact-help"><summary><span data-i18n="helpRaw">&#x539F;&#x59CB;&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintRaw">uint8/uint16。采集通道为 C1、C2、C3…。勾选 <strong>保留</strong> 后再合成；未勾选的通道不进入预览和 Apply。选择 Series/Z/T 的一个平面。原文件不改。面板显示 8 位预览。可读原生未压缩 OME-TIFF，或通过 Fiji + Bio-Formats 读取。</p></details>
+          <label><span data-i18n="rawSource">原始源</span><input id="rawSource" type="text" data-i18n-placeholder="rawSourcePh" placeholder="当前链接或选择原始数据集"></label>
+          <div class="button-row"><button id="rawBrowse" data-i18n="chooseRaw">选择原始文件</button><button id="rawLoad" data-i18n="loadChannels">加载通道</button><button id="rawExit" data-i18n="useRgb">改用 RGB 显示</button><input id="rawFile" type="file" class="hidden"></div>
+          <div class="crop-grid"><label><span data-i18n="series">系列 (从 0 起)</span><input id="rawSeries" type="number" min="0" step="1" value="0"></label><label><span data-i18n="rawZ">Z（从 0 起）</span><input id="rawZ" type="number" min="0" step="1" value="0"></label><label><span data-i18n="rawT">T（从 0 起）</span><input id="rawT" type="number" min="0" step="1" value="0"></label></div>
+          <p id="rawStatus" class="hint-line" data-i18n="rawStatusEmpty">未加载原始数据集。下方 RGB 控件仅作用于 8 位展示图。</p>
+          <p class="hint-line" id="rawKeepHint" data-i18n="rawKeepHint">保留通道（C 名来自 OME；无名称时为 C1/C2/C3）</p>
+          <div class="button-row channel-keep-row" id="rawKeepButtons" role="group" data-i18n-aria="rawKeepAria" aria-label="保留原始通道"></div>
+          <div id="rawChannels"></div>
+          <label><span data-i18n="preview">预览</span><select id="rawSolo"><option value="-1" data-i18n="merged">合成</option></select></label>
+          <div class="button-row"><button id="rawLock" data-i18n="lockRanges">锁定组范围</button><button id="rawUnlock" data-i18n="unlock">解锁</button><button id="rawExport" data-i18n="exportRanges">导出范围</button><button id="rawImport" data-i18n="importRanges">导入范围</button><input id="rawRangesFile" type="file" accept=".json" class="hidden"></div>
+          <p id="rawLockStatus" class="hint-line" data-i18n="rawLockUnlocked">未锁定。组锁定固定名称、顺序、位深、范围、颜色与 gamma；不做逐图自动拉伸。</p>
+          <details><summary data-i18n="advancedDisplay">高级显示（写入处理记录）</summary><label>Gamma <input id="rawGamma" type="number" min="0.1" max="5" step="0.05" value="1"></label><p class="hint-line" data-i18n="hintGamma">默认 gamma 为 1（线性）。其它值按 output = normalized^(1/gamma) 计算，并写入处理记录。原始模式不做 CLAHE，也不做空间滤波。</p></details>
+          <details class="compact-help"><summary><span data-i18n="helpRaw">&#x539F;&#x59CB;&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintHist">直方图：整幅所选平面，对数计数轴。红端表示端点像素；below/above 为严格显示裁切。不做投影。</p></details>
+        </section>
+      </div>
+
+      <div id="tab-scale" class="tab-pane" role="tabpanel" data-pane="scale" hidden>
+        <section class="group" id="scaleGroup">
+          <h2 data-i18n="scaleHeading">矢量标尺</h2>
+          <label><span data-i18n="calibration">标定</span><select id="scaleMethod"><option value="metadata" data-i18n="calMeta">原始元数据 · µm/px</option><option value="field" data-i18n="calField">已知全图视场宽</option><option value="two-point" data-i18n="calTwoPoint">已有水平标尺两端</option></select></label>
+          <div class="crop-grid"><label><span data-i18n="fullWidth">全图宽度</span><input id="scaleFieldWidth" type="number" min="0" value="200"></label><label><span data-i18n="heightOpt">高度(可选)</span><input id="scaleFieldHeight" type="number" min="0" data-i18n-placeholder="optionalPh" placeholder="可选"></label><label><span data-i18n="refBarLen">参考标尺长度</span><input id="scaleReference" type="number" min="0" value="20"></label><label><span data-i18n="units">单位</span><select id="scaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select></label></div>
+          <div class="button-row"><button id="scalePick" data-i18n="pickEndpoints">拾取参考端点</button><button id="scaleCalibrate" data-i18n="saveCal">保存标定</button><button type="button" id="scaleReuseLast" data-i18n="reuseLast" data-i18n-title="reuseLastTitle" title="可选：把上次标定复制到本图">复用上次标定</button><button type="button" id="scaleClearCal" data-i18n="clearCal" data-i18n-title="clearCalTitle" title="仅清除本图已存标定">清除本图标定</button></div>
+          <p id="scaleStatus" class="hint-line" data-i18n="scaleStatusDefault">按全图源标定（µm/px 与端点均为全图文件像素，与当前裁剪无关）；勿用打印 DPI。裁剪/「使用全图」不清除标定。</p>
+          <div class="crop-grid"><label><span data-i18n="barLength">标尺长度</span><input id="scaleLength" type="number" min="0" value="20"></label><label><span data-i18n="linePt">线宽(pt)</span><input id="scaleLine" type="number" min="0.1" max="20" step="0.1" value="1.5"></label><label><span data-i18n="textPt">字号(pt)</span><input id="scaleFont" type="number" min="4" max="72" value="9"></label><label><span data-i18n="marginPt">边距(pt)</span><input id="scaleMargin" type="number" min="0" max="200" value="8"></label></div>
+          <label><span data-i18n="position">位置</span><select id="scalePosition"><option value="bottom-right" data-i18n="bottomRight">右下</option><option value="bottom-left" data-i18n="bottomLeft">左下</option></select></label>
+          <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="scaleColor" type="color" value="#ffffff" title="#ffffff"></label>
+          <label class="scale-include-text"><input id="scaleIncludeText" type="checkbox" checked> <span data-i18n="scaleIncludeText">显示长度文字</span></label>
+          <button id="scaleCreate" data-i18n="createBar">创建/更新矢量标尺</button>
+          <button type="button" id="scaleAudit" data-i18n="auditScales">核对选中图</button>
+          <p id="scaleAuditStatus" class="hint-line" data-i18n="auditScalesHint">选中两张或更多链接图，比较 µm/px。等长标尺若 µm/px 不同，代表的距离就不同。</p>
+          <div class="button-row scale-preset-row">
+            <span class="scale-preset-label" data-i18n="scalePreset">标尺预设</span>
+            <button type="button" id="scalePresetSave" data-i18n="scalePresetSave" data-i18n-title="scalePresetSaveTitle" title="选择保存标尺预设 JSON 的位置（默认从 Downloads 开始）">保存</button>
+            <button type="button" id="scalePresetLoad" data-i18n="scalePresetLoad" data-i18n-title="scalePresetLoadTitle" title="打开标尺预设 JSON（默认从 Downloads 开始）">加载</button>
+          </div>
+          <details class="compact-help"><summary><span data-i18n="helpScale">&#x6807;&#x5C3A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintScaleBar">独立线段+可选文字组。裁剪/改尺寸后请再更新；标尺不自动追随。可选是否显示 µm 等长度文字。默认按图恢复标定；仅「复用上次」是跨图拷贝。</p></details>
+        </section>
+      </div>
+
+      <div id="tab-geometry" class="tab-pane" role="tabpanel" data-pane="geometry" hidden>
+        <section class="group" aria-labelledby="rotateHeading">
+          <h2 id="rotateHeading" data-i18n="rotateFlip">旋转/翻转</h2>
+          <div class="button-row rotate-row">
+            <button type="button" id="rotateCcw" data-i18n="ccw90" data-i18n-title="ccwTitle" title="逆时针 90°">逆时针 90°</button>
+            <button type="button" id="rotateCw" data-i18n="cw90" data-i18n-title="cwTitle" title="顺时针 90°">顺时针 90°</button>
+            <button type="button" id="rotate180" title="180°">180°</button>
+          </div>
+          <div class="button-row flip-row">
+            <button type="button" id="flipHBtn" data-i18n="flipH" data-i18n-title="flipHTitle" title="水平翻转（Illustrator 几何）">水平翻转</button>
+            <button type="button" id="flipVBtn" data-i18n="flipV" data-i18n-title="flipVTitle" title="垂直翻转（Illustrator 几何）">垂直翻转</button>
+          </div>
+          <div class="button-row straighten-row">
+            <button type="button" id="straightenLineBtn" data-i18n="straightenLine" data-i18n-title="straightenLineTitle" title="在预览上拖一条线，将图像旋转到该线水平" aria-pressed="false">拉平水平</button>
+          </div>
+          <label class="fine-row" for="rotateAngle">
+            <span data-i18n="angle">角度 (°)</span>
+            <input id="rotateAngle" type="number" step="0.1" value="0">
+          </label>
+          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintRotate">旋转/翻转立即作用于画板（非像素重采样）。每次实时旋转后角度清零，避免 Apply 再转一次。</p><p class="hint-line" data-i18n="straightenLineHint">点「拉平水平」后在预览上拖一条应对齐水平的线；松手即按该线角度旋转。Esc 取消。</p></details>
+        </section>
+
+        <section class="group marquee-mode-group" aria-labelledby="marqueeModeHeading">
+          <h2 id="marqueeModeHeading" data-i18n="marqueeModeHeading">预览框选工具</h2>
+          <div class="button-row marquee-mode-row" role="group" data-i18n-aria="marqueeModeAria" aria-label="框选工具">
+            <button type="button" id="marqueeModeCropBtn" class="primary" data-i18n="marqueeModeCrop" data-i18n-title="marqueeModeCropTitle" title="预览拖拽只编辑裁剪框（放大框隐藏）" aria-pressed="true">裁剪</button>
+            <button type="button" id="marqueeModeInsetBtn" data-i18n="marqueeModeInset" data-i18n-title="marqueeModeInsetTitle" title="预览拖拽只编辑放大框（裁剪框隐藏）" aria-pressed="false">放大框</button>
+          </div>
+          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintMarqueeMode">同时只能用一种框：裁剪或放大框。互相切换会清掉另一种选区。离开「几何」页也会退出放大框并清掉该区域。放大插图请点顶部「应用」，没有单独的生成按钮。</p></details>
+        </section>
+
+        <section class="group" aria-labelledby="cropHeading">
+          <h2 id="cropHeading"><span data-i18n="crop">裁剪</span> <span id="imageSizeHint" class="hint"></span></h2>
+          <div class="crop-aspect-row">
+            <label for="cropAspectMode"><span data-i18n="ratio">比例</span>
+              <select id="cropAspectMode" title="Aspect lock / fixed size">
+                <option value="free" data-i18n="free">自由</option>
+                <option value="1:1">1:1</option>
+                <option value="4:3">4:3</option>
+                <option value="3:4">3:4</option>
+                <option value="16:9">16:9</option>
+                <option value="3:2">3:2</option>
+                <option value="custom" data-i18n="customWH">自定义 W:H</option>
+                <option value="fixed" data-i18n="fixedPx">固定像素</option>
+                <option value="source-px" data-i18n="sourcePx">源文件像素</option>
+              </select>
+            </label>
+            <span id="cropCustomAspect" class="crop-aspect-extra hidden" hidden>
+              <input id="cropAspectW" type="number" min="1" step="1" value="16" title="Aspect width" aria-label="Aspect W">
+              <span class="crop-aspect-sep">:</span>
+              <input id="cropAspectH" type="number" min="1" step="1" value="9" title="Aspect height" aria-label="Aspect H">
+            </span>
+            <span id="cropFixedSize" class="crop-aspect-extra hidden" hidden>
+              <input id="cropFixedW" type="number" min="1" step="1" value="512" title="Fixed width px" aria-label="Fixed W">
+              <span class="crop-aspect-sep">×</span>
+              <input id="cropFixedH" type="number" min="1" step="1" value="512" title="Fixed height px" aria-label="Fixed H">
+              <span class="crop-aspect-unit">px</span>
+            </span>
+          </div>
+          <div class="crop-grid">
+            <label for="cropLeft"><span data-i18n="left">左</span><input id="cropLeft" type="number" min="0" step="1" value="0"></label>
+            <label for="cropTop"><span data-i18n="top">上</span><input id="cropTop" type="number" min="0" step="1" value="0"></label>
+            <label for="cropWidth"><span data-i18n="width">宽</span><input id="cropWidth" type="number" min="0" step="1" value="0"></label>
+            <label for="cropHeight"><span data-i18n="height">高</span><input id="cropHeight" type="number" min="0" step="1" value="0"></label>
+          </div>
+          <details class="compact-help"><summary><span data-i18n="helpCrop">&#x88C1;&#x526A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintCrop">L/T/W/H 与固定/源文件 W×H 均为<strong>文件像素</strong>（非画板 pt）。「源文件像素」只用未缩放原图像素尺寸，忽略 Place 显示大小，便于同批图一致裁剪。固定=仅移动；W/H 为 0 表示全图。</p></details>
+          <button type="button" id="cropFullBtn" class="secondary-full" data-i18n="useFull">使用全图</button>
+        </section>
+
+        <section class="group" id="insetGroup" aria-labelledby="insetHeading">
+          <h2 id="insetHeading" data-i18n="insetHeading">放大插图 11</h2>
+          <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintInset">在预览上框选区域（与裁剪同一套<strong>文件像素</strong>坐标）。也可在画板上画矩形，与图像一起选中后点「读取画板矩形」。框选完成后点上方「应用」放置不重采样的放大子图、原图矢量框，以及可选引线。已标定则按同一 µm/px 在插图上加标尺。</p></details>
+          <div class="button-row">
+            <button type="button" id="insetDrawBtn" data-i18n="insetDraw" data-i18n-title="marqueeModeInsetTitle" aria-pressed="false" title="预览拖拽只编辑放大框（裁剪框隐藏）">框选区域</button>
+            <button type="button" id="insetReadArtboard" data-i18n="insetReadArtboard">读取画板矩形</button>
+            <button type="button" id="insetClearBtn" data-i18n="insetClear">清除区域</button>
+          </div>
+          <div class="crop-aspect-row">
+            <label for="insetAspectMode"><span data-i18n="ratio">比例</span>
+              <select id="insetAspectMode">
+                <option value="free" data-i18n="free">自由</option>
+                <option value="1:1">1:1</option>
+                <option value="4:3" selected>4:3</option>
+                <option value="16:9">16:9</option>
+              </select>
+            </label>
+            <label for="insetMag"><span data-i18n="insetMag">放大</span>
+              <input id="insetMag" type="number" min="1" max="20" step="0.5" value="3">
+            </label>
+            <label for="insetGap"><span data-i18n="insetGap">间距(pt)</span>
+              <input id="insetGap" type="number" min="0" max="400" step="1" value="12">
+            </label>
+            <label for="insetAnchor"><span data-i18n="insetPlace">位置</span>
+              <select id="insetAnchor">
+                <option value="right" data-i18n="insetRight">右侧</option>
+                <option value="left" data-i18n="insetLeftSide">左侧</option>
+                <option value="above" data-i18n="insetAbove">上方</option>
+                <option value="below" data-i18n="insetBelow">下方</option>
+              </select>
+            </label>
+          </div>
+          <div class="crop-grid">
+            <label for="insetLeft"><span data-i18n="left">左</span><input id="insetLeft" type="number" min="0" step="1" value="0"></label>
+            <label for="insetTop"><span data-i18n="top">上</span><input id="insetTop" type="number" min="0" step="1" value="0"></label>
+            <label for="insetWidth"><span data-i18n="width">宽</span><input id="insetWidth" type="number" min="0" step="1" value="0"></label>
+            <label for="insetHeight"><span data-i18n="height">高</span><input id="insetHeight" type="number" min="0" step="1" value="0"></label>
+          </div>
+          <h3 class="inset-sub" data-i18n="insetFrameHeading">原图框线</h3>
+          <div class="crop-grid">
+            <label for="insetFrameWeight"><span data-i18n="linePt">线宽(pt)</span><input id="insetFrameWeight" type="number" min="0.1" max="20" step="0.1" value="1.5"></label>
+            <label for="insetFrameColor"><span data-i18n="color">颜色</span><input id="insetFrameColor" type="color" value="#ffffff"></label>
+            <label for="insetFrameDash"><span data-i18n="insetDash">线型</span>
+              <select id="insetFrameDash">
+                <option value="solid" data-i18n="dashSolid">实线</option>
+                <option value="dashed" data-i18n="dashDashed">虚线</option>
+                <option value="dotted" data-i18n="dashDotted">点线</option>
+                <option value="dash-dot" data-i18n="dashDot">点划线</option>
+              </select>
+            </label>
+            <label for="insetFrameCorner"><span data-i18n="insetCorner">拐角</span>
+              <select id="insetFrameCorner">
+                <option value="miter" data-i18n="cornerMiter">尖角</option>
+                <option value="round" data-i18n="cornerRound">圆角</option>
+                <option value="bevel" data-i18n="cornerBevel">斜角</option>
+              </select>
+            </label>
+            <label for="insetFrameRadius"><span data-i18n="insetRadius">圆角(pt)</span><input id="insetFrameRadius" type="number" min="0" max="40" step="0.5" value="0"></label>
+          </div>
+          <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintInsetCorner">圆角且半径 > 0 时，轴对齐的框用圆角矩形；旋转图像则用圆角连接。</p></details>
+          <h3 class="inset-sub" data-i18n="insetLeaderHeading">引线</h3>
+          <label><input id="insetLeaderOn" type="checkbox" checked> <span data-i18n="insetLeaderOn">绘制引线</span></label>
+          <div class="crop-grid">
+            <label for="insetLeaderWeight"><span data-i18n="linePt">线宽(pt)</span><input id="insetLeaderWeight" type="number" min="0.1" max="20" step="0.1" value="0.75"></label>
+            <label for="insetLeaderColor"><span data-i18n="color">颜色</span><input id="insetLeaderColor" type="color" value="#ffffff"></label>
+            <label for="insetLeaderDash"><span data-i18n="insetDash">线型</span>
+              <select id="insetLeaderDash">
+                <option value="solid" data-i18n="dashSolid">实线</option>
+                <option value="dashed" data-i18n="dashDashed">虚线</option>
+                <option value="dotted" data-i18n="dashDotted">点线</option>
+                <option value="dash-dot" data-i18n="dashDot">点划线</option>
+              </select>
+            </label>
+          </div>
+          <h3 class="inset-sub" data-i18n="insetScaleHeading">插图标尺</h3>
+          <label><input id="insetScaleOn" type="checkbox" checked> <span data-i18n="insetScaleOn">已标定则添加标尺</span></label>
+          <div class="crop-grid">
+            <label for="insetScaleLength"><span data-i18n="barLength">标尺长度</span><input id="insetScaleLength" type="number" min="0" step="0.1" value="10"></label>
+            <label for="insetScaleUnit"><span data-i18n="units">单位</span>
+              <select id="insetScaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select>
+            </label>
+            <label for="insetScaleFont"><span data-i18n="textPt">字号(pt)</span><input id="insetScaleFont" type="number" min="4" max="72" step="1" value="8"></label>
+            <label for="insetScalePosition"><span data-i18n="position">位置</span>
+              <select id="insetScalePosition">
+                <option value="bottom-right" data-i18n="bottomRight">右下</option>
+                <option value="bottom-left" data-i18n="bottomLeft">左下</option>
+              </select>
+            </label>
+          </div>
+</section>
+
+      </div>
+
+      <div id="tab-export" class="tab-pane" role="tabpanel" data-pane="export" hidden>
+        <section class="group" aria-labelledby="batchHeading">
+          <h2 id="batchHeading" data-i18n="batch">多图统一处理</h2>
+          <div class="button-row"><button id="prepareBatchBtn" data-i18n="reviewSelection">1 · 审查选区</button><button id="runBatchBtn" disabled data-i18n="applyChecked">2 · 应用勾选</button><button id="cancelBatchBtn" disabled data-i18n="stop">停止</button></div>
+          <p id="batchSummary" class="hint-line" data-i18n="batchSummary">在 Illustrator 里多选图像，再点审查。这一批使用同一组参数，不裁剪、不旋转。嵌入图跳过。</p>
+          <div id="batchList" class="batch-list"></div>
+        </section>
+
+        <section class="group export-grid" aria-labelledby="exportHeading">
+          <h2 id="exportHeading" data-i18n="export">导出</h2>
+          <label class="backup-option hidden" hidden><input id="extraBackup" type="checkbox"> Extra file backup (removed in 0.5.6 — use Undo)</label>
+          <p id="exportCapability" class="hint-line export-cap" data-i18n="exportCap">写出 8 位展示图：PNG、JPEG，或未压缩 RGBA8 TIFF。DPI 只写入打印元数据，不是空间标定。</p>
+          <label for="format"><span data-i18n="format">格式</span>
+            <select id="format"><option>PNG</option><option>JPEG</option><option>TIFF</option></select>
+          </label>
+          <label for="dpi">DPI
+            <input id="dpi" type="number" min="36" max="2400" step="1" value="300">
+          </label>
+        </section>
+
+        <details id="fijiSetupDetails" class="group setup">
+          <summary data-i18n="fijiSetup">Fiji 设置</summary>
+          <label for="fijiPath" data-i18n="fijiPathLabel">Fiji 可执行文件或应用目录</label>
+          <div class="path-row">
+            <input id="fijiPath" type="text" spellcheck="false" data-i18n-placeholder="fijiPathPh" placeholder="Fiji/ImageJ 路径">
+            <button id="browseBtn" data-i18n="browse" data-i18n-title="browseTitle" title="选择 Fiji 可执行文件">浏览</button>
+            <input id="fijiFile" class="hidden" type="file">
+          </div>
+          <div class="button-row setup-actions">
+            <button id="detectBtn" data-i18n="detect">检测</button>
+            <button id="testBtn" data-i18n="testConnection">测试连接</button>
+          </div>
+          <div id="fijiStatus" class="status neutral" role="status" data-i18n="notConfigured">未配置</div>
+        </details>
+
+      </div>
+    </div>
+    <footer class="panel-footer">
+      <span class="footer-label" data-i18n="footer">PaperFig {version} · RGB 调整 · 预览固定在顶部</span>
+      <span id="footerStatus" class="footer-status" role="status" aria-live="polite"></span>
+    </footer>
+
+  <!-- First-run Fiji setup gate (shown when fijiPath empty and not skipped) -->
+  <div id="fijiGate" class="fiji-gate hidden" role="dialog" aria-modal="true" aria-labelledby="fijiGateTitle" hidden>
+    <div class="fiji-gate-card">
+      <h2 id="fijiGateTitle" data-i18n="fijiGateTitle">配置 Fiji</h2>
+      <p class="fiji-gate-lead" data-i18n="fijiGateLead">首次使用请先设置 Fiji/ImageJ 路径（原始通道、部分 TIFF 与 Bio-Formats 需要）。普通 RGB JPG/PNG 可不配置。</p>
+      <label for="fijiGatePath" data-i18n="fijiGatePathLabel">Fiji 可执行文件或应用目录</label>
+      <div class="path-row">
+        <input id="fijiGatePath" type="text" spellcheck="false" data-i18n-placeholder="fijiGatePh" placeholder="例如 /Applications/Fiji.app 或 ImageJ-win64.exe">
+        <button type="button" id="fijiGateBrowse" data-i18n="browse" data-i18n-title="browseTitle" title="选择 Fiji 可执行文件">浏览</button>
+      </div>
+      <div class="button-row setup-actions">
+        <button type="button" id="fijiGateDetect" data-i18n="detect">检测</button>
+        <button type="button" id="fijiGateTest" data-i18n="test">测试</button>
+      </div>
+      <div id="fijiGateStatus" class="status neutral" role="status" data-i18n="notConfigured">未配置</div>
+      <div class="fiji-gate-actions">
+        <button type="button" id="fijiGateSave" class="primary" data-i18n="saveContinue">保存并继续</button>
+        <button type="button" id="fijiGateSkip" data-i18n="skipRgb">稍后（仅 RGB）</button>
+      </div>
+      <p class="hint-line" data-i18n-html="fijiGateHint">之后可在 <strong>导出 → Fiji 设置</strong> 中修改。</p>
+    </div>
+  </div>
+
+  </main>
+  <script>
+  (function () {
+    var KEY = 'sci_bitmap_active_tab';
+    function activate(name) {
+      var tabs = document.querySelectorAll('.tab-bar [data-tab]');
+      var panes = document.querySelectorAll('.tab-pane');
+      var i, tab, pane, match;
+      for (i = 0; i < tabs.length; i++) {
+        tab = tabs[i];
+        match = tab.getAttribute('data-tab') === name;
+        tab.classList.toggle('active', match);
+        tab.setAttribute('aria-selected', match ? 'true' : 'false');
+      }
+      for (i = 0; i < panes.length; i++) {
+        pane = panes[i];
+        match = pane.getAttribute('data-pane') === name;
+        pane.classList.toggle('active', match);
+        if (match) { pane.removeAttribute('hidden'); }
+        else { pane.setAttribute('hidden', ''); }
+      }
+      try { localStorage.setItem(KEY, name); } catch (ignore) {}
+      try {
+        document.dispatchEvent(new CustomEvent('paperfig-tab', { detail: { tab: name } }));
+      } catch (ignoreEvt) {}
+    }
+    function boot() {
+      var tabs = document.querySelectorAll('.tab-bar [data-tab]');
+      var i, saved = null;
+      for (i = 0; i < tabs.length; i++) {
+        tabs[i].addEventListener('click', function () {
+          activate(this.getAttribute('data-tab'));
+        });
+      }
+      try { saved = localStorage.getItem(KEY); } catch (ignore) {}
+      if (!saved || !document.querySelector('.tab-pane[data-pane="' + saved + '"]')) {
+        saved = 'adjust';
+      }
+      activate(saved);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  }());
+  </script>
+  <script src="i18n.js"></script>
+  <script src="dark-select.js"></script>
+  <script src="color-picker.js"></script>
+  <script src="CSInterface.js"></script>
+  <script src="fiji-bridge.js"></script>
+  <script src="bitmap-core.js"></script>
+  <script src="bitmap-workflow.js"></script>
+  <script src="file-stamp.js"></script>
+  <script src="bitmap-output.js"></script>
+  <script src="scientific-core.js"></script>
+  <script src="raw-bridge.js"></script>
+  <script src="histogram-view.js"></script>
+  <script src="interaction-policy.js"></script>
+  <script src="scientific-panel.js"></script>
+  <script src="bitmap-panel-marquee.js?v=20261002-inset16"></script>
+  <script src="bitmap-panel.js"></script>
+</body>
+</html>

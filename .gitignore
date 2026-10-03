@@ -1,0 +1,19 @@
+﻿# Node / npm
+node_modules/
+dist/*.zip
+.ipynb_checkpoints/
+_probe.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and coverage output
+coverage/
+.nyc_output/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
