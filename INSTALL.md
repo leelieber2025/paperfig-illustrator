@@ -1,14 +1,14 @@
 # Install / 安装 — PaperFig for Illustrator
 
-Version **1.0.0** · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
+Version **1.1.0** · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
 
 Usage / 用法: [`HOWTO.md`](HOWTO.md).
 
 ## Scripts / 脚本
 
-Run the installer in the folder that contains `CSXS/manifest.xml`. The release zip `paperfig-1.0.0.zip` already uses the folder name `paperfig/`. A GitHub source zip is often named `paperfig-illustrator-1.0.0/`. Do not rename it. The script finds the manifest from its own directory. Running it again replaces only `extensions/paperfig`.
+Run the installer in the folder that contains `CSXS/manifest.xml`. The release zip `paperfig-1.1.0.zip` already uses the folder name `paperfig/`. A GitHub source zip is often named `paperfig-illustrator-1.1.0/`. Do not rename it. The script finds the manifest from its own directory. Running it again replaces only `extensions/paperfig`.
 
-在含 `CSXS/manifest.xml` 的目录里运行安装脚本。发布包 `paperfig-1.0.0.zip` 的顶层目录已是 `paperfig/`。GitHub 源码包常为 `paperfig-illustrator-1.0.0/`，不必改名。脚本从自身所在目录找清单。再次运行只替换 `extensions/paperfig`。
+在含 `CSXS/manifest.xml` 的目录里运行安装脚本。发布包 `paperfig-1.1.0.zip` 的顶层目录已是 `paperfig/`。GitHub 源码包常为 `paperfig-illustrator-1.1.0/`，不必改名。脚本从自身所在目录找清单。再次运行只替换 `extensions/paperfig`。
 
 | OS / 系统 | Double-click / 双击 | Or run / 或执行 |
 |-----------|---------------------|-----------------|
@@ -25,8 +25,8 @@ The script copies the extension to `%APPDATA%\Adobe\CEP\extensions\paperfig` or 
 
 ## Package / 安装包
 
-- Release asset / 发布附件: [paperfig-1.0.0.zip](https://github.com/leelieber2025/paperfig-illustrator/releases/tag/v1.0.0)
-- Local pack output / 本地打包输出: `dist/paperfig-1.0.0.zip`
+- Release asset / 发布附件: [paperfig-1.1.0.zip](https://github.com/leelieber2025/paperfig-illustrator/releases/tag/v1.1.0)
+- Local pack output / 本地打包输出: `dist/paperfig-1.1.0.zip`
 - Or clone this repository and run the installer in the repo root. / 或克隆本仓库，在仓库根目录运行安装脚本。
 
 Quit Illustrator, unzip, and run the installer. Or copy the `paperfig` folder to the CEP path above.
@@ -55,13 +55,13 @@ https://github.com/Adobe-CEP/CEP-Resources/blob/master/CEP_11.x/Documentation/CE
 
 ## Check / 检查
 
-Start Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer reads **1.0.0**. Finish or skip **Configure Fiji**.
+Start Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer reads **1.0.0**. The panel opens on **Scale** and asks for a Fiji path only if a file needs it.
 
-启动 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.0.0**。按 **配置 Fiji** 完成或跳过。
+启动 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.1.0**。默认进入 **标尺**；只有文件需要 Fiji 时才提示配置路径。
 
-Fiji + Bio-Formats is optional, for files the native TIFF reader cannot open. Set the executable or the app folder (for example `Fiji.app`) under **Export → Fiji setup**.
+Fiji + Bio-Formats is optional, for files the native TIFF reader cannot open. Set the executable or the app folder (for example `Fiji.app`) under **Settings → Fiji setup**.
 
-Fiji + Bio-Formats 是可选的，用于原生 TIFF 读不开的文件。在 **导出 → Fiji 设置** 填写可执行文件或应用目录（例如 `Fiji.app`）。
+Fiji + Bio-Formats 是可选的，用于原生 TIFF 读不开的文件。在 **设置 → Fiji 设置** 填写可执行文件或应用目录（例如 `Fiji.app`）。
 
 ## macOS
 

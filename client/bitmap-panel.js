@@ -3,10 +3,9 @@
   'use strict';
 
   var SETTINGS_KEY = 'sci_bitmap_settings';
-  var FIJI_SETUP_SKIP_KEY = 'sci_fiji_setup_skipped';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.0.0';
+  var PANEL_VERSION = '1.1.0';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -1169,45 +1168,19 @@
   function showFijiGate() {
     var gate = byId('fijiGate');
     var details = byId('fijiSetupDetails');
-    if (!gate) { return; }
+    if (!gate || (typeof gate.hasAttribute === 'function' && !gate.hasAttribute('hidden'))) { return; }
     syncFijiPathFields(settings.fijiPath || '');
     gate.classList.remove('hidden');
     gate.removeAttribute('hidden');
     if (details) { details.open = true; }
-  }
-
-  function fijiSetupSkipped() {
-    try { return localStorage.getItem(FIJI_SETUP_SKIP_KEY) === '1'; } catch (ignore) { return false; }
-  }
-
-  function setFijiSetupSkipped(flag) {
-    try {
-      if (flag) { localStorage.setItem(FIJI_SETUP_SKIP_KEY, '1'); }
-      else { localStorage.removeItem(FIJI_SETUP_SKIP_KEY); }
-    } catch (ignore) {}
-  }
-
-  function maybeShowFijiGate() {
-    var path = fijiPathValue() || (settings.fijiPath || '');
-    var details = byId('fijiSetupDetails');
-    if (path) {
-      hideFijiGate();
-      return;
-    }
-    /* Empty Fiji path: open Export setup section; show gate unless user skipped. */
-    if (details) { details.open = true; }
-    if (fijiSetupSkipped()) {
-      hideFijiGate();
-      return;
-    }
-    showFijiGate();
+    var input = byId('fijiGatePath');
+    if (input && typeof input.focus === 'function') { input.focus(); }
   }
 
   function completeFijiGate(savePath) {
     if (savePath) {
       syncFijiPathFields(savePath);
       saveSettings();
-      setFijiSetupSkipped(false);
     }
     hideFijiGate();
   }
@@ -1256,9 +1229,8 @@
       completeFijiGate(v);
     });
     gateSkip.addEventListener('click', function () {
-      setFijiSetupSkipped(true);
       hideFijiGate();
-      setFijiStatus('neutral', t('fijiSkippedRgb'));
+      setFijiStatus('neutral', t('notConfigured'));
       notice(t('fijiSkipped'));
     });
   }
@@ -3240,6 +3212,7 @@
     fijiPath = settings.fijiPath || (byId('fijiPath') && byId('fijiPath').value) || '';
     fijiPath = String(fijiPath).replace(/^\s+|\s+$/g, '');
     if (!fijiPath) {
+      showFijiGate();
       showTiffCropOnlyPlaceholder(t('statusFijiConfigure'));
       setPreviewStatus(t('statusFijiConfigure'), 'error');
       return Promise.resolve(false);
@@ -4253,7 +4226,7 @@
         syncFijiPathFields(result.executable);
         saveSettings();
         setFijiStatus('ok', t('fijiConnected') + ' ' + result.executable);
-        if (result.executable) { hideFijiGate(); setFijiSetupSkipped(false); }
+        if (result.executable) { hideFijiGate(); }
       })
       .catch(function (error) { setFijiStatus('error', error.message); })
       .then(function () {
@@ -4681,12 +4654,16 @@
     initWorkflow();
     initScience();
     bind();
+    document.addEventListener('paperfig-feature-visibility', function (event) {
+      if (!event.detail || event.detail.feature !== 'raw') { return; }
+      updateArtboardPreviewButtons();
+      if (lastSelectedItem) { refreshPanelPreviewAfterGeom(); }
+    });
     updateArtboardPreviewButtons();
     updateExportUiHonesty();
     if (!window.SciBitmapFiji) { setFijiStatus('error', t('fijiBridgeFailed')); }
     else if (settings.fijiPath) { setFijiStatus('neutral', t('fijiConfiguredUntested')); }
     else { setFijiStatus('neutral', t('notConfigured')); }
-    maybeShowFijiGate();
     /* Paint and bind first. Loading jsx plus the first inspect used to block the first clicks. */
     var bootHost = function () {
       ensureHostScript()
@@ -4794,7 +4771,7 @@
     ['grayscale','invert','softBlur','sharpen'].forEach(function(k){byId(k).checked=r[k];});
     channelsToUi(r.channels);byId('channelView').value='merged';updateAdjustmentDisplay();
   }
-  function sourceStamp(p) { return window.PaperFigFileStamp.contentStamp(p); }
+  function sourceStamp(p, fresh) { return window.PaperFigFileStamp.contentStamp(p, fresh); }
   function stampOk(p, stored) { return window.PaperFigFileStamp.matches(p, stored); }
   /*
    * 0.8.1 provenance model
@@ -4924,7 +4901,8 @@
         var tiffInfo=Core.readMetadata(fs,path,window.require('buffer').Buffer);
         if(tiffInfo.samplesPerPixel>3)throw new Error(t('errTiffAlpha'));
         if(decodedFiles[key] && fs.existsSync(decodedFiles[key]))return loadImageElementFromPath(decodedFiles[key]);
-        if(!settings.fijiPath || !window.SciBitmapFiji || !window.SciBitmapFiji.runMacro)throw new Error(t('errTiffNeedsFiji'));
+        if(!settings.fijiPath){showFijiGate();throw new Error(t('errTiffNeedsFiji'));}
+        if(!window.SciBitmapFiji || !window.SciBitmapFiji.runMacro)throw new Error(t('fijiBridgeFailed'));
         var out=suggestPanelProxyOutPath(path),macro=writeTempMacro('setBatchMode(true);\nopen("'+escapeIjString(ijPath(path))+'");\ngetDimensions(w,h,c,z,t);\nif (c*z*t!=1 || (bitDepth!=24 && bitDepth!=8)) exit("Requires one RGB8 or Gray8 image");\nsaveAs("PNG", "'+escapeIjString(ijPath(out))+'");\nclose();\nprint("SCI_RGB_DECODE_OK");\n');
         return window.SciBitmapFiji.runMacro(settings.fijiPath,macro,null,{timeoutMs:180000,successMarker:'SCI_RGB_DECODE_OK'}).then(function(result){
           if(((result.stdout||'')+'\n'+(result.stderr||'')).indexOf('SCI_RGB_DECODE_OK')<0 || !fs.existsSync(out))throw new Error(t('errFijiDecode'));
@@ -4958,9 +4936,15 @@
     record.status=status;if(error)record.error=String(error);
     try{writeJsonFile(output+'.json', record);}catch(e){return ' · Record status could not be updated: '+e.message;}return '';
   }
+  var RGB_RECORD_RECOVERY='paperfig_rgb_record_recovery_v1';
+  function pendingRgbRecords(){try{return JSON.parse(localStorage.getItem(RGB_RECORD_RECOVERY)||'{}')||{};}catch(ignore){return {};}}
+  function rememberRgbRecord(output,record){try{var pending=pendingRgbRecords();pending[output]=record;localStorage.setItem(RGB_RECORD_RECOVERY,JSON.stringify(pending));}catch(ignore){}}
+  function clearRgbRecord(output){try{var pending=pendingRgbRecords();delete pending[output];localStorage.setItem(RGB_RECORD_RECOVERY,JSON.stringify(pending));}catch(ignore){}}
+  function recoverRgbRecords(){var pending=pendingRgbRecords(),output;for(output in pending){if(Object.prototype.hasOwnProperty.call(pending,output)){try{writeJsonFile(output+'.json',pending[output]);delete pending[output];}catch(ignore){}}}try{localStorage.setItem(RGB_RECORD_RECOVERY,JSON.stringify(pending));}catch(ignoreStore){}}
+  function finishRgbRecord(output,record){var warning=markRecord(output,record,'applied');if(warning){rememberRgbRecord(output,record);notice(warning,'error');}else clearRgbRecord(output);return warning;}
   function workflowApply(preview) {
     if(applyRunning||artboardPreviewRunning||liveGeomBusy||panelProxyRunning){notice(t('busyWait'),'error');return Promise.resolve(false);}
-    var opts,source,out,stamp,profile,key,record,prior,processed,t0,timings,tMark,ready,live,reused;
+    var opts,source,out,stamp,profile,key,record,prior,processed,t0,timings,tMark,ready,live,reused,imageReplaced=false,recordWarning='';
     if(preview){artboardPreviewRunning=true;updateArtboardPreviewButtons();}else setApplyRunning(true);
     try{opts=buildAdjustmentOpts(preview?{previewMaxEdge:ARTBOARD_PREVIEW_MAX_EDGE}:null);}catch(e){if(preview){artboardPreviewRunning=false;updateArtboardPreviewButtons();}else setApplyRunning(false);notice(e.message,'error');return Promise.resolve(false);}
     /* Prefer PNG for Apply speed unless user explicitly chose JPEG/TIFF. */
@@ -5017,9 +5001,9 @@
       });
     }).then(function(result){
       processed=result;
-      if(sourceStamp(source)!==stamp)throw new Error(t('errSourceChangedProcessing'));
+      if(sourceStamp(source,true)!==stamp)throw new Error(t('errSourceChangedProcessing'));
       timings.encode=timings.encode||(Date.now()-tMark);tMark=Date.now();
-      /* Sidecar after pixels exist but BEFORE relink is ok; keep thin. Relink first for UX? Prefer relink then sidecar. */
+      if(!preview)record=recipeSidecar(source,out,opts,profile,key);
       return applyStage(preview?'替换预览':'写回画板', preview?'Relink preview':'Relink artboard', 90, timings).then(function(){
         /* Upright crop geometry only on Apply — preview keeps old frame so Cancel can restore. */
         return lockedReplace(out,opts.rotate||0,false,false, preview ? null : geomOptsForCropReplace(opts,processed));
@@ -5029,6 +5013,7 @@
       var stageBits=[],hostBits,k;
       timings.relink=Date.now()-tMark;
       if(!preview){ assertAppliedLink(replaced, out); }
+      imageReplaced=true;
       hostBits=hostRelinkTimingBits(replaced, timings);
       hostBits.forEach(function(b){ stageBits.push(b); });
       for(k in timings){if(Object.prototype.hasOwnProperty.call(timings,k))stageBits.push(k+'='+timings[k]+'ms');}
@@ -5036,28 +5021,28 @@
         artboardPreviewOriginalPath=prior||source;artboardPreviewFile=out;artboardPreviewObjectKey=key;artboardPreviewActive=true;persistArtboardPreviewState();
         notice(t('artboardPreviewUpdated', { secs: secs, stages: stageBits.join(' ') }));
       }else{
-        if(!record){try{record=recipeSidecar(source,out,opts,profile,key);}catch(e){record=null;}}
+        if(record){recordWarning=finishRgbRecord(out,record);record=null;}
         rememberReplacementIdentity(replaced);key=lastObjectKey;
-        rememberRecipe(key,source,out,opts);clearArtboardPreviewState({keepFile:true});
+        try{rememberRecipe(key,source,out,opts);}catch(saveErr){recordWarning+=' · '+saveErr.message;}
+        clearArtboardPreviewState({keepFile:true});
         /* New linked file is baseline: clear crop UI, bust caches, show baked result (not old source). */
         invalidatePanelPreviewCache(source);
         invalidateDecodedImage(out);
         invalidateApplyReady();
         resetAdjustmentsAfterApply(true);
-        if(record){markRecord(out,record,'applied');record=null;}
         rerootAppliedBaseline(key,out);
         lastFingerprint=null;
         lastSourcePath=out;
         if(!seedPreviewFromProcessed(processed, replaced.info)){
           return refreshPanelPreviewAfterGeom().then(function(){
-            appliedStatus(t('appliedArtboard', { detail: secs+'s'+(reused?' · reused':'')+' · '+stageBits.join(' ')+' · Undo (Ctrl/Cmd+Z) · '+out }));
+            appliedStatus(t('appliedArtboard', { detail: secs+'s'+(reused?' · reused':'')+' · '+stageBits.join(' ')+' · Undo (Ctrl/Cmd+Z) · '+out+recordWarning }));
             return true;
           });
         }
-        appliedStatus(t('appliedArtboard', { detail: secs+'s'+(reused?' · reused':'')+' · '+stageBits.join(' ')+' · Undo (Ctrl/Cmd+Z) · '+out }));
+        appliedStatus(t('appliedArtboard', { detail: secs+'s'+(reused?' · reused':'')+' · '+stageBits.join(' ')+' · Undo (Ctrl/Cmd+Z) · '+out+recordWarning }));
       }
       return true;
-    }).catch(function(e){if(record)markRecord(out,record,'not-applied',e.message);notice((e&&e.message?e.message:String(e))+(out?t('outputIfCreated',{path:out}):''),'error');return false;}).then(function(ok){
+    }).catch(function(e){if(record){if(imageReplaced){record.status='applied';rememberRgbRecord(out,record);}else markRecord(out,record,'not-applied',e.message);}notice((e&&e.message?e.message:String(e))+(out?t('outputIfCreated',{path:out}):''),'error');return imageReplaced&&!preview;}).then(function(ok){
       if(preview){artboardPreviewRunning=false;updateArtboardPreviewButtons();}else setApplyRunning(false);return ok;
     });
   }
@@ -5140,28 +5125,32 @@
     catch(e){batchBusy=false;setApplyRunning(false);notice(t('batchReportFail', { msg: e.message }),'error');return;}
     report.skipped=review.rows.filter(function(r){return !r.valid||!r.check.checked;}).map(function(r){return {source:r.item.sourcePath,status:r.status,checked:r.check.checked};});
     rows.forEach(function(row){chain=chain.then(function(){
-      var output,record;
+      var output,record,replaced=false;
       if(batchStop){batchText(row,t('batchCancelled'));report.results.push({source:row.source,status:'cancelled'});return;}
       batchText(row,t('batchProcessing'));
       return Promise.resolve().then(function(){
-        if(sourceStamp(row.source)!==row.stamp)throw new Error(t('errSourceChangedReview'));
+        if(sourceStamp(row.source,true)!==row.stamp)throw new Error(t('errSourceChangedReview'));
         verifiedProfile(row.source,review.opts);output=suggestOutPath(row.source,review.opts.format);
         return processImageWithCanvas(row.source,output,review.opts);
       }).then(function(){
         if(batchStop)throw new Error(t('errCancelledReplace'));
-        if(sourceStamp(row.source)!==row.stamp)throw new Error(t('errSourceChangedProcessing'));
+        if(sourceStamp(row.source,true)!==row.stamp)throw new Error(t('errSourceChangedProcessing'));
         record=recipeSidecar(row.source,output,review.opts,row.profile,row.item.objectKey);
         return evalHost('replaceBatchBitmap('+quoteExtendScript(review.token)+','+row.index+','+quoteExtendScript(output)+')');
       }).then(parseHostResult).then(function(result){
         assertAppliedLink(result, output);
-        rememberRecipe(result.info.objectKey,row.source,output,review.opts);markRecord(output,record,'applied');row.valid=false;batchText(row,t('batchDone'));report.results.push({source:row.source,output:output,status:'applied'});
-      }).catch(function(e){if(record)markRecord(output,record,'not-applied',e.message);batchText(row,batchStop?t('batchCancelledMsg',{msg:localizeMsg(e.message)}):t('batchFailed',{msg:localizeMsg(e.message)}));report.results.push({source:row.source,output:output||null,status:batchStop?'cancelled':'failed',error:e.message});});
+        replaced=true;
+        var warning=finishRgbRecord(output,record);
+        try{rememberRecipe(result.info.objectKey,row.source,output,review.opts);}catch(e){warning+=' · '+e.message;}
+        row.valid=false;batchText(row,t('batchDone')+warning);report.results.push({source:row.source,output:output,status:'applied',warning:warning});
+      }).catch(function(e){if(replaced){record.status='applied';rememberRgbRecord(output,record);report.results.push({source:row.source,output:output,status:'applied',warning:e.message});notice(e.message,'error');return;}if(record)markRecord(output,record,'not-applied',e.message);batchText(row,batchStop?t('batchCancelledMsg',{msg:localizeMsg(e.message)}):t('batchFailed',{msg:localizeMsg(e.message)}));report.results.push({source:row.source,output:output||null,status:batchStop?'cancelled':'failed',error:e.message});});
     }).then(function(){window.require('fs').writeFileSync(reportPath,JSON.stringify(report,null,2),'utf8');});});
     return chain.then(function(){appliedStatus(t('batchFinished', { done: report.results.filter(function(r){return r.status==='applied';}).length, total: rows.length, path: reportPath }));}).catch(function(e){notice(t('batchStopped', { msg: e.message, path: reportPath }),'error');}).then(function(){
       return evalHost('releaseBitmapBatch('+quoteExtendScript(review.token)+')');
     }).then(function(){batchReview=null;batchBusy=false;setApplyRunning(false);lastFingerprint=null;return refreshPanelPreviewAfterGeom();});
   }
   function initWorkflow() {
+    recoverRgbRecords();
     /* Fresh remapping defaults on every panel open; ignore settings.channels. */
     channelsToUi(W.channelsDefault());byId('channelView').value='merged';
     if(!localStorage.getItem(PRESETS_KEY)) { try {var old=JSON.parse(localStorage.getItem('sci_bitmap_adjustment_preset')||'null');if(old)storePresets([{name:'Imported 0.3 preset',recipe:W.recipe(old)}]);}catch(ignore){} }
@@ -5231,6 +5220,7 @@
     if(!window.SciScientificPanel)return;
     science=window.SciScientificPanel.create({
       byId:byId,extensionPath:extensionPath,fiji:function(){return byId('fijiPath').value.trim();},
+      requireFiji:showFijiGate,
       info:function(){return lastSelectedItem;},busy:function(){return applyRunning||artboardPreviewRunning||panelProxyRunning||liveGeomBusy;},
       setBusy:setApplyRunning,notice:notice,footerStatus:footerStatus,appliedStatus:appliedStatus,count:function(){return lastBitmapCount;},capture:captureOperationLock,
       host:function(script){return ensureHostScript().then(function(){return evalHost(script);}).then(parseHostResult);},

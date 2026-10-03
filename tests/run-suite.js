@@ -11,7 +11,8 @@ const always = [
   'tests/raw-service.js',
   'tests/calibration-guard.js',
   'tests/interaction-policy.js',
-  'tests/record-io.js'
+  'tests/record-io.js',
+  'tests/advanced-tabs.js'
 ];
 const optional = [
   ['tests/workflow.js', 'sharp'],

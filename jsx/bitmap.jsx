@@ -17,7 +17,7 @@
  *   the bitmap item itself without dissolving the parent group.
  */
 
-var SCI_BITMAP_HOST_VERSION = "1.0.0";
+var SCI_BITMAP_HOST_VERSION = "1.1.0";
 if (typeof sciBitmapIdentityRegistry === "undefined") {
     var sciBitmapIdentityRegistry = { docs: [], items: [], epoch: String(new Date().getTime()) };
 }

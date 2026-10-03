@@ -17,7 +17,7 @@ const html=fs.readFileSync(path.join(root,'client/index.html'),'utf8');
 for(const m of html.matchAll(/<(input|select|button|canvas|div|output|span|p)[^>]*\bid="([^"]+)"[^>]*>/g)){const e=element(m[2]);e.type=(/type="([^"]+)"/.exec(m[0])||[])[1]||'';e.min=(/min="([^"]*)"/.exec(m[0])||[])[1]||'';e.max=(/max="([^"]*)"/.exec(m[0])||[])[1]||'';e.checked=/\bchecked\b/.test(m[0]);e.value=(/value="([^"]*)"/.exec(m[0])||[])[1]||'';}
 element('format').options=['TIFF','PNG','JPEG'].map(x=>({value:x,text:x}));
 function emit(id,n,event={}){for(const f of callbacks[id+':'+n]||[])f(Object.assign({preventDefault(){},target:element(id)},event));}
-const storage={paperfig_ui_lang:'en'};let failWrite=false,writeDelay=0;
+const storage={paperfig_ui_lang:'en',paperfig_show_raw_v1:'1'};let failWrite=false,writeDelay=0;
 const fsMock=Object.assign({},fs,{writeFile(p,b,cb){setTimeout(()=>{if(failWrite){cb(new Error('simulated disk failure'));}else fs.writeFile(p,b,cb);},writeDelay);}});
 const doc={name:'mock.ai',fullName:{fsName:path.join(out,'mock.ai')},selection:[]};
 const allPlaced=[];function placed(id,p){const it={uuid:id,name:id,typename:'PlacedItem',embedded:false,file:{fsName:p,name:path.basename(p),exists:true,length:12},width:200,height:100,position:[0,100],geometricBounds:[0,100,200,0],matrix:{mValueA:1,mValueB:0,mValueC:0,mValueD:1,mValueTX:0,mValueTY:0},relink(f){this.file={fsName:f.fsName||f,name:path.basename(f.fsName||f),exists:true,length:12};},rotate(angle){this.matrix.mValueA=Math.cos(angle*Math.PI/180);this.matrix.mValueB=Math.sin(angle*Math.PI/180);},resize(){},remove(){/* place-replace mock keeps the same object */},move(){},selected:false,translate(){}};allPlaced.push(it);return it;}
@@ -47,7 +47,7 @@ const host={app:{documents:[doc],activeDocument:doc,redraw(){},getIdentityMatrix
 const Core=require(path.join(root,'client/bitmap-core.js'));
 let init,errors=[];const nodeRequire=m=>m==='fs'?fsMock:m==='os'?{tmpdir:()=>out,homedir:()=>out}:require(m);
 const ctx={console,Image:BlobImage,Blob,FileReader:TestFileReader,Uint8ClampedArray,Float32Array,Buffer,Promise,Date,Math,Number,String,Object,Array,JSON,isFinite,parseFloat,parseInt,setTimeout,clearTimeout,setInterval,clearInterval,localStorage:{getItem:k=>storage[k]==null?null:storage[k],setItem:(k,v)=>{storage[k]=v;},removeItem:k=>{delete storage[k];}},SystemPath:{EXTENSION:'ext'},CSInterface:function(){this.getSystemPath=()=>root;this.evalScript=(s,cb)=>{setTimeout(()=>{try{cb(String(vm.runInContext(s,host)));}catch(e){errors.push(e.message);cb('EvalScript error.');}},0);}},document:{getElementById:element,querySelector(sel){if(String(sel).indexOf('[data-tab].active')>=0)return {getAttribute(){return 'adjust';}};return null;},createElement(t){return t==='canvas'?createCanvas(1,1):element('new-'+Math.random());},querySelectorAll(){return Object.values(els).filter(x=>x.type||x.id==='format'||x.id==='lut');},addEventListener(n,f){if(n==='DOMContentLoaded')init=f;}},window:{URL:{createObjectURL(blob){const id='blob:test-'+(++blobId);blobs.set(id,blob);return id;},revokeObjectURL(id){blobs.delete(id);}},require:nodeRequire,SciBitmapCore:Core,SciBitmapWorkflow:require(path.join(root,'client/bitmap-workflow.js')),SciBitmapFiji:{},requestAnimationFrame:f=>setTimeout(f,0),addEventListener(){},removeEventListener(){},confirm(){return true;}}};
-vm.createContext(ctx);ctx.window.SciScientific=require(path.join(root,'client/scientific-core.js'));['file-stamp.js','i18n.js','raw-bridge.js','histogram-view.js','interaction-policy.js','scientific-panel.js','bitmap-output.js','bitmap-panel-marquee.js'].forEach(f=>vm.runInContext(fs.readFileSync(path.join(root,'client',f),'utf8'),ctx));ctx.PaperFigI18n=ctx.window.PaperFigI18n;if(ctx.PaperFigI18n){ctx.PaperFigI18n.setVersion(require(path.join(root,'package.json')).version);ctx.PaperFigI18n.setLang('en');}
+vm.createContext(ctx);ctx.window.SciScientific=require(path.join(root,'client/scientific-core.js'));['file-stamp.js','i18n.js','raw-bridge.js','histogram-view.js','interaction-policy.js','scientific-panel.js','bitmap-output.js','bitmap-panel-marquee.js'].forEach(f=>vm.runInContext((f==='scientific-panel.js'?fs.readFileSync(path.join(root,'client',f),'utf8').replace('init();return {active:active','init();return {revealScalePresetsFolder:revealScalePresetsFolder,active:active'):fs.readFileSync(path.join(root,'client',f),'utf8')),ctx));ctx.PaperFigI18n=ctx.window.PaperFigI18n;if(ctx.PaperFigI18n){ctx.PaperFigI18n.setVersion(require(path.join(root,'package.json')).version);ctx.PaperFigI18n.setLang('en');}
 let source=fs.readFileSync(path.join(root,'client/bitmap-panel.js'),'utf8');
 source=source.replace("  document.addEventListener('DOMContentLoaded', init);",`  window.__test={science:function(){return science;},writeCrop:writeCropRect,crop:readCropRect,prepareBatch:prepareBatch,runBatch:runBatch,stopBatch:function(){batchStop=true;},batch:function(){return batchReview;},currentRecipe:currentRecipe,loadWorkflowImage:loadWorkflowImage,inspectSelection:inspectSelection,applyPipeline:applyPipeline,runArtboardPreview:runArtboardPreview,cancelArtboardPreview:cancelArtboardPreview,renderPreviewCanvas:renderPreviewCanvas,samplePreviewNeighborhood:samplePreviewNeighborhood,stop:function(){clearInterval(pollTimer);},state:function(){return {previewBase:previewBase,previewBaseDrag:previewBaseDrag,lastObjectKey:lastObjectKey,applyRunning:applyRunning,artboardPreviewRunning:artboardPreviewRunning,artboardPreviewActive:artboardPreviewActive,original:artboardPreviewOriginalPath,file:artboardPreviewFile,cache:panelPreviewCacheBytes,sourceImageSize:sourceImageSize};}};\n  document.addEventListener('DOMContentLoaded', init);`);
 vm.runInContext(source,ctx);const api=ctx.window.__test;
@@ -61,7 +61,7 @@ const fixture=require('./raw-fixture'),rawPath=path.join(out,'raw.ome.tif');fs.w
 await test('Raw channel load builds full precision histogram and source preview',async()=>{
  element('rawSource').value=rawPath;element('rawSeries').value=0;element('rawZ').value=0;element('rawT').value=0;
  await api.science().load(JSON.parse(host.inspectSelectedBitmaps()).items[0],rawPath,{series:0,z:0,t:0});
- assert(api.science().active());assert.equal(api.science().state().dataset.bits,16);assert.equal(api.science().state().dataset.histograms[0][65535],1);assert.equal(api.state().sourceImageSize.width,4);
+ assert(api.science().active());storage.paperfig_show_raw_v1='0';assert.equal(api.science().active(),false);storage.paperfig_show_raw_v1='1';assert.equal(api.science().active(),true);assert.equal(api.science().state().dataset.bits,16);assert.equal(api.science().state().dataset.histograms[0][65535],1);assert.equal(api.state().sourceImageSize.width,4);
 });
 await test('Raw Apply exports a display derivative with gamma/plane/statistics log; repeated Apply is stable',async()=>{
  element('format').value='TIFF';await api.applyPipeline();assert.notEqual(a.file.fsName,aPath);let rec=JSON.parse(fs.readFileSync(a.file.fsName+'.json','utf8'));assert.equal(rec.role,'display-derivative');assert.equal(rec.status,'applied');assert.equal(rec.source,rawPath);assert.equal(rec.bits,16);assert.equal(rec.nonlinear.gamma,1);assert.equal(rec.statistics[0].sensorMaximum,1);let bytes=fs.readFileSync(a.file.fsName);await api.applyPipeline();assert.deepEqual(fs.readFileSync(a.file.fsName),bytes);assert(api.science().active());
@@ -151,6 +151,22 @@ await test('Named scale file preset saves calibration+style and applies to anoth
  if(element('scaleIncludeText'))assert.equal(element('scaleIncludeText').checked,false);
  api.science().deleteNamedScalePreset('MicroscopeX-40x');
  assert(!require('fs').existsSync(presetPath));
+});
+await test('Raw batch record failure after relink remains applied and is recoverable',async()=>{
+ const target=placed('RAW-RECORD-FAIL',rawPath);doc.selection=[target];await api.inspectSelection({quiet:true});
+ element('rawSource').value=rawPath;element('rawSeries').value=0;element('rawZ').value=0;element('rawT').value=0;
+ await api.science().load(JSON.parse(host.inspectSelectedBitmaps()).items[0],rawPath,{series:0,z:0,t:0});
+ api.science().lock();await api.prepareBatch();
+ const writer=ctx.window.PaperFigOutput.writeJsonAtomic;
+ ctx.window.PaperFigOutput.writeJsonAtomic=(p,rec)=>{if(rec.schema==='sci-raw-display'&&rec.status==='applied')throw new Error('raw final record failure');return writer(p,rec);};
+ try{await api.runBatch();assert.notEqual(target.file.fsName,rawPath);assert(/1\/1 applied/.test(element('footerStatus').textContent));const pending=JSON.parse(storage.paperfig_raw_record_recovery_v1);assert(pending.some(x=>x.output===target.file.fsName&&x.rec.status==='applied'));}
+ finally{ctx.window.PaperFigOutput.writeJsonAtomic=writer;}
+});
+await test('Scale folder opener passes a special-character path as one argument',async()=>{
+ const originalRequire=ctx.window.require,home=path.join(out,'home " ; $(touch ignored)');fs.mkdirSync(home,{recursive:true});let call;
+ ctx.window.require=m=>m==='os'?{homedir:()=>home,platform:()=>'linux',tmpdir:()=>out}:m==='child_process'?{spawn:(cmd,args,opts)=>{call={cmd,args,opts};return {on(){}};}}:originalRequire(m);
+ try{api.science().revealScalePresetsFolder();assert.equal(call.cmd,'xdg-open');assert.equal(call.args.length,1);assert.equal(call.args[0],path.join(home,'paperfig','scales'));assert.equal(fs.existsSync(path.join(out,'ignored')),false);}
+ finally{ctx.window.require=originalRequire;}
 });
 assert.deepEqual(errors,[]);console.log('\n'+n+' integration simulations passed (real Canvas pixels; mocked Adobe host).');
 api.stop();fs.rmSync(out,{recursive:true,force:true});process.exit(0);

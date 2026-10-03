@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.0.0</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.1.0</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -88,15 +88,20 @@
     </div>
 
     <nav class="tab-bar" role="tablist" data-i18n-aria="tabsAria" aria-label="面板分区">
-      <button type="button" class="tab-btn active" role="tab" data-tab="adjust" aria-selected="true" data-i18n="tabAdjust" data-i18n-title="tabAdjustTitle" title="RGB8 亮度、色调、颜色、滤镜、预设">调整</button>
-      <button type="button" class="tab-btn" role="tab" data-tab="raw" aria-selected="false" data-i18n="tabRaw" data-i18n-title="tabRawTitle" title="原始通道、直方图、加载">原始</button>
-      <button type="button" class="tab-btn" role="tab" data-tab="scale" aria-selected="false" data-i18n="tabScale" data-i18n-title="tabScaleTitle" title="标定与矢量标尺">标尺</button>
-      <button type="button" class="tab-btn" role="tab" data-tab="geometry" aria-selected="false" data-i18n="tabGeom" data-i18n-title="tabGeomTitle" title="旋转、翻转、裁剪、放大插图">几何</button>
-      <button type="button" class="tab-btn" role="tab" data-tab="export" aria-selected="false" data-i18n="tabExport" data-i18n-title="tabExportTitle" title="导出、批处理、Fiji 设置">导出</button>
+      <div class="tab-tools" role="presentation">
+        <button type="button" class="tab-btn" role="tab" data-tab="adjust" aria-selected="false" data-i18n="tabAdjust" data-i18n-title="tabAdjustTitle" title="RGB8 亮度、色调、颜色、滤镜、预设">调整</button>
+        <button type="button" class="tab-btn active" role="tab" data-tab="scale" aria-selected="true" data-i18n="tabScale" data-i18n-title="tabScaleTitle" title="标定与矢量标尺">标尺</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="geometry" aria-selected="false" data-i18n="tabGeom" data-i18n-title="tabGeomTitle" title="旋转、翻转、拉平">几何</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="crop" aria-selected="false" data-i18n="tabCrop">裁剪</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="inset" aria-selected="false" data-i18n="tabInset">放大插图</button>
+        <button type="button" class="tab-btn hidden" role="tab" data-tab="raw" hidden aria-selected="false" data-i18n="tabRaw" data-i18n-title="tabRawTitle" title="原始通道、直方图、加载">原始</button>
+        <button type="button" class="tab-btn hidden" role="tab" data-tab="export" hidden aria-selected="false" data-i18n="tabExport" data-i18n-title="tabExportTitle" title="导出、批处理">导出</button>
+      </div>
+      <button type="button" class="tab-btn tab-settings-btn" role="tab" data-tab="settings" aria-selected="false" data-i18n-aria="tabSettings" aria-label="设置" data-i18n-title="tabSettings" title="设置"><span aria-hidden="true">⚙</span></button>
     </nav>
 
     <div class="tab-panes">
-      <div id="tab-adjust" class="tab-pane active" role="tabpanel" data-pane="adjust">
+      <div id="tab-adjust" class="tab-pane" role="tabpanel" data-pane="adjust" hidden>
         <details class="compact-help"><summary><span data-i18n="helpEdit">&#x7F16;&#x8F91;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintSourceOrient">面板编辑使用<strong>源文件朝向</strong>。画板预览保留 Illustrator 旋转/翻转。取消可恢复原链接；未完成的预览重开后可恢复。</p><p class="hint-line" data-i18n="hintEmbedded">嵌入图：单次 Apply 生成展示 PNG 并转为链接，无法恢复原始显微数据。</p><p id="undoHint" class="hint-line" data-i18n-html="hintUndo">滑块只改面板预览。点 <strong>Apply</strong> 才写出全分辨率文件并重新链接画板。撤销用 Illustrator <strong>Ctrl/Cmd+Z</strong>。</p></details><div class="group" id="rgbControls">
           <section aria-labelledby="adjustHeading">
             <h2 id="adjustHeading" data-i18n="adjustments">展示图调整</h2>
@@ -213,7 +218,7 @@
         </section>
       </div>
 
-      <div id="tab-scale" class="tab-pane" role="tabpanel" data-pane="scale" hidden>
+      <div id="tab-scale" class="tab-pane active" role="tabpanel" data-pane="scale">
         <section class="group" id="scaleGroup">
           <h2 data-i18n="scaleHeading">矢量标尺</h2>
           <label><span data-i18n="calibration">标定</span><select id="scaleMethod"><option value="metadata" data-i18n="calMeta">原始元数据 · µm/px</option><option value="field" data-i18n="calField">已知全图视场宽</option><option value="two-point" data-i18n="calTwoPoint">已有水平标尺两端</option></select></label>
@@ -258,13 +263,17 @@
           <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintRotate">旋转/翻转立即作用于画板（非像素重采样）。每次实时旋转后角度清零，避免 Apply 再转一次。</p><p class="hint-line" data-i18n="straightenLineHint">点「拉平水平」后在预览上拖一条应对齐水平的线；松手即按该线角度旋转。Esc 取消。</p></details>
         </section>
 
-        <section class="group marquee-mode-group" aria-labelledby="marqueeModeHeading">
+
+      </div>
+
+      <div id="tab-crop" class="tab-pane" role="tabpanel" data-pane="crop" hidden>
+        <section class="group marquee-mode-group hidden" aria-hidden="true" aria-labelledby="marqueeModeHeading">
           <h2 id="marqueeModeHeading" data-i18n="marqueeModeHeading">预览框选工具</h2>
           <div class="button-row marquee-mode-row" role="group" data-i18n-aria="marqueeModeAria" aria-label="框选工具">
             <button type="button" id="marqueeModeCropBtn" class="primary" data-i18n="marqueeModeCrop" data-i18n-title="marqueeModeCropTitle" title="预览拖拽只编辑裁剪框（放大框隐藏）" aria-pressed="true">裁剪</button>
             <button type="button" id="marqueeModeInsetBtn" data-i18n="marqueeModeInset" data-i18n-title="marqueeModeInsetTitle" title="预览拖拽只编辑放大框（裁剪框隐藏）" aria-pressed="false">放大框</button>
           </div>
-          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintMarqueeMode">同时只能用一种框：裁剪或放大框。互相切换会清掉另一种选区。离开「几何」页也会退出放大框并清掉该区域。放大插图请点顶部「应用」，没有单独的生成按钮。</p></details>
+          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintMarqueeMode">同时只能用一种框：裁剪或放大框。互相切换会清掉另一种选区。离开「放大插图」页也会退出放大框并清掉该区域。放大插图请点顶部「应用」，没有单独的生成按钮。</p></details>
         </section>
 
         <section class="group" aria-labelledby="cropHeading">
@@ -305,6 +314,10 @@
           <button type="button" id="cropFullBtn" class="secondary-full" data-i18n="useFull">使用全图</button>
         </section>
 
+
+      </div>
+
+      <div id="tab-inset" class="tab-pane" role="tabpanel" data-pane="inset" hidden>
         <section class="group" id="insetGroup" aria-labelledby="insetHeading">
           <h2 id="insetHeading" data-i18n="insetHeading">放大插图</h2>
           <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintInset">在预览上框选区域（与裁剪同一套<strong>文件像素</strong>坐标）。也可在画板上画矩形，与图像一起选中后点「读取画板矩形」。框选完成后点上方「应用」放置不重采样的放大子图、原图矢量框，以及可选引线。已标定则按同一 µm/px 在插图上加标尺。</p></details>
@@ -418,6 +431,16 @@
           </label>
         </section>
 
+
+
+      </div>
+
+      <div id="tab-settings" class="tab-pane" role="tabpanel" data-pane="settings" hidden>
+        <section class="group" aria-labelledby="advancedHeading">
+          <h2 id="advancedHeading" data-i18n="advancedFeatures">高级功能</h2>
+          <label class="advanced-feature-toggle"><input id="showRawFeature" type="checkbox"> <span data-i18n="showRawFeature">显示原始通道页</span></label>
+          <label class="advanced-feature-toggle"><input id="showExportFeature" type="checkbox"> <span data-i18n="showExportFeature">显示导出与批处理页</span></label>
+        </section>
         <details id="fijiSetupDetails" class="group setup">
           <summary data-i18n="fijiSetup">Fiji 设置</summary>
           <label for="fijiPath" data-i18n="fijiPathLabel">Fiji 可执行文件或应用目录</label>
@@ -432,7 +455,6 @@
           </div>
           <div id="fijiStatus" class="status neutral" role="status" data-i18n="notConfigured">未配置</div>
         </details>
-
       </div>
     </div>
     <footer class="panel-footer">
@@ -440,11 +462,11 @@
       <span id="footerStatus" class="footer-status" role="status" aria-live="polite"></span>
     </footer>
 
-  <!-- First-run Fiji setup gate (shown when fijiPath empty and not skipped) -->
+  <!-- Shown only when a selected file needs Fiji and no path is configured. -->
   <div id="fijiGate" class="fiji-gate hidden" role="dialog" aria-modal="true" aria-labelledby="fijiGateTitle" hidden>
     <div class="fiji-gate-card">
       <h2 id="fijiGateTitle" data-i18n="fijiGateTitle">配置 Fiji</h2>
-      <p class="fiji-gate-lead" data-i18n="fijiGateLead">首次使用请先设置 Fiji/ImageJ 路径（原始通道、部分 TIFF 与 Bio-Formats 需要）。普通 RGB JPG/PNG 可不配置。</p>
+      <p class="fiji-gate-lead" data-i18n="fijiGateLead">当前文件需要 Fiji 才能读取。请设置 Fiji/ImageJ 路径，保存后重试此操作。普通图片无需配置。</p>
       <label for="fijiGatePath" data-i18n="fijiGatePathLabel">Fiji 可执行文件或应用目录</label>
       <div class="path-row">
         <input id="fijiGatePath" type="text" spellcheck="false" data-i18n-placeholder="fijiGatePh" placeholder="例如 /Applications/Fiji.app 或 ImageJ-win64.exe">
@@ -456,18 +478,36 @@
       </div>
       <div id="fijiGateStatus" class="status neutral" role="status" data-i18n="notConfigured">未配置</div>
       <div class="fiji-gate-actions">
-        <button type="button" id="fijiGateSave" class="primary" data-i18n="saveContinue">保存并继续</button>
-        <button type="button" id="fijiGateSkip" data-i18n="skipRgb">稍后（仅 RGB）</button>
+        <button type="button" id="fijiGateSave" class="primary" data-i18n="saveContinue">保存路径</button>
+        <button type="button" id="fijiGateSkip" data-i18n="skipRgb">稍后设置</button>
       </div>
-      <p class="hint-line" data-i18n-html="fijiGateHint">之后可在 <strong>导出 → Fiji 设置</strong> 中修改。</p>
+      <p class="hint-line" data-i18n-html="fijiGateHint">之后可在 <strong>设置 → Fiji 设置</strong> 中修改。</p>
     </div>
   </div>
 
   </main>
   <script>
   (function () {
-    var KEY = 'sci_bitmap_active_tab';
+    var FEATURES = { raw: { key: 'paperfig_show_raw_v1', input: 'showRawFeature' }, export: { key: 'paperfig_show_export_v1', input: 'showExportFeature' } };
+    function featureEnabled(name) {
+      try { return localStorage.getItem(FEATURES[name].key) === '1'; } catch (ignore) { return false; }
+    }
+    function setFeature(name, enabled, notify) {
+      var spec = FEATURES[name], tab = document.querySelector('.tab-bar [data-tab="' + name + '"]');
+      var input = document.getElementById(spec.input);
+      if (input) { input.checked = enabled; }
+      if (tab) {
+        tab.classList.toggle('hidden', !enabled);
+        if (enabled) { tab.removeAttribute('hidden'); }
+        else { tab.setAttribute('hidden', ''); }
+      }
+      if (!enabled && tab && tab.classList.contains('active')) { activate('scale'); }
+      if (notify) {
+        try { document.dispatchEvent(new CustomEvent('paperfig-feature-visibility', { detail: { feature: name, enabled: enabled } })); } catch (ignoreEvt) {}
+      }
+    }
     function activate(name) {
+      if (FEATURES[name] && !featureEnabled(name)) { name = 'scale'; }
       var tabs = document.querySelectorAll('.tab-bar [data-tab]');
       var panes = document.querySelectorAll('.tab-pane');
       var i, tab, pane, match;
@@ -484,24 +524,29 @@
         if (match) { pane.removeAttribute('hidden'); }
         else { pane.setAttribute('hidden', ''); }
       }
-      try { localStorage.setItem(KEY, name); } catch (ignore) {}
       try {
         document.dispatchEvent(new CustomEvent('paperfig-tab', { detail: { tab: name } }));
       } catch (ignoreEvt) {}
     }
     function boot() {
       var tabs = document.querySelectorAll('.tab-bar [data-tab]');
-      var i, saved = null;
+      var i;
       for (i = 0; i < tabs.length; i++) {
         tabs[i].addEventListener('click', function () {
           activate(this.getAttribute('data-tab'));
         });
       }
-      try { saved = localStorage.getItem(KEY); } catch (ignore) {}
-      if (!saved || !document.querySelector('.tab-pane[data-pane="' + saved + '"]')) {
-        saved = 'adjust';
-      }
-      activate(saved);
+      Object.keys(FEATURES).forEach(function (name) {
+        var input = document.getElementById(FEATURES[name].input);
+        setFeature(name, featureEnabled(name), false);
+        if (input) {
+          input.addEventListener('change', function () {
+            try { localStorage.setItem(FEATURES[name].key, input.checked ? '1' : '0'); } catch (ignoreStore) {}
+            setFeature(name, input.checked, true);
+          });
+        }
+      });
+      activate('scale');
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', boot);

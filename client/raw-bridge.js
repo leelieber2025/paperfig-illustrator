@@ -5,13 +5,18 @@
   var JOB_TIMEOUT_MS = 180000;
   var NATIVE_TIFF_MAX = 268435456;
 
-  function create(extensionPath, getFiji) {
+  function create(extensionPath, getFiji, requireFiji) {
     var fs = root.require('fs');
     var path = root.require('path');
     var os = root.require('os');
     var cp = root.require('child_process');
     var service = null;
     var queue = Promise.resolve();
+
+    function missingFiji(message) {
+      if (typeof requireFiji === 'function') { requireFiji(); }
+      return new Error(message);
+    }
 
     /* Recursive best-effort removal (0.8.1: also removes nested data-* dirs). */
     function cleanup(dir) {
@@ -146,11 +151,11 @@
           var st = fs.statSync(source);
           if (st.size <= NATIVE_TIFF_MAX && /\.tiff?$/i.test(source)) {
             return readNative(source, req).catch(function (nativeError) {
-              if (!getFiji()) { throw new Error(nativeError.message + ' · Configure Fiji + Bio-Formats for this layout.'); }
+              if (!getFiji()) { throw missingFiji(nativeError.message + ' · Configure Fiji + Bio-Formats for this layout.'); }
               return submit(req);
             });
           }
-          if (!getFiji()) { throw new Error('Configure Fiji for raw data'); }
+          if (!getFiji()) { throw missingFiji('Configure Fiji for raw data'); }
           return submit(req);
         });
       };

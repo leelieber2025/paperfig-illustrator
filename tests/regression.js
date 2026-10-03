@@ -238,7 +238,7 @@ assert(/exifOrientationTransform/.test(panel));
    assert(/anyLevels/.test(wf)||/levelsTouched\(cs\)/.test(wf));
    assert(/autoLevelsPerChannelFromPreview/.test(panel));
    assert(new RegExp('SCI_BITMAP_HOST_VERSION = "'+pkgVer+'"').test(host));
-   assert(pkgVer==='1.0.0');
+   assert(pkgVer==='1.1.0');
    const releaseZip = require(path.join(root, 'scripts/release-name')).releaseZip(pkgVer);
    const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
    const installDoc = fs.readFileSync(path.join(root, 'INSTALL.md'), 'utf8');
@@ -395,7 +395,7 @@ test('0.10.0 color picker close-race guard; default channel swatches sync+CSS',(
   assert(!/if \(isColorInput\(e\.target\)\) \{ intercept\(e\); \}/.test(picker), 'click must not call intercept toggle');
   assert(/PaperFigColorPicker\.sync\(byId\('ch'\+i\+'Color'\)\)/.test(panel), 'channelsToUi paints swatches');
   assert(/-webkit-appearance:\s*none/.test(css) && /::-webkit-color-swatch/.test(css), 'CSS shows JS background as swatch');
-  assert(/PANEL_VERSION = '1\.0\.0'/.test(panel));
+  assert(new RegExp("PANEL_VERSION = '" + pkgVer.replace(/\./g, '\\.') + "'").test(panel));
   assert(/\.pf-color-preset[\s\S]*?background-image:\s*none/.test(css), 'Fiji preset buttons clear global button gradient');
   assert(/backgroundImage\s*=\s*'none'|backgroundImage\s*=\s*"none"/.test(picker), 'JS clears background-image for solid Fiji presets');
   assert(!/addEventListener\('mousedown',\s*function\s*\([^)]*\)\s*\{\s*e\.stopPropagation\(\);\s*\},\s*true\)/.test(picker), 'popup must not capture-stopPropagation (blocks Fiji preset clicks)');

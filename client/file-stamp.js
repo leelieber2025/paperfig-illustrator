@@ -16,7 +16,7 @@
     var fs = req('fs');
     var st = fs.statSync(filePath);
     var mtime = st.mtimeMs != null ? Number(st.mtimeMs) : Number(new Date(st.mtime).getTime());
-    return { size: Number(st.size), mtime: mtime };
+    return { size: Number(st.size), mtime: mtime, ctime: Number(st.ctimeMs != null ? st.ctimeMs : new Date(st.ctime).getTime()), ino: st.ino, dev: st.dev };
   }
 
   function hashFdSync(fs, crypto, fd) {
@@ -29,20 +29,26 @@
     return 'sha256:' + hash.digest('hex');
   }
 
-  function remember(filePath, size, mtime, stamp) {
-    cache[filePath] = { size: size, mtime: mtime, stamp: stamp };
+  function sameFile(a, b) {
+    return a.size === b.size && a.mtime === b.mtime && a.ctime === b.ctime && a.ino === b.ino && a.dev === b.dev;
+  }
+
+  function remember(filePath, times, stamp) {
+    cache[filePath] = { size: times.size, mtime: times.mtime, ctime: times.ctime, ino: times.ino, dev: times.dev, stamp: stamp };
     return stamp;
   }
 
-  function contentStamp(filePath) {
+  function contentStamp(filePath, fresh) {
     var fs = req('fs');
     var crypto = req('crypto');
     var times = fileTimes(filePath);
     var hit = cache[filePath];
-    if (hit && hit.size === times.size && hit.mtime === times.mtime) { return hit.stamp; }
+    if (!fresh && hit && sameFile(hit, times)) { return hit.stamp; }
     var fd = fs.openSync(filePath, 'r');
     try {
-      return remember(filePath, times.size, times.mtime, hashFdSync(fs, crypto, fd));
+      var stamp = hashFdSync(fs, crypto, fd);
+      if (!sameFile(times, fileTimes(filePath))) { throw new Error('Source changed while hashing'); }
+      return remember(filePath, times, stamp);
     } finally {
       fs.closeSync(fd);
     }
@@ -64,7 +70,7 @@
         reject(err);
         return;
       }
-      if (hit && hit.size === times.size && hit.mtime === times.mtime) {
+      if (hit && sameFile(hit, times)) {
         if (onProgress) { onProgress({ phase: 'read', done: times.size, total: times.size, pct: 100 }); }
         resolve(hit.stamp);
         return;
@@ -77,7 +83,10 @@
         function finish(err, stamp) {
           fs.close(fd, function () {
             if (err) { reject(err); return; }
-            resolve(remember(filePath, times.size, times.mtime, stamp));
+            try {
+              if (!sameFile(times, fileTimes(filePath))) { throw new Error('Source changed while hashing'); }
+              resolve(remember(filePath, times, stamp));
+            } catch (changed) { reject(changed); }
           });
         }
         function readChunk() {
@@ -118,7 +127,7 @@
     if (stored == null || stored === '') { return 'missing'; }
     var text = String(stored);
     if (text.indexOf('sha256:') === 0) {
-      return contentStamp(filePath) === text ? 'match' : 'changed';
+      return contentStamp(filePath, true) === text ? 'match' : 'changed';
     }
     if (isLegacyStamp(text)) { return 'legacy'; }
     return 'changed';

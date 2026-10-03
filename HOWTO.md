@@ -1,6 +1,6 @@
 # How to use PaperFig / 使用说明
 
-**Version 1.0.0** · Adobe Illustrator CEP panel · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
+**Version 1.1.0** · Adobe Illustrator CEP panel · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
 
 English, then the matching Chinese.
 
@@ -23,11 +23,11 @@ Manual copy and `PlayerDebugMode`: [`INSTALL.md`](INSTALL.md).
 
 Quit and reopen Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer reads **1.0.0**. Select a linked bitmap. The preview shows that image.
 
-退出并重新打开 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.0.0**。选中链接的位图后，预览显示该图。
+退出并重新打开 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.1.0**。选中链接的位图后，预览显示该图。
 
-If Fiji is not configured, the first screen is **Configure Fiji** (path, Detect, Test). **Skip for RGB-only** is enough for ordinary RGB JPG/PNG. Change the path later under **Export → Fiji setup**.
+The panel opens on **Scale**. Raw and Export are hidden by default. Show either under **Settings → Advanced features**. PaperFig asks for the Fiji path only when a file needs it; you can also set it under **Settings → Fiji setup**.
 
-未配置 Fiji 时，首次进入 **配置 Fiji**（路径、检测、测试）。普通 RGB JPG/PNG 点 **稍后（仅 RGB）**。之后在 **导出 → Fiji 设置** 修改。
+面板默认进入 **标尺**。**原始** 和 **导出** 默认隐藏，可在 **设置 → 高级功能** 打开。只有文件需要 Fiji 时才会提示设置路径，也可在 **设置 → Fiji 设置** 中填写。
 
 ## 3. Tabs / 各页
 
@@ -38,10 +38,13 @@ The top stays put: preview, **Apply / Refresh / Reset**, **Artboard preview / Ca
 | Tab / 页 | Role / 作用 |
 |----------|-------------|
 | **Adjust / 调整** | RGB8 tone, color, filters, fluorescence keep-channel, presets. RGB8 色调、颜色、滤镜、荧光保留通道、预设。 |
-| **Raw / 原始** | uint8/uint16 planes, histograms, group range lock. uint8/uint16、直方图、组范围锁定。 |
 | **Scale / 标尺** | Calibration and vector scale bar. 标定与矢量标尺。 |
-| **Geom / 几何** | Rotate, flip, straighten, crop, inset. 旋转、翻转、拉平、裁剪、放大插图。 |
-| **Export / 导出** | Batch, file format, Fiji. 批量、格式、Fiji。 |
+| **Geom / 几何** | Rotate, flip, straighten. 旋转、翻转、拉平。 |
+| **Crop / 裁剪** | Crop in file pixels. 按文件像素裁剪。 |
+| **Inset / 放大插图** | Enlarged inset and source frame. 放大插图与原图框线。 |
+| **Raw / 原始** | uint8/uint16 planes, histograms, group range lock. uint8/uint16、直方图、组范围锁定。 |
+| **Export / 导出** | Optional batch and file format controls. 可选批量与格式设置。 |
+| **⚙ Settings / 设置** | Fixed button at the right of the tab bar; advanced tabs and Fiji path. 标签栏右侧固定按钮；高级页开关和 Fiji 路径。 |
 
 Sliders update the preview only. **Apply** writes a full-resolution 8-bit display file and relinks. Undo with Ctrl/Cmd+Z. Raw files on disk are not modified.
 
@@ -63,9 +66,9 @@ Presets store intensity and RGB colors. They do not store crop, rotation, or pat
 
 ## 5. Raw / 原始
 
-Set **Raw source** and click **Load channels**. Use an uncompressed OME-TIFF when you can. Otherwise set Fiji on the Export tab and use Bio-Formats.
+Set **Raw source** and click **Load channels**. Use an uncompressed OME-TIFF when you can. Otherwise set Fiji on the Settings tab and use Bio-Formats.
 
-设置原始文件并点 **加载通道**。能用未压缩 OME-TIFF 就用它。否则在导出页配置 Fiji，通过 Bio-Formats 读取。
+设置原始文件并点 **加载通道**。能用未压缩 OME-TIFF 就用它。否则在设置页配置 Fiji，通过 Bio-Formats 读取。
 
 Choose series, Z, and T (starting at 0). Keep one or two channels if you need to. Set low, high, color, and gamma. **Lock group ranges** uses one range for the batch and does not autoscale each image.
 
@@ -103,15 +106,15 @@ Crop, resize, and **Use full image** do not clear calibration. The bar uses disp
 
 裁剪、改大小和 **使用全图** 不会清除标定。标尺按显示宽度乘以 µm/px 计算。之后若单独缩放图片，标尺不会跟着变，需要重新创建。不要把打印 DPI 当作空间标定。
 
-## 7. Geom / 几何
+## 7. Geom, Crop, Inset / 几何、裁剪、放大插图
 
 **Rotate**, **Flip**, and **Straighten** change the artboard object immediately. They do not resample pixels. The angle field resets after a live rotate. **Straighten**: drag a line that should be horizontal; release rotates to that line. Esc cancels.
 
 **旋转**、**翻转** 和 **拉平水平** 立即改画板对象，不重采样像素。实时旋转后角度归零。**拉平水平**：在预览上拖一条应成为水平的线，松开后按该线旋转。Esc 取消。
 
-**Crop** and **Inset** cannot both be active. Switching clears the other. Leaving Geom exits inset mode and clears the inset left, top, width, and height.
+**Crop** and **Inset** cannot both be active. Switching clears the other. Leaving Inset exits inset mode and clears the inset left, top, width, and height.
 
-**裁剪** 和 **放大框** 不能同时使用。切换会清掉另一种选区。离开几何页会退出放大框，并清掉插图的左、上、宽、高。
+**裁剪** 和 **放大框** 不能同时使用。切换会清掉另一种选区。离开放大插图页会退出放大框，并清掉插图的左、上、宽、高。
 
 Crop left/top/width/height are file pixels. Width and height of 0, or **Use full image**, means no crop. **Original file px** locks width and height to the linked file’s pixel size. If Illustrator does not report that size, PaperFig reads PNG, JPEG, TIFF, GIF, or BMP on disk.
 
@@ -121,9 +124,9 @@ Crop left/top/width/height are file pixels. Width and height of 0, or **Use full
 
 带裁剪的 **应用** 按直立方向写入。宽高比等于裁剪后的像素。完成后回到裁剪模式，并清掉插图区域。
 
-**Inset:** choose **Inset** or **Draw region**. Drag a box, type left/top/width/height, or select the image and a rectangle and click **Read artboard rectangle**. Ratios are free, 1:1, 4:3, and 16:9. The PNG is a 1:1 crop of the linked file. Left/right: the inset height matches the main image. Above/below: **Zoom** multiplies the region. **Apply** places the crop, a frame on the source, and leaders when **Draw leaders** is on. Frame and leaders have their own weight, color, and dash (solid, dashed, dotted, dash-dot). Corners are miter, round, or bevel. Round with a radius above 0 uses a rounded rectangle when the box is axis-aligned. **Add scale bar when calibrated** adds a vector bar on the inset when a calibration exists.
+**Inset:** open the **Inset** tab and choose **Draw region**. Drag a box, type left/top/width/height, or select the image and a rectangle and click **Read artboard rectangle**. Ratios are free, 1:1, 4:3, and 16:9. The PNG is a 1:1 crop of the linked file. Left/right: the inset height matches the main image. Above/below: **Zoom** multiplies the region. **Apply** places the crop, a frame on the source, and leaders when **Draw leaders** is on. Frame and leaders have their own weight, color, and dash (solid, dashed, dotted, dash-dot). Corners are miter, round, or bevel. Round with a radius above 0 uses a rounded rectangle when the box is axis-aligned. **Add scale bar when calibrated** adds a vector bar on the inset when a calibration exists.
 
-**放大插图：** 选 **放大框** 或 **框选区域**。拖选、填写左/上/宽/高，或同时选中图像和矩形后点 **读取画板矩形**。比例为自由、1:1、4:3、16:9。PNG 是链接文件的 1:1 裁切。放在左右时，高度与主图一致。放在上下时，**放大** 乘以区域尺寸。点顶部 **应用** 放置子图和原图框；勾选 **绘制引线** 时加上互不交叉的引线。框和引线各自有线宽、颜色和线型（实线、虚线、点线、点划线）。拐角为尖角、圆角或斜角。圆角且半径大于 0、框又与轴对齐时，用圆角矩形。已有标定且勾选 **已标定则添加标尺** 时，插图上会加矢量标尺。
+**放大插图：** 打开 **放大插图** 页，点 **框选区域**。拖选、填写左/上/宽/高，或同时选中图像和矩形后点 **读取画板矩形**。比例为自由、1:1、4:3、16:9。PNG 是链接文件的 1:1 裁切。放在左右时，高度与主图一致。放在上下时，**放大** 乘以区域尺寸。点顶部 **应用** 放置子图和原图框；勾选 **绘制引线** 时加上互不交叉的引线。框和引线各自有线宽、颜色和线型（实线、虚线、点线、点划线）。拐角为尖角、圆角或斜角。圆角且半径大于 0、框又与轴对齐时，用圆角矩形。已有标定且勾选 **已标定则添加标尺** 时，插图上会加矢量标尺。
 
 ## 8. Export / 导出
 
@@ -135,9 +138,9 @@ Formats: PNG, JPEG, or uncompressed RGBA8 TIFF. DPI is print metadata, not spati
 
 格式为 PNG、JPEG 或未压缩 RGBA8 TIFF。DPI 只写入打印元数据，不是空间标定。
 
-**Fiji setup:** path to the executable or the app folder, then **Detect** or **Test connection**. Install Bio-Formats in Fiji when a file needs it. Ordinary RGB JPG/PNG and many simple TIFFs do not need Fiji.
+**Fiji setup (Settings tab):** path to the executable or the app folder, then **Detect** or **Test connection**. Install Bio-Formats in Fiji when a file needs it. Ordinary RGB JPG/PNG and many simple TIFFs do not need Fiji.
 
-**Fiji 设置：** 填写可执行文件或应用目录，然后点 **检测** 或 **测试连接**。需要时在 Fiji 里安装 Bio-Formats。普通 RGB JPG/PNG 和许多简单 TIFF 不必配置 Fiji。
+**Fiji 设置（设置页）：** 填写可执行文件或应用目录，然后点 **检测** 或 **测试连接**。需要时在 Fiji 里安装 Bio-Formats。普通 RGB JPG/PNG 和许多简单 TIFF 不必配置 Fiji。
 
 ## 9. Notes / 说明
 

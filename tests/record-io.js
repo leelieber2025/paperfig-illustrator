@@ -17,6 +17,12 @@ stamp.contentStampAsync(file, function (info) {
   assert(info.pct >= 0 && info.pct <= 100);
 }).then(function (hashed) {
   assert.equal(hashed, stamp.contentStamp(file));
+  const originalTime = fs.statSync(file).mtime;
+  fs.writeFileSync(file, Buffer.from('xyz'));
+  fs.utimesSync(file, originalTime, originalTime);
+  assert.notEqual(stamp.contentStamp(file), hashed, 'same-size edit with restored mtime must change the stamp');
+  assert.notEqual(stamp.contentStamp(file, true), hashed, 'commit check must rehash the source');
+  assert.equal(stamp.matches(file, hashed), false);
   const dest = path.join(dir, 'out.json');
   fs.writeFileSync(dest, '{"keep":true}');
   output.writeJsonAtomic(dest, { schema: 'sci-raw-display', status: 'applied' });

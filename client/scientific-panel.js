@@ -1,7 +1,7 @@
 /* Scientific workflow controller, separated from legacy RGB panel. See LICENSE. */
 (function(root){'use strict';
 var batchPromise=null;root.SciScientificPanel={create:function(a){
- var S=root.SciScientific,fs=root.require('fs'),path=root.require('path'),$=a.byId,bridge=root.SciRawBridge.create(a.extensionPath,a.fiji),dataset=null,owner='',source='',stamp='',boundDisplay='',previewEdge=800,rows=[],locked=null,batch=null,stop=false,picking=false,points=[],framePending=false;
+ var S=root.SciScientific,fs=root.require('fs'),path=root.require('path'),$=a.byId,bridge=root.SciRawBridge.create(a.extensionPath,a.fiji,a.requireFiji),dataset=null,owner='',source='',stamp='',boundDisplay='',previewEdge=800,rows=[],locked=null,batch=null,stop=false,picking=false,points=[],framePending=false;
  function syncPickCursor(on){var st=$('previewStage');if(st){st.classList.toggle('endpoint-pick',!!on);st.classList.toggle('pick-mode',!!on);if(on)st.classList.remove('hand-pan');}if(a.syncHand)a.syncHand();}
  var KEY='sci_raw_bindings_v1',CAL='sci_calibrations_v1',LAST_CAL='sci_calibration_last_v1',GLOBAL_SCALE='sci_scale_global_v1',SCALE_PRESET_SCHEMA='sci-scale-preset',pickKey='',calUiKey='';
  function t(key,vars){try{if(root.PaperFigI18n&&typeof root.PaperFigI18n.t==='function')return root.PaperFigI18n.t(key,vars);}catch(ignore){}return key;}
@@ -44,8 +44,9 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
   else{points=[];}
  }
  function key(){var i=a.info();return i?i.objectKey:'';}
- function active(){return !!(dataset&&owner===key());}
- function fileStamp(p){return root.PaperFigFileStamp.contentStamp(p);}
+ function rawFeatureEnabled(){try{return localStorage.getItem('paperfig_show_raw_v1')==='1';}catch(ignore){return false;}}
+ function active(){return !!(rawFeatureEnabled()&&dataset&&owner===key());}
+ function fileStamp(p,fresh){return root.PaperFigFileStamp.contentStamp(p,fresh);}
  function stampOk(p,stored){return root.PaperFigFileStamp.matches(p,stored);}
  function clearedMark(rec){return !!(rec&&rec.cleared===true);}
  function plane(){var p={series:Number($('rawSeries').value),z:Number($('rawZ').value),t:Number($('rawT').value)};Object.keys(p).forEach(function(k){if(!isFinite(p[k])||p[k]<0||p[k]%1)throw new Error(t('errSeriesZT'));});return p;}
@@ -87,11 +88,11 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
  function paint(d){var canvas=$('previewCanvas'),ctx=canvas.getContext('2d');canvas.width=d.width;canvas.height=d.height;var im=ctx.createImageData(d.width,d.height);im.data.set(d.data);ctx.putImageData(im,0,0);a.rawPreview(d,dataset);}
  function renderPanel(){if(!active())return false;var r=readRange(),stats=S.statistics(dataset,r);paint(S.render(dataset,r,{maxEdge:previewEdge,solo:Number($('rawSolo').value)}));stats.forEach(function(st,i){root.SciHistogram.draw(rows[i].hist,dataset.histograms[i],r.channels[i].low,r.channels[i].high);rows[i].stats.textContent=t('belowAboveStats',{below:st.belowPercent.toFixed(3),above:st.abovePercent.toFixed(3),atLow:st.atLow,atHigh:st.atHigh,max:st.sensorMaximum});});return true;}
  function load(item,raw,p,saved,expectedStamp){if(a.busy())return Promise.resolve(false);if(!item||!item.linked||item.typename!=='PlacedItem'){error(new Error(t('errSelectLinked')));return Promise.resolve(false);}if(a.isPreview(item)){error(new Error(t('errCancelPreviewRaw')));return Promise.resolve(false);}var target=item.objectKey;var sourceStamp;try{sourceStamp=fileStamp(raw);if(expectedStamp&&root.PaperFigFileStamp.classify(raw,expectedStamp)==='legacy'){if(!confirmCalReuse(t('confirmSourceStamp'))){error(new Error(t('sourceNeedsConfirm')));return Promise.resolve(false);}return root.PaperFigFileStamp.contentStampAsync(raw,function(info){status(t('progressRead',{pct:info.pct}));}).then(function(upgraded){return load(item,raw,p,saved,upgraded);});}if(expectedStamp&&!stampOk(raw,expectedStamp))throw new Error(t('errRawSourceChangedSaved'));}catch(e){error(e);return Promise.resolve(false);}a.setBusy(true);status(t('rawLoading'));
-  return bridge.load(raw,p).then(function(d){if(fileStamp(raw)!==sourceStamp)throw new Error(t('errRawSourceChangedReading'));if(key()!==target)throw new Error(t('errSelectionChangedRaw'));dataset=d;owner=target;source=raw;stamp=sourceStamp;boundDisplay=item.sourcePath;var r=S.recipe(d,locked?locked.recipe:saved);renderRows(r);$('rawSource').value=raw;$('rawSeries').value=p.series;$('rawZ').value=p.z;$('rawT').value=p.t;saveBinding(item,source,stamp,p,r);status(d.reader+' · '+d.width+'×'+d.height+' · uint'+d.bits+' · C '+d.names.length+' / Z '+d.sizeZ+' / T '+d.sizeT+' / series '+d.seriesCount+' · one plane, no projection');renderPanel();updateCalibrationStatus();if(d.physical&&d.physical.x){a.notice(t('spatialMeta',{detail:d.physical.x+' µm/px'+(d.physical.y!=null?' · Y '+d.physical.y+' µm/px':'')}));}return true;
+  return bridge.load(raw,p).then(function(d){if(fileStamp(raw,true)!==sourceStamp)throw new Error(t('errRawSourceChangedReading'));if(key()!==target)throw new Error(t('errSelectionChangedRaw'));dataset=d;owner=target;source=raw;stamp=sourceStamp;boundDisplay=item.sourcePath;var r=S.recipe(d,locked?locked.recipe:saved);renderRows(r);$('rawSource').value=raw;$('rawSeries').value=p.series;$('rawZ').value=p.z;$('rawT').value=p.t;saveBinding(item,source,stamp,p,r);status(d.reader+' · '+d.width+'×'+d.height+' · uint'+d.bits+' · C '+d.names.length+' / Z '+d.sizeZ+' / T '+d.sizeT+' / series '+d.seriesCount+' · one plane, no projection');renderPanel();updateCalibrationStatus();if(d.physical&&d.physical.x){a.notice(t('spatialMeta',{detail:d.physical.x+' µm/px'+(d.physical.y!=null?' · Y '+d.physical.y+' µm/px':'')}));}return true;
   }).catch(function(e){dataset=null;owner='';status(t('rawLoadFailed',{msg:e.message}));error(e);return false;}).then(function(ok){a.setBusy(false);updateBusy();return ok;});
  }
  function loadClick(){try{var item=a.info(),raw=$('rawSource').value.trim()||(item&&item.sourcePath);if(!raw)throw new Error(t('errChooseOriginal'));return load(item,raw,plane());}catch(e){error(e);}}
- function maybeLoad(item){var b=infoBinding(item);if(!b)return false;if(active()&&b.source===source)return true;load(item,b.source,b.plane,b.recipe,b.stamp);return true;}
+ function maybeLoad(item){if(!rawFeatureEnabled())return false;var b=infoBinding(item);if(!b)return false;if(active()&&b.source===source)return true;load(item,b.source,b.plane,b.recipe,b.stamp);return true;}
  function onSelection(item){
   if(dataset&&(!item||item.objectKey!==owner||item.sourcePath!==boundDisplay)){dataset=null;owner='';rows=[];$('rawChannels').textContent='';if($('rawKeepButtons'))$('rawKeepButtons').textContent='';$('rawSource').value='';status(t('rawNeedLoad'));if($('rawKeepHint'))$('rawKeepHint').textContent=t('rawKeepHint');}
   /* Endpoint picking is independent of raw load; only cancel when the object changes. */
@@ -101,7 +102,7 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
   updateCalibrationStatus();
  }
  function canvas(im){var c=document.createElement('canvas');c.width=im.width;c.height=im.height;var x=c.getContext('2d'),d=x.createImageData(im.width,im.height);d.data.set(im.data);x.putImageData(d,0,0);return c;}
- function record(d,r,raw,st,out,item,p,crop){return {schema:'sci-raw-display',version:1,software:'PaperFig for Illustrator '+((root.PaperFigI18n&&root.PaperFigI18n.getVersion&&root.PaperFigI18n.getVersion())||'1.0.0'),role:'display-derivative',createdAt:new Date().toISOString(),source:raw,sourceStamp:st,output:out,objectKey:item.objectKey,plane:p,width:d.width,height:d.height,bits:d.bits,channelNames:d.names,physicalMicrometers:d.physical,recipe:S.clone(r),crop:crop,compositeClipping:r.outputClipping||null,statistics:S.statistics(d,r),statisticsRegion:'entire selected source plane, before crop',calibration:lookupCalibration(item)||null,nonlinear:{gamma:r.gamma,formula:'pow(clip((I-low)/(high-low),0,1),1/gamma)',clahe:false,spatialFilters:false},status:'prepared'};}
+ function record(d,r,raw,st,out,item,p,crop){return {schema:'sci-raw-display',version:1,software:'PaperFig for Illustrator '+((root.PaperFigI18n&&root.PaperFigI18n.getVersion&&root.PaperFigI18n.getVersion())||'1.1.0'),role:'display-derivative',createdAt:new Date().toISOString(),source:raw,sourceStamp:st,output:out,objectKey:item.objectKey,plane:p,width:d.width,height:d.height,bits:d.bits,channelNames:d.names,physicalMicrometers:d.physical,recipe:S.clone(r),crop:crop,compositeClipping:r.outputClipping||null,statistics:S.statistics(d,r),statisticsRegion:'entire selected source plane, before crop',calibration:lookupCalibration(item)||null,nonlinear:{gamma:r.gamma,formula:'pow(clip((I-low)/(high-low),0,1),1/gamma)',clahe:false,spatialFilters:false},status:'prepared'};}
  function writeRecord(out,rec){var dest=out+'.json';if(root.PaperFigOutput&&root.PaperFigOutput.writeJsonAtomic){root.PaperFigOutput.writeJsonAtomic(dest,rec);return;}var partial=dest+'.partial';fs.writeFileSync(partial,JSON.stringify(rec,null,2),'utf8');fs.renameSync(partial,dest);}
  var RECORD_RECOVERY='paperfig_raw_record_recovery_v1';
  function recoveryList(){try{var raw=localStorage.getItem(RECORD_RECOVERY);var list=raw?JSON.parse(raw):[];return Array.isArray(list)?list:[];}catch(e){return [];}}
@@ -117,11 +118,59 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
  function prepareBatch(){if(!active())return false;if(a.busy())return true;if(!locked){error(new Error(t('errLockBeforeBatch')));return true;}var r=readRange(),p={series:dataset.series,z:dataset.z,t:dataset.t};a.setBusy(true);stop=false;batch={raw:true,rows:[],recipe:S.clone(r),plane:p,format:a.format(),dpi:a.dpi()};$('batchList').textContent='';$('cancelBatchBtn').disabled=false;
   return a.host('captureBitmapBatch()').then(function(result){batch.token=result.token;var chain=Promise.resolve();result.items.forEach(function(item,index){var row={item:item,index:index,valid:false},div=document.createElement('div');div.className='batch-item';row.check=document.createElement('input');row.check.type='checkbox';row.check.disabled=true;row.thumb=document.createElement('canvas');row.label=document.createElement('span');div.appendChild(row.check);div.appendChild(row.thumb);div.appendChild(row.label);$('batchList').appendChild(div);batch.rows.push(row);row.label.textContent=(item.name||'Image')+' · '+t('rawBatchChecking');chain=chain.then(function(){if(stop){row.label.textContent+=' · '+t('rawBatchCancelled');return;}return Promise.resolve().then(function(){if(!item.linked)throw new Error(t('errRawBatchLinked'));if(a.isPreview(item))throw new Error(t('errCancelPreviewFirst'));var b=infoBinding(item);row.source=b?b.source:item.sourcePath;row.stamp=fileStamp(row.source);if(b&&b.stamp!==row.stamp)throw new Error(t('errOriginalRawChanged'));return bridge.load(row.source,p);}).then(function(d){S.recipe(d,r);row.valid=true;row.check.checked=true;var im=S.render(d,r,{maxEdge:48}),c=canvas(im);row.thumb.width=c.width;row.thumb.height=c.height;row.thumb.getContext('2d').drawImage(c,0,0);row.label.textContent=(item.name||path.basename(row.source))+' · '+t('rawBatchReadyRow',{bits:d.bits,n:d.names.length});}).catch(function(e){row.label.textContent=(item.name||'Image')+' · '+t('rawBatchSkipped',{msg:(root.PaperFigI18n&&root.PaperFigI18n.localizeError?root.PaperFigI18n.localizeError(e.message):e.message)});});});});return chain;}).then(function(){$('batchSummary').textContent=t('rawBatchSummary');a.notice(t('rawBatchReady'));}).catch(error).then(function(){a.setBusy(false);updateBusy();});
  }
- function runBatch(){if(!batch)return false;if(a.busy())return true;var review=batch,selected=review.rows.filter(function(row){return row.valid&&row.check.checked;}),report={schema:'sci-raw-batch',role:'display-derivative',recipe:review.recipe,plane:review.plane,results:[],skipped:review.rows.filter(function(r){return !r.valid||!r.check.checked;}).map(function(r){return {source:r.item.sourcePath,reason:r.label.textContent};})},reportPath;
+ function runBatch(){
+  if(!batch)return false;
+  if(a.busy())return true;
+  var review=batch,selected=review.rows.filter(function(row){return row.valid&&row.check.checked;}),report={schema:'sci-raw-batch',role:'display-derivative',recipe:review.recipe,plane:review.plane,results:[],skipped:review.rows.filter(function(r){return !r.valid||!r.check.checked;}).map(function(r){return {source:r.item.sourcePath,reason:r.label.textContent};})},reportPath;
   if(!selected.length){a.notice(t('errCheckOneRaw'));return true;}
-  try{reportPath=a.output(selected[0].source)+'.batch.json';fs.writeFileSync(reportPath,JSON.stringify(report,null,2));}catch(e){error(e);return true;}a.setBusy(true);stop=false;$('cancelBatchBtn').disabled=false;var chain=Promise.resolve();selected.forEach(function(row){chain=chain.then(function(){var out,rec;if(stop){report.results.push({source:row.source,status:'cancelled'});return;}
-   row.label.textContent=t('rawBatchProcessing',{name:path.basename(row.source)});return Promise.resolve().then(function(){if(fileStamp(row.source)!==row.stamp)throw new Error(t('errSourceChangedReview'));return bridge.load(row.source,review.plane);}).then(function(d){S.recipe(d,review.recipe);out=a.output(row.source,review.format);rec=record(d,review.recipe,row.source,row.stamp,out,row.item,review.plane,{left:0,top:0,width:d.width,height:d.height});var rendered=S.render(d,review.recipe);rec.compositeClipping={pixels:rendered.compositeClipped,percent:rendered.compositeClippedPercent};return a.write(canvas(rendered),out,review.dpi);}).then(function(){if(stop)throw new Error(t('errCancelledCommit'));if(fileStamp(row.source)!==row.stamp)throw new Error(t('errSourceChangedProcessing'));writeRecord(out,rec);return a.host('replaceBatchBitmap('+JSON.stringify(review.token)+','+row.index+','+JSON.stringify(out)+')');}).then(function(result){if(a.assertLink)a.assertLink(result,out);saveBinding(result.info,row.source,row.stamp,review.plane,review.recipe);rec.status='applied';writeRecord(out,rec);row.label.textContent=t('rawBatchDone',{name:path.basename(row.source)});row.valid=false;report.results.push({source:row.source,output:out,status:'applied'});}).catch(function(e){row.label.textContent=(stop?t('batchCancelledMsg',{msg:(root.PaperFigI18n&&root.PaperFigI18n.localizeError?root.PaperFigI18n.localizeError(e.message):e.message)}):t('batchFailed',{msg:(root.PaperFigI18n&&root.PaperFigI18n.localizeError?root.PaperFigI18n.localizeError(e.message):e.message)}));report.results.push({source:row.source,output:out,status:stop?'cancelled':'failed',error:e.message});if(rec&&rec.status!=='applied'){rec.status='not-applied';try{writeRecord(out,rec);}catch(ignore){}}});}).then(function(){fs.writeFileSync(reportPath,JSON.stringify(report,null,2));});});
-  batchPromise=chain.then(function(){(a.appliedStatus||a.notice)(t('rawBatchFinished',{done:report.results.filter(function(r){return r.status==='applied';}).length,total:selected.length,path:reportPath}));}).catch(error).then(function(){a.host('releaseBitmapBatch('+JSON.stringify(review.token)+')').catch(error);batch=null;dataset=null;owner='';a.setBusy(false);updateBusy();return a.refresh();});return batchPromise;
+  try{reportPath=a.output(selected[0].source)+'.batch.json';fs.writeFileSync(reportPath,JSON.stringify(report,null,2));}catch(e){error(e);return true;}
+  a.setBusy(true);stop=false;$('cancelBatchBtn').disabled=false;
+  var chain=Promise.resolve();
+  selected.forEach(function(row){
+   chain=chain.then(function(){
+    var out,rec,replaced=false,warnings=[];
+    if(stop){report.results.push({source:row.source,status:'cancelled'});return;}
+    row.label.textContent=t('rawBatchProcessing',{name:path.basename(row.source)});
+    return Promise.resolve().then(function(){
+     if(fileStamp(row.source,true)!==row.stamp)throw new Error(t('errSourceChangedReview'));
+     return bridge.load(row.source,review.plane);
+    }).then(function(d){
+     S.recipe(d,review.recipe);out=a.output(row.source,review.format);
+     rec=record(d,review.recipe,row.source,row.stamp,out,row.item,review.plane,{left:0,top:0,width:d.width,height:d.height});
+     var rendered=S.render(d,review.recipe);
+     rec.compositeClipping={pixels:rendered.compositeClipped,percent:rendered.compositeClippedPercent};
+     return a.write(canvas(rendered),out,review.dpi);
+    }).then(function(){
+     if(stop)throw new Error(t('errCancelledCommit'));
+     if(fileStamp(row.source,true)!==row.stamp)throw new Error(t('errSourceChangedProcessing'));
+     writeRecord(out,rec);
+     return a.host('replaceBatchBitmap('+JSON.stringify(review.token)+','+row.index+','+JSON.stringify(out)+')');
+    }).then(function(result){
+     if(a.assertLink)a.assertLink(result,out);
+     replaced=true;
+     rec.objectKey=result.info.objectKey;
+     rec.status='applied';
+     try{writeRecord(out,rec);clearRecordRecovery(out);}catch(writeErr){rememberRecordRecovery(out,rec,'image-replaced');warnings.push(writeErr.message);}
+     try{saveBinding(result.info,row.source,row.stamp,review.plane,review.recipe);}catch(bindingErr){warnings.push(bindingErr.message);}
+     row.label.textContent=t('rawBatchDone',{name:path.basename(row.source)})+(warnings.length?' · '+warnings.join('; '):'');
+     if(warnings.length)a.notice(t('imageReplacedRecordFailed',{msg:warnings.join('; ')}),'error');
+     row.valid=false;
+     report.results.push({source:row.source,output:out,status:'applied',warnings:warnings});
+    }).catch(function(e){
+     if(replaced){
+      row.valid=false;
+      report.results.push({source:row.source,output:out,status:'applied',warnings:[e.message]});
+      a.notice(t('imageReplacedRecordFailed',{msg:e.message}),'error');
+      return;
+     }
+     row.label.textContent=(stop?t('batchCancelledMsg',{msg:e.message}):t('batchFailed',{msg:e.message}));
+     report.results.push({source:row.source,output:out,status:stop?'cancelled':'failed',error:e.message});
+     if(rec){rec.status='not-applied';try{writeRecord(out,rec);}catch(ignore){}}
+    });
+   }).then(function(){fs.writeFileSync(reportPath,JSON.stringify(report,null,2));});
+  });
+  batchPromise=chain.then(function(){(a.appliedStatus||a.notice)(t('rawBatchFinished',{done:report.results.filter(function(r){return r.status==='applied';}).length,total:selected.length,path:reportPath}));}).catch(error).then(function(){return a.host('releaseBitmapBatch('+JSON.stringify(review.token)+')').catch(error).then(function(){batch=null;dataset=null;owner='';a.setBusy(false);updateBusy();return a.refresh();});});
+  return batchPromise;
  }
  function lock(){try{locked={schema:'sci-raw-ranges',version:1,recipe:current(),lockedAt:new Date().toISOString()};store('sci_raw_group_lock',locked);$('rawLockStatus').textContent=t('lockedRanges');updateBusy();}catch(e){error(e);}}
  function updateBusy(){var busy=a.busy();rows.forEach(function(row){[row.low,row.high,row.lowSlider,row.highSlider,row.show,row.color].forEach(function(el){el.disabled=busy||!!locked;});});$('rawGamma').disabled=busy||!!locked;var rgb=$('rgbControls');rgb.classList.toggle('science-active',active());Array.prototype.forEach.call(rgb.querySelectorAll?rgb.querySelectorAll('input,select,button'):[],function(e){if(active())e.disabled=true;});['rawBrowse','rawLoad','rawExit','rawLock','rawUnlock','rawExport','rawImport','scalePick','scaleCalibrate','scaleCreate','scaleAudit','scaleReuseLast','scaleClearCal','scalePresetSave','scalePresetLoad','scaleSaveGlobal','scaleUseGlobal','scaleClearGlobal'].forEach(function(id){if($(id))$(id).disabled=busy;});if(batch){$('runBatchBtn').disabled=busy||!batch.rows.some(function(r){return r.valid;});batch.rows.forEach(function(r){r.check.disabled=busy||!r.valid;});}$('cancelBatchBtn').disabled=!(batch&&busy);}
@@ -395,13 +444,10 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
  }
  function importScalePresetFile(file){loadScalePresetFile(file);}
  function revealScalePresetsFolder(){try{
-  var dir=scalePresetsDir(),url;
-  url='file:///'+String(dir).replace(/\\/g,'/');
-  if(root.cep&&root.cep.util&&typeof root.cep.util.openURLInDefaultBrowser==='function'){
-   root.cep.util.openURLInDefaultBrowser(url);
-  }else if(root.require){
-   try{var plat=(root.require('os').platform&&root.require('os').platform())||'';root.require('child_process').exec(plat==='win32'?'explorer "'+dir+'"':(plat==='darwin'?'open "'+dir+'"':'xdg-open "'+dir+'"'));}catch(ignore){}
-  }
+  var dir=scalePresetsDir(),plat=root.require('os').platform();
+  var command=plat==='win32'?'explorer.exe':(plat==='darwin'?'open':'xdg-open');
+  var child=root.require('child_process').spawn(command,[dir],{windowsHide:true});
+  child.on('error',error);
   a.notice(t('scalePresetStatusFolder',{dir:dir,n:listScalePresetFiles().length}));
  }catch(e){error(e);}}
  /* Back-compat aliases used by older tests / callers */

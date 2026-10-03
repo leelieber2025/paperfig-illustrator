@@ -51,7 +51,7 @@ vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root,'client/i18n.js'),'utf8'),ctx);ctx.PaperFigI18n=ctx.window.PaperFigI18n;if(ctx.PaperFigI18n){ctx.PaperFigI18n.setVersion(require(path.join(root,'package.json')).version);ctx.PaperFigI18n.setLang('en');}
 ['file-stamp.js','bitmap-output.js','interaction-policy.js','bitmap-panel-marquee.js'].forEach(f=>vm.runInContext(fs.readFileSync(path.join(root,'client',f),'utf8'),ctx));
 let source=fs.readFileSync(path.join(root,'client/bitmap-panel.js'),'utf8');
-source=source.replace("  document.addEventListener('DOMContentLoaded', init);",`  window.__test={prepareBatch:prepareBatch,runBatch:runBatch,stopBatch:function(){batchStop=true;},batch:function(){return batchReview;},currentRecipe:currentRecipe,loadWorkflowImage:loadWorkflowImage,inspectSelection:inspectSelection,applyPipeline:applyPipeline,runArtboardPreview:runArtboardPreview,cancelArtboardPreview:cancelArtboardPreview,renderPreviewCanvas:renderPreviewCanvas,samplePreviewNeighborhood:samplePreviewNeighborhood,stop:function(){clearInterval(pollTimer);},clearDrafts:function(){drafts={};draftKey='';draftPath='';},state:function(){return {previewBase:previewBase,previewBaseDrag:previewBaseDrag,lastObjectKey:lastObjectKey,applyRunning:applyRunning,artboardPreviewRunning:artboardPreviewRunning,artboardPreviewActive:artboardPreviewActive,original:artboardPreviewOriginalPath,file:artboardPreviewFile,cache:panelPreviewCacheBytes,sourceImageSize:sourceImageSize};}};\n  document.addEventListener('DOMContentLoaded', init);`);
+source=source.replace("  document.addEventListener('DOMContentLoaded', init);",`  window.__test={recoverRgbRecords:recoverRgbRecords,prepareBatch:prepareBatch,runBatch:runBatch,stopBatch:function(){batchStop=true;},batch:function(){return batchReview;},currentRecipe:currentRecipe,loadWorkflowImage:loadWorkflowImage,inspectSelection:inspectSelection,applyPipeline:applyPipeline,runArtboardPreview:runArtboardPreview,cancelArtboardPreview:cancelArtboardPreview,renderPreviewCanvas:renderPreviewCanvas,samplePreviewNeighborhood:samplePreviewNeighborhood,stop:function(){clearInterval(pollTimer);},clearDrafts:function(){drafts={};draftKey='';draftPath='';},state:function(){return {previewBase:previewBase,previewBaseDrag:previewBaseDrag,lastObjectKey:lastObjectKey,applyRunning:applyRunning,artboardPreviewRunning:artboardPreviewRunning,artboardPreviewActive:artboardPreviewActive,original:artboardPreviewOriginalPath,file:artboardPreviewFile,cache:panelPreviewCacheBytes,sourceImageSize:sourceImageSize};}};\n  document.addEventListener('DOMContentLoaded', init);`);
 vm.runInContext(source,ctx);const api=ctx.window.__test;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function waitFor(fn){for(let i=0;i<300;i++){if(fn())return;await sleep(10);}throw new Error('Timed out; notice='+element('notice').textContent+'; preview='+element('previewStatus').textContent+'; message='+element('previewMessage').textContent+'; errors='+JSON.stringify(errors)+'; state='+JSON.stringify(api.state(),(k,v)=>k==='data'?'pixels':v));}
@@ -177,6 +177,21 @@ await test('Baseline marker blocks sidecar remap; removing marker recovers recip
  const first=fs.readFileSync(outPath);await api.applyPipeline();assert.deepEqual(fs.readFileSync(item.file.fsName),first);
 });
 
+await test('RGB record failure before relink keeps the selected image unchanged',async()=>{
+ const target=placed('RECORD-PRE',aPath);doc.selection=[target];await api.inspectSelection({quiet:true});await waitFor(()=>api.state().previewBase);emit('resetBtn','click');element('format').value='PNG';
+ const writer=ctx.window.PaperFigOutput.writeJsonAtomic;
+ ctx.window.PaperFigOutput.writeJsonAtomic=(p,rec)=>{if(rec.schema==='sci-bitmap-processing-record'&&rec.status==='prepared')throw new Error('record disk failure');return writer(p,rec);};
+ try{const ok=await api.applyPipeline();assert.equal(ok,false);assert.equal(target.file.fsName,aPath);assert(/record disk failure/.test(element('notice').textContent));}
+ finally{ctx.window.PaperFigOutput.writeJsonAtomic=writer;}
+});
+await test('RGB final record failure reports applied image and keeps a recovery copy',async()=>{
+ const target=placed('RECORD-POST',aPath);doc.selection=[target];await api.inspectSelection({quiet:true});await waitFor(()=>api.state().previewBase);emit('resetBtn','click');element('format').value='PNG';
+ const writer=ctx.window.PaperFigOutput.writeJsonAtomic;
+ ctx.window.PaperFigOutput.writeJsonAtomic=(p,rec)=>{if(rec.schema==='sci-bitmap-processing-record'&&rec.status==='applied')throw new Error('final record disk failure');return writer(p,rec);};
+ try{assert.equal(await api.applyPipeline(),true);assert.notEqual(target.file.fsName,aPath);assert(/final record disk failure/.test(element('footerStatus').textContent));const pending=JSON.parse(storage.paperfig_rgb_record_recovery_v1);assert.equal(pending[target.file.fsName].status,'applied');}
+ finally{ctx.window.PaperFigOutput.writeJsonAtomic=writer;}
+ api.recoverRgbRecords();assert.equal(JSON.parse(fs.readFileSync(target.file.fsName+'.json','utf8')).status,'applied');assert.equal(Object.keys(JSON.parse(storage.paperfig_rgb_record_recovery_v1)).length,0);
+});
 await test('Blob decoder revokes transient URLs; decode cache may keep ≤2',async()=>{await sleep(150);assert(blobs.size<=2,'leaked blobs='+blobs.size);});
 assert.deepEqual(errors,[]);console.log('\n'+n+' integration simulations passed (real Canvas pixels; mocked Adobe host).');
 api.stop();fs.rmSync(out,{recursive:true,force:true});process.exit(0);

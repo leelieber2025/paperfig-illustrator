@@ -21,7 +21,9 @@ files.forEach(function (name) {
     .replace(/Version \*\*\d+\.\d+\.\d+\*\*/g, 'Version **' + ver + '**')
     .replace(/footer \*\*\d+\.\d+\.\d+\*\*/g, 'footer **' + ver + '**')
     .replace(/shows \*\*\d+\.\d+\.\d+\*\*/g, 'shows **' + ver + '**')
-    .replace(/页脚应为 \*\*\d+\.\d+\.\d+\*\*/g, '页脚应为 **' + ver + '**');
+    .replace(/页脚应为 \*\*\d+\.\d+\.\d+\*\*/g, '页脚应为 **' + ver + '**')
+    .replace(/页脚为 \*\*\d+\.\d+\.\d+\*\*/g, '页脚为 **' + ver + '**')
+    .replace(/tag\/v\d+\.\d+\.\d+/g, 'tag/v' + ver);
   if (next !== text) { fs.writeFileSync(file, next); }
 });
 

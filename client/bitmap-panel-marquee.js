@@ -1506,7 +1506,7 @@
     }).then(function () { api.setApplyRunning(false); });
   }
 
-  /* Leaving Geometry (or any non-geometry tab) exits inset/magnifier marquee. */
+  /* The active tab owns the preview marquee; leaving Inset clears its region. */
   function exitInsetMarqueeIfNeeded(tabName) {
     var tab = tabName;
     var active;
@@ -1515,9 +1515,10 @@
       tab = active ? active.getAttribute('data-tab') : '';
     }
     if (tab && tab !== 'geometry' && api.straightenMode) { api.setStraightenMode(false); }
-    if (tab && tab !== 'geometry' && api.marqueeMode === 'inset') {
-      setMarqueeMode('crop', { quiet: true });
-    }
+    if (tab === 'inset') { setMarqueeMode('inset', { quiet: true }); }
+    else if (tab === 'crop') { setMarqueeMode('crop', { quiet: true, armCrop: true }); }
+    else if (tab && api.marqueeMode === 'inset') { setMarqueeMode('crop', { quiet: true }); }
+    else if (tab) { api.cropDrawArmed = false; syncMarqueeModeUi(); }
   }
 
   function bindInsetControls() {
@@ -1534,7 +1535,7 @@
       var name = ev && ev.detail && ev.detail.tab;
       exitInsetMarqueeIfNeeded(name);
     });
-    /* Boot / late api.bind: clear inset if the restored tab is not Geometry. */
+    /* Boot / late api.bind: match the restored tab. */
     exitInsetMarqueeIfNeeded();
     if (api.byId('insetApply')) {
       api.byId('insetApply').addEventListener('click', applyInset);
