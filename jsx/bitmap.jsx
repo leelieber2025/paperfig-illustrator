@@ -17,7 +17,7 @@
  *   the bitmap item itself without dissolving the parent group.
  */
 
-var SCI_BITMAP_HOST_VERSION = "1.1.0";
+var SCI_BITMAP_HOST_VERSION = "1.2.0";
 if (typeof sciBitmapIdentityRegistry === "undefined") {
     var sciBitmapIdentityRegistry = { docs: [], items: [], epoch: String(new Date().getTime()) };
 }
@@ -1336,10 +1336,19 @@ function sciBitmapRelinkExact(item,file) {
     try{item.relink(file);sciBitmapFitCorners(item,wanted);}catch(e){try{item.relink(original);sciBitmapFitCorners(item,wanted);}catch(rollback){throw new Error(e.message+'; rollback failed: '+rollback.message+' — use Undo and inspect the object.');}throw e;}
 }
 function sciBitmapScaleBar(lockJson,specJson) {
-    var group=null;
+    var group=null,wrapper=null,item=null,originalParent=null,imageMoved=false,rollbackFailed=false,committed=false;
     try {
-        var info=sciBitmapAssertLock(lockJson),entry=sciBitmapFirstBitmapEntry(app.activeDocument.selection),item=entry.item,s=eval('('+specJson+')');
+        var info=sciBitmapAssertLock(lockJson),selected=sciBitmapCollectBitmaps(app.activeDocument.selection,false,[]),entry=selected[0],s=eval('('+specJson+')');
+        if(selected.length!==1)throw new Error('Select exactly one image for its scale bar');
+        item=entry.item;
         if(item.typename!=='PlacedItem')throw new Error('Scale bar requires a linked placed image');
+        originalParent=item.parent;
+        var ancestor=originalParent;
+        while(ancestor&&ancestor.typename==='GroupItem'){
+            if(ancestor.clipped)throw new Error('Scale bar cannot be grouped inside a clipping group');
+            ancestor=ancestor.parent;
+        }
+        if(!originalParent||(originalParent.typename!=='GroupItem'&&originalParent.typename!=='Layer'))throw new Error('Unsupported image parent for scale bar grouping');
         var includeText=s.includeText!==false;
         if(!(s.fraction>0&&s.fraction<0.9)||!(s.lineWidth>0&&s.lineWidth<=20)||!(s.margin>=0&&s.margin<=200))throw new Error('Invalid scale bar settings');
         if(includeText&&!(s.fontSize>=4&&s.fontSize<=72))throw new Error('Invalid scale bar settings');
@@ -1375,7 +1384,7 @@ function sciBitmapScaleBar(lockJson,specJson) {
             start=[p[0][0]+x*ux+y*vx,p[0][1]+x*uy+y*vy];end=[start[0]+s.fraction*ux,start[1]+s.fraction*uy];
         }
         var color=new RGBColor(),hex=String(s.color||'');if(!/^#[0-9a-f]{6}$/i.test(hex))throw new Error('Invalid scale bar color');color.red=parseInt(hex.substr(1,2),16);color.green=parseInt(hex.substr(3,2),16);color.blue=parseInt(hex.substr(5,2),16);
-        // Separate top-level group: not baked into pixels or silently placed inside clipping groups.
+        // Keep the editable vector bar next to its image in the same group.
         var nameSuffix=includeText?String(s.label||''):(s.length!=null?String(s.length)+(s.unit==='um'?' \u00b5m':' '+String(s.unit||'')):'bar');
         group=app.activeDocument.groupItems.add();group.name='SCI scale \u00b7 '+nameSuffix;
         var line=group.pathItems.add();line.setEntirePath([start,end]);line.filled=false;line.stroked=true;line.strokeWidth=s.lineWidth;line.strokeColor=color;
@@ -1386,9 +1395,101 @@ function sciBitmapScaleBar(lockJson,specJson) {
         // The text stays upright for readability; the line follows source-X, including rotation/shear.
         group.note='SCI_SCALE_V1:'+sciBitmapJSON({objectKey:info.objectKey,sourcePath:info.sourcePath,calibration:s.calibration,displayPixelsX:s.displayPixelsX,length:s.length,unit:s.unit,includeText:includeText,corners:p,createdAt:(new Date()).toUTCString()});
         var old=[];for(var i=0;i<app.activeDocument.groupItems.length;i++){var g=app.activeDocument.groupItems[i];if(g===group)continue;try{if(g.note&&g.note.indexOf('SCI_SCALE_V1:')===0){var note=eval('('+g.note.substr(13)+')');if(note.objectKey===info.objectKey)old.push(g);}}catch(ignore){}}
-        // New group is complete before replacing the prior generated bar.
-        for(i=0;i<old.length;i++)old[i].remove();app.redraw();return sciBitmapResult({ok:true,label:s.label,includeText:includeText});
-    }catch(e){if(group){try{group.remove();}catch(ignore){}}return sciBitmapFailure(e);}
+        if(originalParent.typename==='Layer'){
+            wrapper=app.activeDocument.groupItems.add();wrapper.name='SCI image + scale';
+            wrapper.move(item,ElementPlacement.PLACEBEFORE);
+            item.move(wrapper,ElementPlacement.PLACEATEND);
+            imageMoved=true;
+        }
+        group.move(item,ElementPlacement.PLACEAFTER);
+        group.zOrder(ZOrderMethod.BRINGTOFRONT);
+        committed=true;
+        // Replace only a previous generated bar for this exact image.
+        for(i=0;i<old.length;i++)old[i].remove();
+        try{app.redraw();}catch(ignoreRedraw){}
+        return sciBitmapResult({ok:true,label:s.label,includeText:includeText,grouped:true});
+    }catch(e){
+        if(!committed){
+            if(imageMoved){try{item.move(originalParent,ElementPlacement.PLACEATEND);}catch(rollback){rollbackFailed=true;e=new Error(e.message+'; image rollback failed — use Undo and inspect the image.');}}
+            if(group){try{group.remove();}catch(ignoreGroup){}}
+            if(wrapper&&!rollbackFailed){try{wrapper.remove();}catch(ignoreWrapper){}}
+        }
+        return sciBitmapFailure(e);
+    }
+}
+function sciBitmapFigureFontFamilies() {
+    try {
+        var names = [], seen = {}, fonts = app.textFonts, i, family;
+        for (i = 0; fonts && i < fonts.length; i++) {
+            family = String(fonts[i].family || fonts[i].name || '');
+            if (family && !seen[family]) { seen[family] = true; names.push(family); }
+        }
+        names.sort();
+        return sciBitmapResult({ ok: true, fonts: names });
+    } catch (e) { return sciBitmapFailure(e); }
+}
+function sciBitmapFigureFont(name, style) {
+    var fonts = app.textFonts, family = String(name || ''), bold = style === 'bold' || style === 'bold-italic', italic = style === 'italic' || style === 'bold-italic';
+    var i, font, fontStyle, isBold, isItalic, first = null;
+    if (!family) { if (style === 'regular') { return null; } throw new Error('Choose a font family for this style.'); }
+    for (i = 0; fonts && i < fonts.length; i++) {
+        font = fonts[i];
+        if (family && font.family !== family && font.name !== family) { continue; }
+        if (!first) { first = font; }
+        fontStyle = String(font.style || '');
+        isBold = /bold|demi|semi/i.test(fontStyle);
+        isItalic = /italic|oblique/i.test(fontStyle);
+        if (isBold === bold && isItalic === italic) { return font; }
+    }
+    if (!first) { throw new Error('Font is not installed: ' + family); }
+    if (style === 'regular') { return first; }
+    throw new Error('Selected font family does not have this style: ' + family);
+}
+function sciBitmapFigureLabel(lockJson, specJson) {
+    var group = null;
+    try {
+        var info = sciBitmapAssertLock(lockJson), entry = sciBitmapFirstBitmapEntry(app.activeDocument.selection);
+        var item = entry && entry.item, s = eval('(' + specJson + ')'), text = String(s.text || '').replace(/^\s+|\s+$/g, '');
+        var positions = { 'top-left': 1, 'top-right': 1, 'bottom-left': 1, 'bottom-right': 1, 'outside-top-left': 1, 'outside-top-right': 1 };
+        var size = Number(s.size), margin = Number(s.margin), verticalOffset = Number(s.verticalOffset == null ? 0 : s.verticalOffset), bounds, left, top, right, bottom, color, font, frame, width, height, x, y, old = [], i, g, note;
+        if (!item || (item.typename !== 'PlacedItem' && item.typename !== 'RasterItem')) { throw new Error('Figure label requires one image.'); }
+        if (!text || text.length > 16 || /[\r\n]/.test(text)) { throw new Error('Enter a label of 1–16 characters.'); }
+        if (!(size >= 4 && size <= 72) || !(margin >= -200 && margin <= 200) || !(verticalOffset >= -200 && verticalOffset <= 200) || !positions[s.position]) { throw new Error('Invalid figure label settings.'); }
+        font = sciBitmapFigureFont(s.font, String(s.style || 'regular'));
+        color = sciBitmapHexColor(s.color);
+        bounds = item.geometricBounds;
+        left = Number(bounds[0]); top = Number(bounds[1]); right = Number(bounds[2]); bottom = Number(bounds[3]);
+        if (!(right > left && top > bottom)) { throw new Error('Invalid image bounds.'); }
+        group = app.activeDocument.groupItems.add();
+        group.name = 'SCI figure label \u00b7 ' + text;
+        frame = group.textFrames.add();
+        frame.contents = text;
+        frame.textRange.characterAttributes.size = size;
+        frame.textRange.characterAttributes.fillColor = color;
+        if (font) { frame.textRange.characterAttributes.textFont = font; }
+        width = Number(frame.width) || text.length * size * 0.7;
+        height = Number(frame.height) || size * 1.2;
+        x = /-right$/.test(s.position) ? right - margin - width : left + margin;
+        y = s.position.indexOf('outside-') === 0 ? top + 8 + height + verticalOffset : (/^bottom-/.test(s.position) ? bottom + 8 + height + verticalOffset : top - 8 + verticalOffset);
+        if (s.position.indexOf('outside-') !== 0 && (x < left - 0.01 || x + width > right + 0.01 || y > top + 0.01 || y - height < bottom - 0.01)) {
+            throw new Error('Figure label does not fit inside this image.');
+        }
+        frame.position = [x, y];
+        group.note = 'SCI_FIGLABEL_V1:' + sciBitmapJSON({ objectKey: info.objectKey, sourcePath: info.sourcePath, text: text, font: s.font || '', style: s.style || 'regular', size: size, margin: margin, verticalOffset: verticalOffset, position: s.position, color: s.color });
+        for (i = 0; i < app.activeDocument.groupItems.length; i++) {
+            g = app.activeDocument.groupItems[i];
+            if (g === group) { continue; }
+            try {
+                if (g.note && g.note.indexOf('SCI_FIGLABEL_V1:') === 0) {
+                    note = eval('(' + g.note.substr(16) + ')');
+                    if (note.objectKey === info.objectKey) { old.push(g); }
+                }
+            } catch (ignore) {}
+        }
+        for (i = 0; i < old.length; i++) { old[i].remove(); }
+        app.redraw();
+        return sciBitmapResult({ ok: true, text: text, position: s.position });
+    } catch (e) { if (group) { try { group.remove(); } catch (ignoreRemove) {} } return sciBitmapFailure(e); }
 }
 /*
  * Inset. Crops are already written in source-file pixels.

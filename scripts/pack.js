@@ -10,7 +10,6 @@ var cp = require('child_process');
 
 var root = path.resolve(__dirname, '..');
 var ver = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-require('./sync-release-docs');
 var distDir = path.join(root, 'dist');
 var stageRoot = path.join(distDir, '_pack_stage');
 var stage = path.join(stageRoot, 'paperfig');

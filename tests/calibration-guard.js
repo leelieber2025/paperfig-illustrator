@@ -15,9 +15,9 @@ function cls() {
 }
 function element() {
   return {
-    value: '', checked: false, disabled: false, textContent: '', classList: cls(),
+    value: '', checked: false, disabled: false, textContent: '', classList: cls(), options: [],
     style: {}, dataset: {}, parentElement: { classList: cls() },
-    addEventListener() {}, removeEventListener() {}, appendChild() {},
+    addEventListener() {}, removeEventListener() {}, appendChild(child) { this.options.push(child); }, remove(i) { this.options.splice(i, 1); },
     setAttribute() {}, getAttribute() { return null; }, click() {}
   };
 }
@@ -66,6 +66,7 @@ const api = ctx.window.SciScientificPanel.create({
   sourceSize: function () { return ctx.window._size; },
   busy: function () { return false; },
   notice: function (m) { ctx.window._notice = m; },
+  host: function () { return Promise.resolve({ fonts: [] }); },
   setBusy: function () {},
   refresh: function () {},
   extensionPath: root,

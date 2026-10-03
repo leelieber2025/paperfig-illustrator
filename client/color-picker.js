@@ -1,6 +1,6 @@
 /* PaperFig: in-panel RGB color picker for CEP.
  * Native <input type=color> opens behind the panel. This intercepts and shows
- * an RGB picker PLUS Fiji / ImageJ Merge Channels presets inside the same popup.
+ * an RGB picker with channel presets plus black and white inside the same popup.
  * Channel rows stay a simple color swatch — presets live in the picker, not the row.
  *
  * Close races guarded: mousedown opens; click only blocks native (no toggle);
@@ -108,14 +108,15 @@
     return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
   }
 
-  function fijiPresets() {
+  function colorPresets() {
     var W = window.SciBitmapWorkflow;
-    if (W && typeof W.channelColorPresets === 'function') { return W.channelColorPresets(); }
-    return [
+    var colors = W && typeof W.channelColorPresets === 'function' ? W.channelColorPresets().slice() : [
       { id: 'red', hex: '#ff0000' }, { id: 'green', hex: '#00ff00' }, { id: 'blue', hex: '#0000ff' },
       { id: 'gray', hex: '#ffffff' }, { id: 'cyan', hex: '#00ffff' }, { id: 'magenta', hex: '#ff00ff' },
       { id: 'yellow', hex: '#ffff00' }
     ];
+    colors.push({ id: 'black', hex: '#000000' }, { id: 'white', hex: '#ffffff' });
+    return colors;
   }
 
   function syncSwatch(input) {
@@ -186,23 +187,22 @@
     var popup = document.createElement('div');
     popup.className = 'pf-color-popup';
     popup.setAttribute('role', 'dialog');
-    popup.setAttribute('aria-label', t('channelColorPresetsAria'));
+    popup.setAttribute('aria-label', t('pickerColorPresets'));
     /* Do NOT capture-stopPropagation on the popup: that runs before child
      * targets and blocks Fiji preset / OK / SV / hue mousedown handlers.
      * Document outside-close already ignores events when openPopup.contains(target). */
 
-    /* Fiji presets INSIDE the picker window */
+    /* Color presets INSIDE the picker window */
     var presetRow = document.createElement('div');
     presetRow.className = 'pf-color-presets';
     presetRow.setAttribute('role', 'group');
-    presetRow.setAttribute('aria-label', t('channelColorPresetsAria'));
+    presetRow.setAttribute('aria-label', t('pickerColorPresets'));
     var presetLabel = document.createElement('div');
     presetLabel.className = 'pf-color-presets-label';
-    presetLabel.textContent = t('fijiColorPresets');
-    if (presetLabel.textContent === 'fijiColorPresets') { presetLabel.textContent = 'Fiji'; }
+    presetLabel.textContent = t('pickerColorPresets');
     popup.appendChild(presetLabel);
     var presetBtns = [];
-    fijiPresets().forEach(function (p) {
+    colorPresets().forEach(function (p) {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'pf-color-preset' + (p.id === 'gray' ? ' preset-gray' : '');

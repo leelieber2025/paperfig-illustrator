@@ -52,7 +52,7 @@ function boot(saved) {
 }
 
 const first = boot({});
-assert.deepEqual(first.tabs.map(t => t.name), ['adjust', 'scale', 'geometry', 'crop', 'inset', 'raw', 'export', 'settings']);
+assert.deepEqual(first.tabs.map(t => t.name), ['adjust', 'scale', 'geometry', 'crop', 'inset', 'label', 'raw', 'export', 'settings']);
 assert(/<div class="tab-tools" role="presentation">[\s\S]*?<\/div>\s*<button[^>]*class="tab-btn tab-settings-btn"[^>]*data-tab="settings"/.test(html));
 assert(first.tabs.find(t => t.name === 'raw').classList.contains('hidden'));
 assert(first.tabs.find(t => t.name === 'export').classList.contains('hidden'));

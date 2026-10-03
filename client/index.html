@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.1.0</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.0</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -94,6 +94,7 @@
         <button type="button" class="tab-btn" role="tab" data-tab="geometry" aria-selected="false" data-i18n="tabGeom" data-i18n-title="tabGeomTitle" title="旋转、翻转、拉平">几何</button>
         <button type="button" class="tab-btn" role="tab" data-tab="crop" aria-selected="false" data-i18n="tabCrop">裁剪</button>
         <button type="button" class="tab-btn" role="tab" data-tab="inset" aria-selected="false" data-i18n="tabInset">放大插图</button>
+        <button type="button" class="tab-btn" role="tab" data-tab="label" aria-selected="false" data-i18n="tabLabel">标签</button>
         <button type="button" class="tab-btn hidden" role="tab" data-tab="raw" hidden aria-selected="false" data-i18n="tabRaw" data-i18n-title="tabRawTitle" title="原始通道、直方图、加载">原始</button>
         <button type="button" class="tab-btn hidden" role="tab" data-tab="export" hidden aria-selected="false" data-i18n="tabExport" data-i18n-title="tabExportTitle" title="导出、批处理">导出</button>
       </div>
@@ -237,8 +238,9 @@
             <button type="button" id="scalePresetSave" data-i18n="scalePresetSave" data-i18n-title="scalePresetSaveTitle" title="选择保存标尺预设 JSON 的位置（默认从 Downloads 开始）">保存</button>
             <button type="button" id="scalePresetLoad" data-i18n="scalePresetLoad" data-i18n-title="scalePresetLoadTitle" title="打开标尺预设 JSON（默认从 Downloads 开始）">加载</button>
           </div>
-          <details class="compact-help"><summary><span data-i18n="helpScale">&#x6807;&#x5C3A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintScaleBar">独立线段+可选文字组。裁剪/改尺寸后请再更新；标尺不自动追随。可选是否显示 µm 等长度文字。默认按图恢复标定；仅「复用上次」是跨图拷贝。</p></details>
+          <details class="compact-help"><summary><span data-i18n="helpScale">&#x6807;&#x5C3A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintScaleBar">标尺与单张图片自动编组；整体缩放一起变化。裁剪或单独修改图片后请更新。可选是否显示 µm 等长度文字。默认按图恢复标定；仅「复用上次」是跨图拷贝。</p></details>
         </section>
+
       </div>
 
       <div id="tab-geometry" class="tab-pane" role="tabpanel" data-pane="geometry" hidden>
@@ -409,6 +411,29 @@
           </div>
 </section>
 
+      </div>
+
+      <div id="tab-label" class="tab-pane" role="tabpanel" data-pane="label" hidden>
+        <section class="group" id="figureLabelGroup" aria-labelledby="figureLabelHeading">
+          <h2 id="figureLabelHeading" data-i18n="figureLabelHeading">图版标签</h2>
+          <div class="crop-grid">
+            <label for="figureLabelText"><span data-i18n="figureLabelText">文字</span><input id="figureLabelText" type="text" maxlength="16" value="A"></label>
+            <label for="figureLabelFont"><span data-i18n="figureLabelFont">字体</span><select id="figureLabelFont"><option value="" data-i18n="figureLabelFontAuto">自动字体</option></select></label>
+            <label for="figureLabelStyle"><span data-i18n="figureLabelStyle">字形</span><select id="figureLabelStyle"><option value="regular" data-i18n="figureLabelRegular">常规</option><option value="bold" data-i18n="figureLabelBold">粗体</option><option value="italic" data-i18n="figureLabelItalic">斜体</option><option value="bold-italic" data-i18n="figureLabelBoldItalic">粗斜体</option></select></label>
+            <label for="figureLabelSize"><span data-i18n="textPt">字号(pt)</span><input id="figureLabelSize" type="number" min="4" max="72" step="1" value="14"></label>
+            <label for="figureLabelMargin"><span data-i18n="figureLabelHorizontalPt">左右偏移(pt)</span><input id="figureLabelMargin" type="number" min="-200" max="200" step="1" value="8"></label>
+            <label for="figureLabelVerticalOffset"><span data-i18n="figureLabelVerticalPt">上下偏移(pt)</span><input id="figureLabelVerticalOffset" type="number" min="-200" max="200" step="1" value="0"></label>
+            <label for="figureLabelPosition"><span data-i18n="position">位置</span><select id="figureLabelPosition"><option value="outside-top-left" data-i18n="outsideTopLeft" selected>图外左上</option><option value="outside-top-right" data-i18n="outsideTopRight">图外右上</option><option value="top-left" data-i18n="topLeft">左上</option><option value="top-right" data-i18n="topRight">右上</option><option value="bottom-left" data-i18n="bottomLeft">左下</option><option value="bottom-right" data-i18n="bottomRight">右下</option></select></label>
+          </div>
+          <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="figureLabelColor" type="color" value="#000000" title="#000000"></label>
+          <button type="button" id="figureLabelCreate" data-i18n="figureLabelCreate">创建/更新标签</button>
+          <div class="crop-grid">
+            <label for="figureLabelPresetName"><span data-i18n="figureLabelPresetName">方案名</span><input id="figureLabelPresetName" type="text" maxlength="40" data-i18n-placeholder="figureLabelPresetNamePh" placeholder="例如 深色图"></label>
+            <label for="figureLabelPresetSelect"><span data-i18n="figureLabelPreset">已存样式</span><select id="figureLabelPresetSelect"><option value="" data-i18n="figureLabelPresetChoose">选择样式</option></select></label>
+          </div>
+          <div class="button-row"><button type="button" id="figureLabelPresetSave" data-i18n="figureLabelPresetSave">保存样式</button><button type="button" id="figureLabelPresetLoad" data-i18n="figureLabelPresetLoad">调用</button><button type="button" id="figureLabelPresetDelete" data-i18n="figureLabelPresetDelete">删除</button></div>
+          <p class="hint-line" data-i18n="figureLabelHint">输入字母后创建可编辑标签。左右偏移正值向图内，负值向图外；上下偏移正值向上，负值向下。设置可保存调用。</p>
+        </section>
       </div>
 
       <div id="tab-export" class="tab-pane" role="tabpanel" data-pane="export" hidden>

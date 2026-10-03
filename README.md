@@ -1,6 +1,6 @@
 # PaperFig for Illustrator
 
-**Version 1.1.0** · Adobe Illustrator CEP panel for scientific figure bitmaps.
+Adobe Illustrator CEP panel for scientific figure bitmaps.
 
 PaperFig adjusts a placed bitmap in the panel and writes an **8-bit display file** for layout. It does not change the scientific or raw file on disk. It covers tone and channel mapping, uint8/uint16 preview, spatial calibration, and vector scale bars.
 
@@ -17,6 +17,7 @@ Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licens
 | **Geom** | Rotate, flip, and straighten on the artboard. |
 | **Crop** | Crop in file pixels. |
 | **Inset** | Make an enlarged inset (free, 1:1, 4:3, 16:9). |
+| **Label** | Editable A/B/C panel labels with saved font and placement styles. |
 | **Raw** | uint8/uint16 planes from TIFF/OME, or from Fiji + Bio-Formats. Histograms, per-channel range and gamma. |
 | **Export** | Optional batch apply and PNG/JPEG/TIFF format options. |
 | **⚙ Settings** | Fixed at the right of the tab bar; show advanced tabs and configure Fiji when needed. |
@@ -34,9 +35,9 @@ Install folder: `%APPDATA%\Adobe\CEP\extensions\paperfig` (Windows) · `~/Librar
 
 ### Install
 
-Download `paperfig-1.1.0.zip` from the [v1.0.0 release](https://github.com/leelieber2025/paperfig-illustrator/releases/tag/v1.1.0). The zip’s top folder is `paperfig/`. The pack script writes the same file to `dist/paperfig-1.1.0.zip`. Double-click `install.bat` (Windows) or `install.command` (macOS) next to `CSXS/manifest.xml`. See [`INSTALL.md`](INSTALL.md).
+Download the ZIP from the [releases page](https://github.com/leelieber2025/paperfig-illustrator/releases). The zip’s top folder is `paperfig/`. Local builds are written to `dist/`. Double-click `install.bat` (Windows) or `install.command` (macOS) next to `CSXS/manifest.xml`. See [`INSTALL.md`](INSTALL.md).
 
-Restart Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer reads **1.0.0**.
+Restart Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer shows the installed package version.
 
 The panel opens on **Scale**. Raw and Export are hidden by default; enable either under **Settings → Advanced features**. Fiji is optional: PaperFig asks for its path only when a file needs it, and the path can also be set under **Settings → Fiji setup**.
 
@@ -59,11 +60,12 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 | 页 | 作用 |
 |----|------|
 | **调整** | 亮度、对比、色调、色彩平衡、灰度、反相、模糊、锐化。荧光换色与保留通道。预设。 |
-| **原始** | 从 TIFF/OME 或 Fiji + Bio-Formats 读 uint8/uint16。直方图、逐通道范围与 gamma。 |
 | **标尺** | 按图标定，并由 µm/px 生成矢量标尺。 |
 | **几何** | 在画板上旋转、翻转、拉平。 |
 | **裁剪** | 按文件像素裁剪。 |
 | **放大插图** | 放大插图（自由、1:1、4:3、16:9）。 |
+| **标签** | 生成可编辑的 A/B/C 图版标签，并保存字体与位置样式。 |
+| **原始** | 从 TIFF/OME 或 Fiji + Bio-Formats 读 uint8/uint16。直方图、逐通道范围与 gamma。 |
 | **导出** | 可选的批量应用与 PNG/JPEG/TIFF 格式设置。 |
 | **设置** | 显示高级页，需要时配置 Fiji。 |
 
@@ -75,9 +77,9 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 
 每次 RGB **应用** 写 `<输出>.json`。`<输出>.baseline.json` 单独标记该文件已成为新基线。原始 **应用** 写 schema 为 `sci-raw-display` 的 `<输出>.json`，不写 baseline 文件，也不改原始文件。
 
-安装：从 [v1.0.0 发布](https://github.com/leelieber2025/paperfig-illustrator/releases/tag/v1.1.0) 下载 `paperfig-1.1.0.zip`。压缩包顶层是 `paperfig/`。在含 `CSXS/manifest.xml` 的目录双击 `install.bat`（Windows）或 `install.command`（macOS）。详见 [`INSTALL.md`](INSTALL.md)。
+安装：从 [发布页](https://github.com/leelieber2025/paperfig-illustrator/releases) 下载 ZIP。压缩包顶层是 `paperfig/`。在含 `CSXS/manifest.xml` 的目录双击 `install.bat`（Windows）或 `install.command`（macOS）。详见 [`INSTALL.md`](INSTALL.md)。
 
-重启 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.1.0**。
+重启 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚显示已安装包的版本。
 
 面板默认进入 **标尺**。**原始** 和 **导出** 默认隐藏，可在 **设置 → 高级功能** 打开。Fiji 可选，需要时在 **设置 → Fiji 设置** 配置。
 

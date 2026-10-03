@@ -21,32 +21,49 @@ test('Manual full-field calibration, two-point calibration and cropped scale fra
 const host={app:{getIdentityMatrix(){return {mValueA:1,mValueB:0,mValueC:0,mValueD:1,mValueTX:0,mValueTY:0};}},Transformation:{DOCUMENTORIGIN:0}};vm.createContext(host);vm.runInContext(fs.readFileSync(path.join(__dirname,'../jsx/bitmap.jsx'),'utf8'),host);
 function mul(a,b){return [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];}
 function item(m){return {boundingBox:[0,0,100,-50],file:{fsName:'/before'},m:m,get matrix(){return Object.fromEntries(['A','B','C','D','TX','TY'].map((k,i)=>['mValue'+k,this.m[i]]));},get geometricBounds(){let b=this.boundingBox,p=[[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]]].map(([x,y])=>[this.m[0]*x+this.m[2]*y+this.m[4],this.m[1]*x+this.m[3]*y+this.m[5]]);return [Math.min(...p.map(v=>v[0])),Math.max(...p.map(v=>v[1])),Math.max(...p.map(v=>v[0])),Math.min(...p.map(v=>v[1]))];},relink(f){this.file=f;this.boundingBox=f.fsName==='/before'?[0,0,100,-50]:[0,0,300,-80];},transform(m){this.m=mul(['A','B','C','D','TX','TY'].map(k=>m['mValue'+k]),this.m);}};}
+function scaleGroupMock(target){
+  const groups=[];
+  const layer={typename:'Layer'};
+  target.parent=layer;
+  target.move=function(relative,placement){this.parent=placement===host.ElementPlacement.PLACEATEND?relative:relative.parent;};
+  groups.add=function(){
+    const g={typename:'GroupItem',parent:layer,name:'',note:'',lines:[],texts:[],pageItems:[],
+      pathItems:{add(){const line={setEntirePath(p){this.points=p;}};g.lines.push(line);return line;}},
+      textFrames:{add(){const frame={contents:'',width:20,textRange:{characterAttributes:{}}};g.texts.push(frame);return frame;}},
+      move(relative,placement){this.parent=placement===host.ElementPlacement.PLACEATEND?relative:relative.parent;},
+      zOrder(){},remove(){const at=groups.indexOf(this);if(at>=0)groups.splice(at,1);}};
+    groups.push(g);return g;
+  };
+  host.ElementPlacement={PLACEBEFORE:0,PLACEAFTER:1,PLACEATEND:2};
+  host.ZOrderMethod={BRINGTOFRONT:0};
+  return groups;
+}
+function scaleBarGroup(groups){return groups.filter(g=>g.note&&g.note.indexOf('SCI_SCALE_V1:')===0)[0];}
 test('Exact relink preserves four corners under rotation, flip and shear',()=>{for(const m of [[1,0,0,1,10,20],[0,2,-2,0,30,40],[-1,0,0,1,5,8],[0.8,0.6,0.3,1.2,70,80]]){let i=item(m),before=host.sciBitmapCorners(i);host.sciBitmapRelinkExact(i,{fsName:'/after'});let after=host.sciBitmapCorners(i);for(let p=0;p<4;p++)for(let k=0;k<2;k++)assert(Math.abs(before[p][k]-after[p][k])<1e-6);}});
 console.log('\n'+tests+' scientific checks passed.');
-test('Vector bar creates editable line/text, records calibration and replaces only own generated group',()=>{let target=item([1,0,0.3,1,20,80]);Object.assign(target,{typename:'PlacedItem',embedded:false,uuid:'scale-test',name:'test',file:{fsName:'/before',name:'before.tif',exists:true}});const groups=[];groups.add=function(){let g={name:'',note:'',lines:[],texts:[],pathItems:{add(){let l={setEntirePath(p){this.points=p;}};g.lines.push(l);return l;}},textFrames:{add(){let t={contents:'',width:20,textRange:{characterAttributes:{}}};g.texts.push(t);return t;}},remove(){groups.splice(groups.indexOf(g),1);}};groups.push(g);return g;};let doc={name:'test.ai',fullName:{fsName:'/test.ai'},selection:[target],groupItems:groups};host.app.documents=[doc];host.app.activeDocument=doc;host.app.redraw=function(){};host.RGBColor=function(){};let lock=JSON.parse(host.captureSelectionLock()).lock;let s={fraction:0.2,lineWidth:1,fontSize:9,margin:5,position:'bottom-right',color:'#ffffff',label:'20 碌m',length:20,unit:'um',displayPixelsX:1000,calibration:{umPerPixelX:0.1}};let result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);assert.equal(groups.length,1);assert.equal(groups[0].texts[0].contents,'20 碌m');let pts=groups[0].lines[0].points;assert(Math.abs(Math.hypot(pts[1][0]-pts[0][0],pts[1][1]-pts[0][1])-20)<1e-6);assert(groups[0].note.includes('umPerPixelX'));result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);assert.equal(groups.length,1);});
+test('Vector bar creates editable line/text, records calibration and replaces only own generated group',()=>{let target=item([1,0,0.3,1,20,80]);Object.assign(target,{typename:'PlacedItem',embedded:false,uuid:'scale-test',name:'test',file:{fsName:'/before',name:'before.tif',exists:true}});const groups=scaleGroupMock(target);let doc={name:'test.ai',fullName:{fsName:'/test.ai'},selection:[target],groupItems:groups};host.app.documents=[doc];host.app.activeDocument=doc;host.app.redraw=function(){};host.RGBColor=function(){};let lock=JSON.parse(host.captureSelectionLock()).lock;let s={fraction:0.2,lineWidth:1,fontSize:9,margin:5,position:'bottom-right',color:'#ffffff',label:'20 碌m',length:20,unit:'um',displayPixelsX:1000,calibration:{umPerPixelX:0.1}};let result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);assert.equal(groups.length,2);assert.equal(scaleBarGroup(groups).texts[0].contents,'20 碌m');let pts=scaleBarGroup(groups).lines[0].points;assert(Math.abs(Math.hypot(pts[1][0]-pts[0][0],pts[1][1]-pts[0][1])-20)<1e-6);assert(scaleBarGroup(groups).note.includes('umPerPixelX'));result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));assert(result.ok,result.error);assert.equal(groups.length,2);});
 test('Vector bar omit text when includeText is false and restore on update',()=>{
   let target=item([1,0,0.3,1,20,80]);
   Object.assign(target,{typename:'PlacedItem',embedded:false,uuid:'scale-notext',name:'test',file:{fsName:'/before',name:'before.tif',exists:true}});
-  const groups=[];
-  groups.add=function(){let g={name:'',note:'',lines:[],texts:[],pathItems:{add(){let l={setEntirePath(p){this.points=p;}};g.lines.push(l);return l;}},textFrames:{add(){let t={contents:'',width:20,textRange:{characterAttributes:{}}};g.texts.push(t);return t;}},remove(){groups.splice(groups.indexOf(g),1);}};groups.push(g);return g;};
+  const groups=scaleGroupMock(target);
   let doc={name:'test.ai',fullName:{fsName:'/test.ai'},selection:[target],groupItems:groups};
   host.app.documents=[doc];host.app.activeDocument=doc;host.app.redraw=function(){};host.RGBColor=function(){};
   let lock=JSON.parse(host.captureSelectionLock()).lock;
   const base={fraction:0.2,lineWidth:1,fontSize:9,margin:5,position:'bottom-right',color:'#ffffff',label:'20 µm',length:20,unit:'um',displayPixelsX:1000,calibration:{umPerPixelX:0.1}};
   let result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(Object.assign({},base,{includeText:false}))));
   assert(result.ok,result.error);
-  assert.equal(groups.length,1);
-  assert.equal(groups[0].texts.length,0,'no text frame when includeText=false');
-  assert.equal(groups[0].lines.length,1);
+  assert.equal(groups.length,2);
+  assert.equal(scaleBarGroup(groups).texts.length,0,'no text frame when includeText=false');
+  assert.equal(scaleBarGroup(groups).lines.length,1);
   result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(Object.assign({},base,{includeText:true}))));
   assert(result.ok,result.error);
-  assert.equal(groups.length,1,'update replaces prior group');
-  assert.equal(groups[0].texts.length,1);
-  assert.equal(groups[0].texts[0].contents,'20 µm');
+  assert.equal(groups.length,2,'update replaces prior bar');
+  assert.equal(scaleBarGroup(groups).texts.length,1);
+  assert.equal(scaleBarGroup(groups).texts[0].contents,'20 µm');
   result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(Object.assign({},base,{includeText:false}))));
   assert(result.ok,result.error);
-  assert.equal(groups.length,1);
-  assert.equal(groups[0].texts.length,0,'update with includeText=false removes text');
+  assert.equal(groups.length,2);
+  assert.equal(scaleBarGroup(groups).texts.length,0,'update with includeText=false removes text');
 });
 test('Scale bar bottom-left/right stay at visual bottom with BL-first corners',()=>{
   /* Linked upright place often uses det<0 (negative D) 鈫?sciBitmapCorners BL-first (V toward visual top). */
@@ -56,8 +73,7 @@ test('Scale bar bottom-left/right stay at visual bottom with BL-first corners',(
   const topEdge=(corners[0][1]+corners[1][1])*0.5, botEdge=(corners[2][1]+corners[3][1])*0.5;
   assert(topEdge<botEdge,'expected BL-first corners (p0/p1 below p2/p3)');
   const gb=target.geometricBounds; /* [left, top, right, bottom], top>bottom */
-  const groups=[];
-  groups.add=function(){let g={name:'',note:'',lines:[],texts:[],pathItems:{add(){let l={setEntirePath(p){this.points=p;}};g.lines.push(l);return l;}},textFrames:{add(){let t={contents:'',width:20,textRange:{characterAttributes:{}}};g.texts.push(t);return t;}},remove(){groups.splice(groups.indexOf(g),1);}};groups.push(g);return g;};
+  const groups=scaleGroupMock(target);
   let doc={name:'test.ai',fullName:{fsName:'/test.ai'},selection:[target],groupItems:groups};
   host.app.documents=[doc];host.app.activeDocument=doc;host.app.redraw=function(){};host.RGBColor=function(){};
   let lock=JSON.parse(host.captureSelectionLock()).lock;
@@ -66,7 +82,7 @@ test('Scale bar bottom-left/right stay at visual bottom with BL-first corners',(
     const s={fraction:0.2,lineWidth:1,fontSize:9,margin:5,position,color:'#ffffff',label:'10 碌m',length:10,unit:'um',displayPixelsX:1000,calibration:{umPerPixelX:0.1}};
     const result=JSON.parse(host.sciBitmapScaleBar(JSON.stringify(lock),JSON.stringify(s)));
     assert(result.ok,result.error||position);
-    return groups[0].lines[0].points;
+    return scaleBarGroup(groups).lines[0].points;
   }
   const br=place('bottom-right');
   const bl=place('bottom-left');

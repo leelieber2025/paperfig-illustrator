@@ -1,6 +1,6 @@
 # How to use PaperFig / 使用说明
 
-**Version 1.1.0** · Adobe Illustrator CEP panel · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
+Adobe Illustrator CEP panel · License **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)**
 
 English, then the matching Chinese.
 
@@ -21,9 +21,9 @@ Manual copy and `PlayerDebugMode`: [`INSTALL.md`](INSTALL.md).
 
 ## 2. Open the panel / 打开面板
 
-Quit and reopen Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer reads **1.0.0**. Select a linked bitmap. The preview shows that image.
+Quit and reopen Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer shows the installed package version. Select a linked bitmap. The preview shows that image.
 
-退出并重新打开 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚为 **1.1.0**。选中链接的位图后，预览显示该图。
+退出并重新打开 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚显示已安装包的版本。选中链接的位图后，预览显示该图。
 
 The panel opens on **Scale**. Raw and Export are hidden by default. Show either under **Settings → Advanced features**. PaperFig asks for the Fiji path only when a file needs it; you can also set it under **Settings → Fiji setup**.
 
@@ -42,6 +42,7 @@ The top stays put: preview, **Apply / Refresh / Reset**, **Artboard preview / Ca
 | **Geom / 几何** | Rotate, flip, straighten. 旋转、翻转、拉平。 |
 | **Crop / 裁剪** | Crop in file pixels. 按文件像素裁剪。 |
 | **Inset / 放大插图** | Enlarged inset and source frame. 放大插图与原图框线。 |
+| **Label / 标签** | Editable A/B/C labels with reusable styles. 可编辑图版标签与可复用样式。 |
 | **Raw / 原始** | uint8/uint16 planes, histograms, group range lock. uint8/uint16、直方图、组范围锁定。 |
 | **Export / 导出** | Optional batch and file format controls. 可选批量与格式设置。 |
 | **⚙ Settings / 设置** | Fixed button at the right of the tab bar; advanced tabs and Fiji path. 标签栏右侧固定按钮；高级页开关和 Fiji 路径。 |
@@ -102,9 +103,9 @@ Each image keeps its own calibration. Selecting an uncalibrated image clears the
 
 **保存** 用系统对话框把 JSON 预设写到 `~/paperfig/scales`（Windows 为 `%USERPROFILE%\paperfig\scales`）。**加载** 从同一文件夹读入标定和标尺样式。**核对选中图** 比较当前选中链接图的 µm/px。
 
-Crop, resize, and **Use full image** do not clear calibration. The bar uses display width times µm/px. It does not follow if you scale the placed image later. Create the bar again after that. Do not use print DPI as spatial calibration.
+Crop, resize, and **Use full image** do not clear calibration. The bar uses display width times µm/px. A new bar joins the image in a group, so scaling the entire group scales both. If the image is inside a normal group, the bar joins that group. Select exactly one image; clipped groups are not changed. After cropping, replacing, or scaling only the image, update the bar. Do not use print DPI as spatial calibration.
 
-裁剪、改大小和 **使用全图** 不会清除标定。标尺按显示宽度乘以 µm/px 计算。之后若单独缩放图片，标尺不会跟着变，需要重新创建。不要把打印 DPI 当作空间标定。
+裁剪、改大小和 **使用全图** 不会清除标定。标尺按显示宽度乘以 µm/px 计算。新标尺与图片编组，缩放整个组时会一起变化；图片已在普通组内则标尺加入该组。须明确选中一张图片，剪切蒙版组不会自动改动。裁剪、替换或单独缩放图片后，仍需更新标尺。不要把打印 DPI 当作空间标定。
 
 ## 7. Geom, Crop, Inset / 几何、裁剪、放大插图
 
@@ -128,7 +129,13 @@ Crop left/top/width/height are file pixels. Width and height of 0, or **Use full
 
 **放大插图：** 打开 **放大插图** 页，点 **框选区域**。拖选、填写左/上/宽/高，或同时选中图像和矩形后点 **读取画板矩形**。比例为自由、1:1、4:3、16:9。PNG 是链接文件的 1:1 裁切。放在左右时，高度与主图一致。放在上下时，**放大** 乘以区域尺寸。点顶部 **应用** 放置子图和原图框；勾选 **绘制引线** 时加上互不交叉的引线。框和引线各自有线宽、颜色和线型（实线、虚线、点线、点划线）。拐角为尖角、圆角或斜角。圆角且半径大于 0、框又与轴对齐时，用圆角矩形。已有标定且勾选 **已标定则添加标尺** 时，插图上会加矢量标尺。
 
-## 8. Export / 导出
+## 8. Label / 标签
+
+**Panel label:** type A, B, C, or another short label and click **Create / update label**. The default is outside the image at the top left. Use the font dropdown (Automatic works without choosing a font), regular/bold/italic style, size, color, and corner. Horizontal offset accepts negative values; positive moves inward from the chosen side. Vertical offset also accepts negative values; positive moves up and negative moves down. The text stays editable in Illustrator. Label text and settings stay in the panel until changed. Save named styles for later use; presets store appearance and position, not the letter.
+
+**图版标签：** 输入 A、B、C 等文字后点 **创建/更新标签**。默认放在图外左上角，可从下拉框选已安装字体，也可保留自动字体；还可设常规/粗体/斜体、字号、颜色和位置。左右偏移允许负值，正值向图片内侧移动；上下偏移也允许负值，正值向上、负值向下。文字在 Illustrator 中仍可编辑。文字与设置会一直保留，直到你修改；可保存命名样式供以后调用，样式不包含字母。
+
+## 9. Export / 导出
 
 Select several images. Click **1 · Review selection**, then **2 · Apply checked**. One recipe, no crop, no rotation. Embedded images are skipped. **Stop** cancels the batch that is running.
 
@@ -142,7 +149,7 @@ Formats: PNG, JPEG, or uncompressed RGBA8 TIFF. DPI is print metadata, not spati
 
 **Fiji 设置（设置页）：** 填写可执行文件或应用目录，然后点 **检测** 或 **测试连接**。需要时在 Fiji 里安装 Bio-Formats。普通 RGB JPG/PNG 和许多简单 TIFF 不必配置 Fiji。
 
-## 9. Notes / 说明
+## 10. Notes / 说明
 
 The panel edits source orientation. The artboard preview keeps Illustrator’s rotation and flip. After Apply, an embedded image becomes a linked display PNG. That step does not recover the original microscopy file. Zoom the preview before picking scale endpoints.
 

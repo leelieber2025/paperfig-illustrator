@@ -16,7 +16,7 @@
 
 Apply writes an 8-bit display file. The raw file stays the source. A calibration is not copied just because a recipe is reused.
 
-There is no automatic scale-bar tracking. The bar is a vector group from the pixel width and µm/px at the moment you create it. If you scale the placed image later, create the bar again.
+The bar is a vector group from the pixel width and µm/px at creation. A standalone image and bar are wrapped in one group; an image in a normal group gets the bar as a sibling. Whole-group transforms move both. Image-only crop, replacement, or scaling requires updating the bar. Clipped groups are rejected. Figure labels are independent editable text groups keyed to one placed image; selecting a group with one image positions the label from that image.
 
 A legacy stamp `size:mtime` is not treated as the same content when only the byte size matches. The panel asks you to confirm the source, then stores `sha256:`. Raw JSON is written to a temporary file and renamed into place. If the image is already replaced and the record fails, the panel says so and retries the record the next time it opens.
 
@@ -43,7 +43,7 @@ Not in this panel: projection, CLAHE, raw spatial filters, multi-file datasets.
 
 应用写出 8 位展示图。原始文件仍是数据来源。复用配方不会顺便复制标定。
 
-没有自动标尺跟踪。标尺是创建当时按像素宽度和 µm/px 生成的矢量组。之后若单独缩放图片，需要重新创建标尺。
+标尺在创建时按像素宽度和 µm/px 生成。独立图片与标尺组成一个组；已有普通组的图片则将标尺加入原组。整体变换会带动两者。单独裁剪、替换或缩放图片后需要更新标尺。剪切蒙版组不自动改动。图版标签是按单张置入图像标记的独立可编辑文字组；选中含一张图片的组时，标签仍按该图片定位。
 
 旧记录 `size:mtime` 不能只凭文件大小相同就当作内容未变。面板会要求重新确认来源，确认后保存 `sha256:`。原始 JSON 先写入临时文件再替换。若图片已经替换而记录写入失败，面板会说明，并在下次打开时重试该记录。
 
