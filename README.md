@@ -6,6 +6,8 @@ PaperFig adjusts a placed bitmap in the panel and writes an **8-bit display file
 
 Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)** — see [`LICENSE`](LICENSE).
 
+**Demo / 演示** (1 min): [YouTube](https://youtu.be/wRnx4TTDYiI). Calibrate, straighten and crop, add a vector scale bar, make an inset, then add labels. 标定、拉平并裁切、加矢量标尺、做放大插图，再加标签。
+
 ---
 
 ## English
