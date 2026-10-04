@@ -1,5 +1,7 @@
 # PaperFig for Illustrator
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23073417.svg)](https://doi.org/10.5281/zenodo.23073417) [![License: GPL-3.0](https://img.shields.io/github/license/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/blob/main/LICENSE) [![Release](https://img.shields.io/github/v/release/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/releases/latest) [![Issues](https://img.shields.io/github/issues/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/issues) [![Stars](https://img.shields.io/github/stars/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/stargazers) [![Downloads](https://img.shields.io/github/downloads/leelieber2025/paperfig-illustrator/total?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/releases)
+
 Adobe Illustrator CEP panel for scientific figure bitmaps.
 
 PaperFig adjusts a placed bitmap in the panel and writes an **8-bit display file** for layout. It does not change the scientific or raw file on disk. It covers tone and channel mapping, uint8/uint16 preview, spatial calibration, and vector scale bars.
@@ -121,6 +123,27 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 用法见 [`HOWTO.md`](HOWTO.md)。
 
 ---
+
+## Citation / 引用
+
+Cite every version with [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417). That DOI always opens the latest release. The current release is v1.2.1, [10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291).
+
+Zhao Li 李钊. (2026). *leelieber2025/paperfig-illustrator: PaperFig 1.2.1* (Version v1.2.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23137291
+
+引用全部版本用 [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417)，它始终指向最新版。当前版本 v1.2.1 是 [10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291)。
+
+```bibtex
+@software{zhao_li_2026_23137291,
+  author    = {Zhao Li 李钊},
+  title     = {leelieber2025/paperfig-illustrator: PaperFig 1.2.1},
+  month     = oct,
+  year      = 2026,
+  publisher = {Zenodo},
+  version   = {v1.2.1},
+  doi       = {10.5281/zenodo.23137291},
+  url       = {https://doi.org/10.5281/zenodo.23137291}
+}
+```
 
 ## License / 许可
 
