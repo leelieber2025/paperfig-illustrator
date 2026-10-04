@@ -126,20 +126,19 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 
 ## Citation / 引用
 
-Cite every version with [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417). That DOI always opens the latest release. The current release is v1.2.1, [10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291).
+Cite every version with [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417). That DOI always opens the latest release. The latest record is [10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291).
 
-Zhao Li 李钊. (2026). *leelieber2025/paperfig-illustrator: PaperFig 1.2.1* (Version v1.2.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23137291
+Zhao Li 李钊. (2026). *leelieber2025/paperfig-illustrator: PaperFig* [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23137291
 
-引用全部版本用 [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417)，它始终指向最新版。当前版本 v1.2.1 是 [10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291)。
+引用全部版本用 [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417)，它始终指向最新版。2636826032357602440526159[10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291)。
 
 ```bibtex
 @software{zhao_li_2026_23137291,
   author    = {Zhao Li 李钊},
-  title     = {leelieber2025/paperfig-illustrator: PaperFig 1.2.1},
+  title     = {leelieber2025/paperfig-illustrator: PaperFig},
   month     = oct,
   year      = 2026,
   publisher = {Zenodo},
-  version   = {v1.2.1},
   doi       = {10.5281/zenodo.23137291},
   url       = {https://doi.org/10.5281/zenodo.23137291}
 }
