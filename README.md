@@ -10,9 +10,19 @@ Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licens
 <tr>
 <td width="50%" valign="top">
 
-[![Scale and crop demo, click to watch](https://img.youtube.com/vi/wRnx4TTDYiI/mqdefault.jpg)](https://youtu.be/wRnx4TTDYiI)
-
 **Scale and crop demo / 标定与裁切演示** (1 min)
+
+</td>
+<td width="50%" valign="top">
+
+**Brightness and channels demo / 亮度与通道演示** (35 sec)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+[![Scale and crop demo, click to watch](https://img.youtube.com/vi/wRnx4TTDYiI/mqdefault.jpg)](https://youtu.be/wRnx4TTDYiI)
 
 [▶ Watch / 观看](https://youtu.be/wRnx4TTDYiI)
 
@@ -22,8 +32,6 @@ Calibrate, straighten and crop, add a vector scale bar, make an inset, then add 
 <td width="50%" valign="top">
 
 [![Brightness and channels demo, click to watch](https://img.youtube.com/vi/jVFhHXaDabA/mqdefault.jpg)](https://youtu.be/jVFhHXaDabA)
-
-**Brightness and channels demo / 亮度与通道演示** (35 sec)
 
 [▶ Watch / 观看](https://youtu.be/jVFhHXaDabA)
 
