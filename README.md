@@ -130,7 +130,7 @@ Cite every version with [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo
 
 Zhao Li 李钊. (2026). *leelieber2025/paperfig-illustrator: PaperFig* [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23137291
 
-引用全部版本用 [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417)，它始终指向最新版。2636826032357602440526159[10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291)。
+引用全部版本用 [10.5281/zenodo.23073417](https://doi.org/10.5281/zenodo.23073417)，它始终指向最新版。最新记录是[10.5281/zenodo.23137291](https://doi.org/10.5281/zenodo.23137291)。
 
 ```bibtex
 @software{zhao_li_2026_23137291,
