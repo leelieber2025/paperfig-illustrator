@@ -21,7 +21,7 @@ Calibrate, straighten and crop, add a vector scale bar, make an inset, then add 
 </td>
 <td width="50%" valign="top">
 
-**Brightness and channels demo / 亮度与通道演示**
+**Brightness and channels demo / 亮度与通道演示** (35 sec)
 
 [![Brightness and channels, click to watch](https://img.youtube.com/vi/jVFhHXaDabA/mqdefault.jpg)](https://youtu.be/jVFhHXaDabA)
 
