@@ -26,7 +26,7 @@ Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licens
 
 [▶ Watch / 观看](https://youtu.be/wRnx4TTDYiI)
 
-Calibrate, straighten and crop, add a vector scale bar, make an inset, then add labels. 标定、拉平并裁切、加矢量标尺、做放大插图，再加标签。
+Calibrate, rotate, and crop, add a vector scale bar, make an inset, then add labels. 标定、旋转并裁切、加矢量标尺、做放大插图，再加标签。
 
 </td>
 <td width="50%" valign="top">
