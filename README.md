@@ -6,6 +6,10 @@ PaperFig adjusts a placed bitmap in the panel and writes an **8-bit display file
 
 Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)** — see [`LICENSE`](LICENSE).
 
+<table>
+<tr>
+<td width="50%" valign="top">
+
 **Demo / 演示** (1 min)
 
 [![PaperFig demo, click to watch](https://img.youtube.com/vi/wRnx4TTDYiI/mqdefault.jpg)](https://youtu.be/wRnx4TTDYiI)
@@ -14,6 +18,9 @@ Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licens
 
 Calibrate, straighten and crop, add a vector scale bar, make an inset, then add labels. 标定、拉平并裁切、加矢量标尺、做放大插图，再加标签。
 
+</td>
+<td width="50%" valign="top">
+
 **Tone / 色调**
 
 [![PaperFig tone demo, click to watch](https://img.youtube.com/vi/jVFhHXaDabA/mqdefault.jpg)](https://youtu.be/jVFhHXaDabA)
@@ -21,6 +28,10 @@ Calibrate, straighten and crop, add a vector scale bar, make an inset, then add 
 [▶ Watch / 观看](https://youtu.be/jVFhHXaDabA)
 
 Raise brightness and contrast, emphasize one channel, then switch to a colorblind-friendly palette. Channel colors can be changed freely. 增加亮度和对比度，单独加强一个通道，再换成色盲友好配色。通道颜色可以随意改。
+
+</td>
+</tr>
+</table>
 
 ---
 
