@@ -245,10 +245,11 @@ assert(/exifOrientationTransform/.test(panel));
    const manifest = fs.readFileSync(path.join(root, 'CSXS/manifest.xml'), 'utf8');
    assert(manifest.includes('ExtensionBundleVersion="' + pkgVer + '"'));
    assert(manifest.includes('Id="com.zhaoli.paperfig.panel" Version="' + pkgVer + '"'));
-   ['README.md', 'INSTALL.md', 'HOWTO.md', 'ARCHITECTURE.md'].forEach(function (name) {
+   ['INSTALL.md', 'HOWTO.md', 'ARCHITECTURE.md'].forEach(function (name) {
      const doc = fs.readFileSync(path.join(root, name), 'utf8');
      assert(!/\b\d+\.\d+\.\d+\b/.test(doc), name + ' should not contain a release version');
    });
+   assert(/10\.5281\/zenodo\.23137291/.test(fs.readFileSync(path.join(root, 'README.md'), 'utf8')));
    assert(/\b1\.2\.1\b/.test(fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8')));
    const installSh = fs.readFileSync(path.join(root, 'install.sh'), 'utf8');
    assert(installSh.indexOf('rm -rf "${DEST}"') < 0);
