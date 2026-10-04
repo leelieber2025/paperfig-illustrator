@@ -12,6 +12,8 @@ assert(/id="figureLabelPosition"[^>]*><option value="outside-top-left"[^>]*selec
 assert(/id="figureLabelMargin"[^>]*min="-200"/.test(html));
 assert(/id="figureLabelVerticalOffset"[^>]*min="-200"/.test(html));
 assert(/id="figureLabelColor"[^>]*value="#000000"/.test(html));
+assert(/id="figureStainPosition"[^>]*>[\s\S]*?value="top-left"[^>]*selected/.test(html));
+assert(/id="figureStainFont"/.test(html) && /id="figureStainStyle"/.test(html) && /id="figureStainSize"/.test(html));
 assert(/id: 'black', hex: '#000000'/.test(picker) && /id: 'white', hex: '#ffffff'/.test(picker));
 assert(/verticalOffset:Number\(\$\('figureLabelVerticalOffset'\)\.value\)/.test(panel));
 
@@ -78,7 +80,7 @@ groups.add = (function (add) {
   return function () {
     const group = add();
     const original = group.textFrames.add;
-    group.textFrames.add = function () { const frame = original(); group.textFrames.added = frame; return frame; };
+    group.textFrames.add = function () { const frame = original(); if (!group.textFrames.added) group.textFrames.added = frame; (group.textFrames.items ||= []).push(frame); return frame; };
     return group;
   };
 })(groups.add);
@@ -89,6 +91,25 @@ assert.equal(frame.textRange.characterAttributes.fillColor.hex, '#000000');
 frame = label({ margin: -12, verticalOffset: -15, font: 'Arial', style: 'bold' });
 assert.deepEqual([...frame.position], [-12, 105]);
 assert.equal(frame.textRange.characterAttributes.textFont, fonts[1]);
+assert.equal(groups.filter(g => g.note.indexOf('SCI_FIGLABEL_V1:') === 0).length, 1);
+frame = label({ stains: [
+  { text: 'TUBB3', color: '#ff0000' },
+  { text: 'TX', color: '#00ff00' },
+  { text: 'RUNX2', color: '#ffffff' }
+], stainFont: 'Arial', stainStyle: 'bold', stainSize: 12, stainPosition: 'top-left', stainMargin: 8, stainVerticalOffset: 0 });
+let stainGroup = groups.filter(g => g.note.indexOf('SCI_FIGLABEL_V1:') === 0)[0];
+assert.deepEqual(stainGroup.textFrames.items.map(f => f.contents), ['A', 'TUBB3', 'TX', 'RUNX2']);
+assert.deepEqual(stainGroup.textFrames.items.slice(1).map(f => [...f.position]), [[8, 92], [34, 92], [60, 92]]);
+assert.deepEqual(stainGroup.textFrames.items.slice(1).map(f => f.textRange.characterAttributes.fillColor.hex), ['#ff0000', '#00ff00', '#ffffff']);
+assert(stainGroup.textFrames.items.slice(1).every(f => f.textRange.characterAttributes.textFont === fonts[1] && f.textRange.characterAttributes.size === 12));
+frame = label({ stains: [
+  { text: 'TUBB3', color: '#ff0000' },
+  { text: '', color: '#00ff00' },
+  { text: 'RUNX2', color: '#ffffff' }
+], stainSize: 12, stainPosition: 'outside-bottom-right', stainMargin: -5, stainVerticalOffset: 3 });
+stainGroup = groups.filter(g => g.note.indexOf('SCI_FIGLABEL_V1:') === 0)[0];
+assert.deepEqual(stainGroup.textFrames.items.map(f => f.contents), ['A', 'TUBB3', 'RUNX2']);
+assert.deepEqual(stainGroup.textFrames.items.slice(1).map(f => [...f.position]), [[59, -5], [85, -5]]);
 assert.equal(groups.filter(g => g.note.indexOf('SCI_FIGLABEL_V1:') === 0).length, 1);
 const bad = JSON.parse(ctx.sciBitmapFigureLabel('{}', JSON.stringify({ text: 'A', size: 14, margin: 201, verticalOffset: 0, position: 'outside-top-left', color: '#000000' })));
 assert.equal(bad.ok, false);

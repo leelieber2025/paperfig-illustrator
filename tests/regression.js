@@ -447,15 +447,12 @@ test('0.10.0 color picker close-race guard; default channel swatches sync+CSS',(
    near(quad[1], [150,80]);
    near(quad[2], [150,40]);
    near(quad[3], [50,40]);
-   const sizeFree = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 3);
-   assert.equal(sizeFree.width, 300);
-   assert.equal(sizeFree.height, 120);
-   const size = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 3, 'right');
+   const size = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 'right');
    assert.equal(size.height, 100, 'side inset height matches main');
    assert.equal(size.width, 250, 'side inset width from crop aspect');
    assert(Math.abs(size.effectiveMagnification - 2.5) < 1e-9);
    
-const sizeAbove = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 3, 'above');
+const sizeAbove = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 'above');
    
 assert.equal(sizeAbove.width, 200, 'above inset width matches main');
    
@@ -463,7 +460,7 @@ assert.equal(sizeAbove.height, 80, 'above inset height from crop aspect');
    
 assert(Math.abs(sizeAbove.effectiveMagnification - 2) < 1e-9);
    
-const sizeBelow = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 3, 'below');
+const sizeBelow = Core.insetPointSize(corners, {x:0.25,y:0.2,w:0.5,h:0.4}, 'below');
    
 assert.equal(sizeBelow.width, 200, 'below inset width matches main');
    
@@ -488,12 +485,12 @@ assert.equal(sizeBelow.height, 80, 'below inset height from crop aspect');
    const tallLeaders = Core.insetLeaders([[0,100],[40,100],[40,60],[0,60]], {x:60,y:120}, tall);
    assert.equal(tallLeaders.length, 2);
    assert(!segCross(tallLeaders[0], tallLeaders[1]), 'taller side inset leaders must not cross');
-   const region = Core.regionFromDocPoints(corners, [[50,80],[150,80],[150,40],[50,40]], 1000, 500);
-   assert.equal(region.left, 250);
-   assert.equal(region.top, 100);
-   assert.equal(region.width, 500);
-   assert.equal(region.height, 200);
    assert(!/id="insetApply"/.test(fs.readFileSync(path.join(root,'client/index.html'),'utf8')), '0.9.2 removes separate Create inset button');
+   assert(!/id="insetMag"/.test(fs.readFileSync(path.join(root,'client/index.html'),'utf8')), 'unused Inset Zoom control is removed');
+   assert(!/id="(?:insetDrawBtn|insetClearBtn|cropFullBtn)"/.test(fs.readFileSync(path.join(root,'client/index.html'),'utf8')), 'redundant region buttons are removed');
+   const scaleHtml=fs.readFileSync(path.join(root,'client/index.html'),'utf8');
+   assert(scaleHtml.indexOf('id="scalePresetSave"')<scaleHtml.indexOf('id="scaleMethod"'), 'Scale preset controls come before calibration');
+   assert(!/id="scaleAudit"/.test(scaleHtml), 'unused selection comparison is removed');
   assert(/marqueeMode === 'inset'/.test(panel) && /return applyInset\(\)/.test(panel), 'inset-mode Apply must call applyInset');
   assert(!/channels:\s*W\.channelsDefault/.test(panelMarquee), 'marquee applyInset must not use panel-local W');
   assert(/SciBitmapWorkflow\.channelsDefault\(\)/.test(panelMarquee), 'marquee applyInset uses SciBitmapWorkflow');
@@ -507,7 +504,7 @@ assert.equal(sizeBelow.height, 80, 'below inset height from crop aspect');
    assert(/function applyInset/.test(panel));
    assert(/identityPixels/.test(panel));
    assert(/insetHeading/.test(fs.readFileSync(path.join(root,'client/i18n.js'),'utf8')));
-   assert.throws(()=>Core.insetPointSize(corners, {w:0.2,h:0.2}, 0.5), /Invalid inset settings/);
+   assert.throws(()=>Core.insetPointSize(corners, {w:0.2,h:0.2}, 'diagonal'), /Invalid inset settings/);
    /* 0.8.9: file Y → artboard via geometricBounds; BL-first corner UV remapped. */
    assert.equal(Core.insetFileNyToCornerNy(corners, 0.25), 0.25, 'TL-first: file Y = corner UV');
    const blFirst = [[0,0],[200,0],[200,100],[0,100]]; /* corner[0] at visual bottom */

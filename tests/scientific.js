@@ -17,7 +17,7 @@ test('keepChannels selects one or two of three acquisition planes',()=>{
 test('Group signature rejects reordered channel names and mismatched bit depth',()=>{let r=S.recipe(d);assert.throws(()=>S.recipe({...d,names:['C2','C1']},r));assert.throws(()=>S.recipe({...d,bits:8},r));assert.throws(()=>S.recipe(d,{channels:[{low:1,high:0}]}));});
 test('OME DimensionOrder maps C/Z planes; Z/T bounds are checked',()=>{let xml='<OME><Image><Pixels DimensionOrder="XYZCT" SizeX="4" SizeY="2" SizeC="2" SizeZ="2" SizeT="1"><Channel Name="A"/><Channel Name="B"/><TiffData/></Pixels></Image></OME>';let f=fixture({xml,planes:[[1,1,1,1,1,1,1,1],[2,2,2,2,2,2,2,2],[3,3,3,3,3,3,3,3],[4,4,4,4,4,4,4,4]]});let r=S.nativeTiff(f,{z:1});assert.equal(r.planes[0][0],2);assert.equal(r.planes[1][0],4);assert.throws(()=>S.nativeTiff(f,{z:2}));});
 test('Unsupported layouts and truncated raw data fail closed',()=>{assert.throws(()=>S.nativeTiff(fixture({compression:5})));assert.throws(()=>S.nativeTiff(fixture().subarray(0,200)));assert.throws(()=>S.nativeTiff(fixture({xml:'<not-ome/>'})));});
-test('Manual full-field calibration, two-point calibration and cropped scale fraction',()=>{let cal=S.calibration({method:'field',width:200,unit:'um',pixelsX:2000,pixelsY:1000});assert.equal(cal.umPerPixelX,0.1);assert.equal(cal.coordSpace,'full-source');assert.equal(S.scaleFraction(cal,20,'um',1000),0.2);assert.equal(S.scaleFraction(cal,20,'um',500),0.4);/* same 碌m/px, narrower crop 鈫?longer fraction */cal=S.calibration({method:'two-point',points:[{x:10,y:20},{x:210,y:20}],length:20,unit:'um'});assert.equal(cal.umPerPixelX,0.1);assert.equal(cal.coordSpace,'full-source');cal=S.calibration({method:'two-point',points:[{x:10,y:20},{x:20,y:100}],length:20,unit:'um'});assert(Math.abs(cal.umPerPixelX-20/Math.sqrt(10*10+80*80))<1e-9);assert.throws(()=>S.calibration({method:'two-point',points:[{x:10,y:20},{x:11,y:20}],length:20,unit:'um'}));assert.throws(()=>S.scaleFraction({umPerPixelX:0.1},200,'um',1000));let same=S.scaleAudit([{umPerPixelX:0.1},{umPerPixelX:0.1004}]);assert.equal(same.mismatch,false);let diff=S.scaleAudit([{umPerPixelX:0.1},{umPerPixelX:0.2}]);assert.equal(diff.mismatch,true);assert.equal(diff.calibrated,2);});
+test('Manual full-field calibration, two-point calibration and cropped scale fraction',()=>{let cal=S.calibration({method:'field',width:200,unit:'um',pixelsX:2000,pixelsY:1000});assert.equal(cal.umPerPixelX,0.1);assert.equal(cal.coordSpace,'full-source');assert.equal(S.scaleFraction(cal,20,'um',1000),0.2);assert.equal(S.scaleFraction(cal,20,'um',500),0.4);/* same 碌m/px, narrower crop 鈫?longer fraction */cal=S.calibration({method:'two-point',points:[{x:10,y:20},{x:210,y:20}],length:20,unit:'um'});assert.equal(cal.umPerPixelX,0.1);assert.equal(cal.coordSpace,'full-source');cal=S.calibration({method:'two-point',points:[{x:10,y:20},{x:20,y:100}],length:20,unit:'um'});assert(Math.abs(cal.umPerPixelX-20/Math.sqrt(10*10+80*80))<1e-9);assert.throws(()=>S.calibration({method:'two-point',points:[{x:10,y:20},{x:11,y:20}],length:20,unit:'um'}));assert.throws(()=>S.scaleFraction({umPerPixelX:0.1},200,'um',1000));});
 const host={app:{getIdentityMatrix(){return {mValueA:1,mValueB:0,mValueC:0,mValueD:1,mValueTX:0,mValueTY:0};}},Transformation:{DOCUMENTORIGIN:0}};vm.createContext(host);vm.runInContext(fs.readFileSync(path.join(__dirname,'../jsx/bitmap.jsx'),'utf8'),host);
 function mul(a,b){return [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];}
 function item(m){return {boundingBox:[0,0,100,-50],file:{fsName:'/before'},m:m,get matrix(){return Object.fromEntries(['A','B','C','D','TX','TY'].map((k,i)=>['mValue'+k,this.m[i]]));},get geometricBounds(){let b=this.boundingBox,p=[[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]]].map(([x,y])=>[this.m[0]*x+this.m[2]*y+this.m[4],this.m[1]*x+this.m[3]*y+this.m[5]]);return [Math.min(...p.map(v=>v[0])),Math.max(...p.map(v=>v[1])),Math.max(...p.map(v=>v[0])),Math.min(...p.map(v=>v[1]))];},relink(f){this.file=f;this.boundingBox=f.fsName==='/before'?[0,0,100,-50]:[0,0,300,-80];},transform(m){this.m=mul(['A','B','C','D','TX','TY'].map(k=>m['mValue'+k]),this.m);}};}
@@ -164,7 +164,7 @@ test('0.8.6 inset matches side height, non-crossing leaders, styled frame, scale
   host.StrokeJoin={MITERENDJOIN:0,ROUNDENDJOIN:1,BEVELENDJOIN:2};
   host.StrokeCap={BUTTENDCAP:0,ROUNDENDCAP:1};
   const lock=JSON.parse(host.captureSelectionLock()).lock;
-  const spec={file:'/inset.png',norm:{x:0.25,y:0.2,w:0.5,h:0.4},magnification:2,gap:8,anchor:'right',
+  const spec={file:'/inset.png',norm:{x:0.25,y:0.2,w:0.5,h:0.4},gap:8,anchor:'right',
     frame:{weight:2,color:'#ffcc00',dashes:[6,4],corner:'miter',radius:0},
     leaders:{enabled:true,weight:0.75,color:'#00aaff',dashes:[1,2.5],corner:'round',radius:0},
     scaleBar:{fraction:0.25,lineWidth:1.25,fontSize:8,margin:4,position:'bottom-right',color:'#ffffff',label:'10 碌m',displayPixelsX:100,calibration:{umPerPixelX:0.1}}};
@@ -202,16 +202,14 @@ test('0.8.6 inset matches side height, non-crossing leaders, styled frame, scale
   assert.equal(placed.length,1);
   assert.equal(placed[0].file.fsName,'/inset2.png');
   assert(groups[0].lines.some(l=>l.rounded && l.rounded.rx===6));
-  const pathItem={typename:'PathItem',pathPoints:[
-    {anchor:[60,60]},{anchor:[160,60]},{anchor:[160,20]},{anchor:[60,20]}
-  ]};
-  doc.selection=[target, pathItem];
-  const reg=JSON.parse(host.sciBitmapArtboardRegion(JSON.stringify(lock), JSON.stringify({sourceWidth:200,sourceHeight:100})));
-  assert(reg.ok, reg.error);
-  assert.equal(reg.left, 50);
-  assert.equal(reg.top, 20);
-  assert.equal(reg.width, 100);
-  assert.equal(reg.height, 40);
+  const noTextScale=Object.assign({}, spec.scaleBar, {includeText:false,lineWidth:2.5,margin:7,color:'#000000'});
+  result=JSON.parse(host.sciBitmapInset(JSON.stringify(lock), JSON.stringify(Object.assign({}, spec2, {file:'/inset3.png',scaleBar:noTextScale}))));
+  assert(result.ok, result.error);
+  assert.equal(groups[0].texts.length,0,'Inset scale can omit length text');
+  const insetBar=groups[0].lines.find(l=>!l.closed&&l.strokeWidth===2.5);
+  assert(insetBar,'Inset scale uses its own line width');
+  assert.equal(insetBar.strokeColor.red,0);
+  assert(Math.abs(insetBar.points[0][1]-(placed[0].geometricBounds[3]+7+2.5))<1e-6,'Inset scale uses its own margin without text');
   assert(!JSON.parse(host.sciBitmapInset(JSON.stringify(lock), JSON.stringify(Object.assign({}, spec, {file:'/missing.png'})))).ok);
 });
 
@@ -234,7 +232,7 @@ test('0.9.7 inset above/below matches main width (height from crop aspect)',()=>
   host.File=function(p){this.fsName=p;this.exists=true;};
   host.ElementPlacement={PLACEBEFORE:0,PLACEATEND:1,PLACEATBEGINNING:2};
   const lock=JSON.parse(host.captureSelectionLock()).lock;
-  const spec={file:'/inset.png',norm:{x:0.25,y:0.2,w:0.5,h:0.4},magnification:3,gap:8,anchor:'above',
+  const spec={file:'/inset.png',norm:{x:0.25,y:0.2,w:0.5,h:0.4},gap:8,anchor:'above',
     frame:{weight:1,color:'#ffffff',dashes:[],corner:'miter',radius:0}, leaders:{enabled:false}};
   const result=JSON.parse(host.sciBitmapInset(JSON.stringify(lock), JSON.stringify(spec)));
   assert(result.ok, result.error);
@@ -271,7 +269,7 @@ test('0.8.9 inset frameCorners via geometricBounds + no blind V-flip on upright 
   host.ElementPlacement={PLACEBEFORE:0,PLACEATEND:1,PLACEATBEGINNING:2};
   const lock=JSON.parse(host.captureSelectionLock()).lock;
   const corners=[{x:0.1,y:0.2},{x:0.4,y:0.15},{x:0.45,y:0.55},{x:0.05,y:0.5}];
-  const spec={file:'/inset.png',norm:{x:0.05,y:0.15,w:0.4,h:0.4},frameCorners:corners,pixelWidth:80,pixelHeight:50,magnification:2,gap:8,anchor:'right',
+  const spec={file:'/inset.png',norm:{x:0.05,y:0.15,w:0.4,h:0.4},frameCorners:corners,pixelWidth:80,pixelHeight:50,gap:8,anchor:'right',
     frame:{weight:1,color:'#ff0000',dashes:[],corner:'miter',radius:0}, leaders:{enabled:false}};
   const result=JSON.parse(host.sciBitmapInset(JSON.stringify(lock), JSON.stringify(spec)));
   assert(result.ok, result.error);
@@ -316,7 +314,7 @@ test('0.8.8 inset flips once only when fresh place has det>0',()=>{
   host.File=function(p){this.fsName=p;this.exists=true;};
   host.ElementPlacement={PLACEBEFORE:0,PLACEATEND:1,PLACEATBEGINNING:2};
   const lock=JSON.parse(host.captureSelectionLock()).lock;
-  const spec={file:'/inset.png',norm:{x:0.1,y:0.1,w:0.2,h:0.2},magnification:2,gap:8,anchor:'right',
+  const spec={file:'/inset.png',norm:{x:0.1,y:0.1,w:0.2,h:0.2},gap:8,anchor:'right',
     frame:{weight:1,color:'#ffffff',dashes:[],corner:'miter',radius:0}, leaders:{enabled:false}};
   const result=JSON.parse(host.sciBitmapInset(JSON.stringify(lock), JSON.stringify(spec)));
   assert(result.ok, result.error);

@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.0';
+  var PANEL_VERSION = '1.2.1';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -95,11 +95,10 @@
     cropFixedW: 512,
     cropFixedH: 512,
     insetAspectMode: '4:3',
-    insetMag: 3,
     insetGap: 12,
     insetAnchor: 'right',
     insetFrameWeight: 1.5,
-    insetFrameColor: '#ffffff',
+    insetFrameColor: '#ff0000',
     insetFrameDash: 'solid',
     insetFrameCorner: 'miter',
     insetFrameRadius: 0,
@@ -108,9 +107,13 @@
     insetLeaderColor: '#ffffff',
     insetLeaderDash: 'solid',
     insetScaleOn: true,
-    insetScaleLength: 10,
+    insetScaleLength: 20,
     insetScaleUnit: 'um',
-    insetScaleFont: 8,
+    insetScaleLine: 1.5,
+    insetScaleFont: 9,
+    insetScaleMargin: 8,
+    insetScaleColor: '#ffffff',
+    insetScaleIncludeText: true,
     insetScalePosition: 'bottom-right',
     format: 'PNG', /* lossless + compressed; TIFF remains available (uncompressed RGBA, slower/larger) */
     dpi: 300,
@@ -929,6 +932,7 @@
     return __marqueeFns;
   }
   function applyAspectModeToCurrentCrop(){ installMarquee(); return __marqueeFns.applyAspectModeToCurrentCrop.apply(this, arguments); }
+  function abortMarqueeDrags(){ installMarquee(); return __marqueeFns.abortMarqueeDrags.apply(this, arguments); }
   function applyInset(){ installMarquee(); return __marqueeFns.applyInset.apply(this, arguments); }
   function artboardOrientActive(){ installMarquee(); return __marqueeFns.artboardOrientActive.apply(this, arguments); }
   function bindInsetControls(){ installMarquee(); return __marqueeFns.bindInsetControls.apply(this, arguments); }
@@ -1254,7 +1258,8 @@
   function setApplyRunning(running) {
     applyRunning = running;
     byId('applyBtn').disabled = running;
-    byId('resetBtn').disabled = running;
+    if (byId('insetUpdateBtn')) { byId('insetUpdateBtn').disabled = running; }
+    byId('resetBtn').disabled = running || !resetTabAvailable();
     byId('inspectBtn').disabled = running;
     updateArtboardPreviewButtons();
     byId('applyBtn').dataset.label = t('apply');
@@ -2341,13 +2346,15 @@
     c.height = h;
     ctx.drawImage(img, 0, 0, w, h);
     data = ctx.getImageData(0, 0, w, h);
-    previewBase = { width: w, height: h, data: new Uint8ClampedArray(data.data) };
+    previewBase = { width: w, height: h, data: data.data };
     if (wd < w || hd < h) {
-      c.width = wd;
-      c.height = hd;
-      ctx.drawImage(img, 0, 0, wd, hd);
-      data = ctx.getImageData(0, 0, wd, hd);
-      previewBaseDrag = { width: wd, height: hd, data: new Uint8ClampedArray(data.data) };
+      var dragCanvas = document.createElement('canvas');
+      dragCanvas.width = wd;
+      dragCanvas.height = hd;
+      var dragCtx = dragCanvas.getContext('2d');
+      dragCtx.drawImage(c, 0, 0, wd, hd);
+      data = dragCtx.getImageData(0, 0, wd, hd);
+      previewBaseDrag = { width: wd, height: hd, data: data.data };
     } else {
       previewBaseDrag = null;
     }
@@ -3437,6 +3444,7 @@
     if (!size && item) {
       size = estimateSizeFromBounds(item.widthPt, item.heightPt, settings.dpi || byId('dpi').value);
     }
+    if (science && science.setSourcePixelSize) { science.setSourcePixelSize(size); }
 
     /*
      * If file px aspect disagrees with artboard geometry (e.g. landscape TIFF
@@ -3578,8 +3586,32 @@
     pollSelection();
   }
 
+  function resetTabName() {
+    var active = document.querySelector('.tab-bar [data-tab].active');
+    return active ? active.getAttribute('data-tab') : 'adjust';
+  }
+
+  function resetTabAvailable() {
+    var tab = resetTabName();
+    return tab === 'adjust' || tab === 'crop' || tab === 'inset' || tab === 'raw';
+  }
+
   function resetAdjustments() {
-    if(science&&science.reset())return;
+    var tab = resetTabName();
+    if (tab === 'inset') {
+      abortMarqueeDrags();
+      clearInsetRegionQuiet();
+      notice(t('insetCleared'));
+      return;
+    }
+    if (tab === 'crop') {
+      writeCropRect(0, 0, 0, 0);
+      saveSettings();
+      notice(t('cropCleared'));
+      return;
+    }
+    if (tab === 'raw') { if (science) { science.reset(); } return; }
+    if (tab !== 'adjust') { return; }
     channelsToUi(W.channelsDefault());byId('channelView').value='merged';
     byId('brightness').value = 0;
     byId('contrast').value = 0;
@@ -3593,17 +3625,8 @@
     byId('softBlur').checked = false;
     byId('sharpen').checked = false;
     byId('lut').value = 'None';
-    byId('rotateAngle').value = 0;
-    settings.flipH = false;
-    settings.flipV = false;
-    syncFlipButtons();
     setPickMode(null);
-    byId('cropLeft').value = 0;
-    byId('cropTop').value = 0;
-    byId('cropWidth').value = 0;
-    byId('cropHeight').value = 0;
     updateAdjustmentDisplay();
-    updateCropOverlay();
     saveSettings();
     notice(t('resetDefaults'));
   }
@@ -3950,10 +3973,6 @@
     byId('softBlur').checked = false;
     byId('sharpen').checked = false;
     byId('lut').value = 'None';
-    byId('rotateAngle').value = 0;
-    settings.flipH = false;
-    settings.flipV = false;
-    syncFlipButtons();
     setPickMode(null);
     byId('cropLeft').value = 0;
     byId('cropTop').value = 0;
@@ -4003,11 +4022,12 @@
 
   function updateArtboardPreviewButtons() {
     var busy = applyRunning || artboardPreviewRunning || liveGeomBusy || panelProxyRunning;
-    ['applyBtn','inspectBtn','resetBtn','rotateCcw','rotateCw','rotate180','flipHBtn','flipVBtn','straightenLineBtn',
-      'savePresetBtn','loadPresetBtn','updatePresetBtn','deletePresetBtn','repeatLastBtn','importPresetBtn','exportPresetBtn','magentaGreenBtn','identityColorsBtn','prepareBatchBtn','cropFullBtn','pickBlackBtn','pickWhiteBtn','autoLevelsBtn','autoChannelLevelsBtn'].forEach(function(id) {
+    ['applyBtn','insetUpdateBtn','inspectBtn','resetBtn','rotateCcw','rotateCw','rotate180','flipHBtn','flipVBtn','straightenLineBtn',
+      'savePresetBtn','loadPresetBtn','updatePresetBtn','deletePresetBtn','repeatLastBtn','importPresetBtn','exportPresetBtn','magentaGreenBtn','identityColorsBtn','prepareBatchBtn','pickBlackBtn','pickWhiteBtn','autoLevelsBtn','autoChannelLevelsBtn'].forEach(function(id) {
       if (byId(id)) { byId(id).disabled = busy; }
     });
     Array.prototype.forEach.call(document.querySelectorAll('.group input, .group select'), function(el) { el.disabled=busy; });
+    byId('resetBtn').disabled = busy || !resetTabAvailable();
     if (!busy) { updateAdjustmentDisplay(); }
 
     syncBatchButtons();
@@ -4357,10 +4377,6 @@
         setStraightenMode(false);
         notice(t('straightenLineCancelled'));
       }
-    });
-    byId('cropFullBtn').addEventListener('click', function () {
-      setMarqueeMode('crop', { quiet: true });
-      writeCropRect(0, 0, 0, 0);
     });
     byId('previewStage').addEventListener('wheel', onPreviewWheel);
     byId('previewStage').addEventListener('mousemove', function (event) {

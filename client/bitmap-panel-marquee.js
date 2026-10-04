@@ -795,13 +795,12 @@
   }
 
   function readInsetStyleSettings() {
-    if (!api.byId('insetMag')) { return; }
+    if (!api.byId('insetGap')) { return; }
     api.settings.insetAspectMode = readInsetAspectMode();
-    api.settings.insetMag = Math.max(1, Math.min(20, numOr('insetMag', 3)));
     api.settings.insetGap = Math.max(0, Math.min(400, numOr('insetGap', 12)));
     api.settings.insetAnchor = (api.byId('insetAnchor') && api.byId('insetAnchor').value) || 'right';
     api.settings.insetFrameWeight = Math.max(0.1, Math.min(20, numOr('insetFrameWeight', 1.5)));
-    api.settings.insetFrameColor = (api.byId('insetFrameColor') && api.byId('insetFrameColor').value) || '#ffffff';
+    api.settings.insetFrameColor = (api.byId('insetFrameColor') && api.byId('insetFrameColor').value) || '#ff0000';
     api.settings.insetFrameDash = (api.byId('insetFrameDash') && api.byId('insetFrameDash').value) || 'solid';
     api.settings.insetFrameCorner = (api.byId('insetFrameCorner') && api.byId('insetFrameCorner').value) || 'miter';
     api.settings.insetFrameRadius = Math.max(0, Math.min(40, numOr('insetFrameRadius', 0)));
@@ -810,35 +809,46 @@
     api.settings.insetLeaderColor = (api.byId('insetLeaderColor') && api.byId('insetLeaderColor').value) || '#ffffff';
     api.settings.insetLeaderDash = (api.byId('insetLeaderDash') && api.byId('insetLeaderDash').value) || 'solid';
     api.settings.insetScaleOn = !!(api.byId('insetScaleOn') && api.byId('insetScaleOn').checked);
-    api.settings.insetScaleLength = Math.max(0, numOr('insetScaleLength', 10));
+    api.settings.insetScaleLength = Math.max(0, numOr('insetScaleLength', 20));
     api.settings.insetScaleUnit = (api.byId('insetScaleUnit') && api.byId('insetScaleUnit').value) || 'um';
-    api.settings.insetScaleFont = Math.max(4, Math.min(72, numOr('insetScaleFont', 8)));
+    api.settings.insetScaleLine = Math.max(0.1, Math.min(20, numOr('insetScaleLine', 1.5)));
+    api.settings.insetScaleMargin = Math.max(0, Math.min(200, numOr('insetScaleMargin', 8)));
+    api.settings.insetScaleColor = (api.byId('insetScaleColor') && api.byId('insetScaleColor').value) || '#ffffff';
+    api.settings.insetScaleIncludeText = !!(api.byId('insetScaleIncludeText') && api.byId('insetScaleIncludeText').checked);
+    api.settings.insetScaleFont = Math.max(4, Math.min(72, numOr('insetScaleFont', 9)));
     api.settings.insetScalePosition = (api.byId('insetScalePosition') && api.byId('insetScalePosition').value) || 'bottom-right';
   }
 
   function populateInsetStyle() {
-    if (!api.byId('insetMag')) { return; }
+    if (!api.byId('insetGap')) { return; }
     var insetAspectEl = api.byId('insetAspectMode');
     if (insetAspectEl) {
       commitInsetAspect(readInsetAspectMode() || '4:3');
       selectInsetAspectOption(insetAspectEl, insetAspectToken);
     }
-    api.byId('insetMag').value = api.settings.insetMag != null ? api.settings.insetMag : 3;
     api.byId('insetGap').value = api.settings.insetGap != null ? api.settings.insetGap : 12;
     api.byId('insetAnchor').value = api.settings.insetAnchor || 'right';
     api.byId('insetFrameWeight').value = api.settings.insetFrameWeight != null ? api.settings.insetFrameWeight : 1.5;
-    api.byId('insetFrameColor').value = api.settings.insetFrameColor || '#ffffff';
+    api.byId('insetFrameColor').value = api.settings.insetFrameColor || '#ff0000';
+    if (window.PaperFigColorPicker) { window.PaperFigColorPicker.sync(api.byId('insetFrameColor')); }
     api.byId('insetFrameDash').value = api.settings.insetFrameDash || 'solid';
     api.byId('insetFrameCorner').value = api.settings.insetFrameCorner || 'miter';
     api.byId('insetFrameRadius').value = api.settings.insetFrameRadius != null ? api.settings.insetFrameRadius : 0;
     api.byId('insetLeaderOn').checked = api.settings.insetLeaderOn !== false;
     api.byId('insetLeaderWeight').value = api.settings.insetLeaderWeight != null ? api.settings.insetLeaderWeight : 0.75;
     api.byId('insetLeaderColor').value = api.settings.insetLeaderColor || '#ffffff';
+    if (window.PaperFigColorPicker) { window.PaperFigColorPicker.sync(api.byId('insetLeaderColor')); }
     api.byId('insetLeaderDash').value = api.settings.insetLeaderDash || 'solid';
     api.byId('insetScaleOn').checked = api.settings.insetScaleOn !== false;
-    api.byId('insetScaleLength').value = api.settings.insetScaleLength != null ? api.settings.insetScaleLength : 10;
+    api.byId('insetScaleLength').value = api.settings.insetScaleLength != null ? api.settings.insetScaleLength : 20;
     api.byId('insetScaleUnit').value = api.settings.insetScaleUnit || 'um';
-    api.byId('insetScaleFont').value = api.settings.insetScaleFont != null ? api.settings.insetScaleFont : 8;
+    api.byId('insetScaleLine').value = api.settings.insetScaleLine != null ? api.settings.insetScaleLine : 1.5;
+    api.byId('insetScaleMargin').value = api.settings.insetScaleMargin != null ? api.settings.insetScaleMargin : 8;
+    api.byId('insetScaleColor').value = api.settings.insetScaleColor || '#ffffff';
+    if (window.PaperFigColorPicker) { window.PaperFigColorPicker.sync(api.byId('insetScaleColor')); }
+    api.byId('insetScaleIncludeText').checked = api.settings.insetScaleIncludeText !== false;
+    syncInsetScaleTextUi();
+    api.byId('insetScaleFont').value = api.settings.insetScaleFont != null ? api.settings.insetScaleFont : 9;
     api.byId('insetScalePosition').value = api.settings.insetScalePosition || 'bottom-right';
     if (api.byId('insetLeft')) {
       api.byId('insetLeft').value = 0;
@@ -867,6 +877,7 @@
     api.byId('insetHeight').value = 0;
     if (api.insetDrag) { api.insetDrag.liveOverlay = null; }
     updateInsetOverlay();
+    updateCropOverlay();
   }
 
   function writeInsetRect(left, top, width, height, opts) {
@@ -1089,7 +1100,6 @@
   function syncMarqueeModeUi() {
     var cropBtn = api.byId('marqueeModeCropBtn');
     var insetBtn = api.byId('marqueeModeInsetBtn');
-    var drawBtn = api.byId('insetDrawBtn');
     var stage = api.byId('previewStage');
     var insetOn = api.marqueeMode === 'inset';
     var cropArmed = !insetOn && !!api.cropDrawArmed;
@@ -1101,10 +1111,6 @@
     if (insetBtn) {
       insetBtn.classList.toggle('primary', insetOn);
       insetBtn.setAttribute('aria-pressed', insetOn ? 'true' : 'false');
-    }
-    if (drawBtn) {
-      drawBtn.classList.toggle('primary', insetOn);
-      drawBtn.setAttribute('aria-pressed', insetOn ? 'true' : 'false');
     }
     if (stage) {
       stage.classList.toggle('inset-draw', insetOn);
@@ -1120,6 +1126,13 @@
       applyEl.title = insetOn ? api.t('applyTitleInset') : api.t('applyTitle');
       if (applyEl.dataset) { applyEl.dataset.label = api.t('apply'); }
       applyEl.textContent = api.t('apply');
+    }
+    var resetEl = api.byId('resetBtn');
+    if (resetEl) {
+      var activeTab = document.querySelector('.tab-bar [data-tab].active');
+      var resetTab = activeTab ? activeTab.getAttribute('data-tab') : 'adjust';
+      resetEl.title = api.t(resetTab === 'inset' ? 'resetInsetTitle' : resetTab === 'crop' ? 'resetCropTitle' : 'resetTitle');
+      resetEl.disabled = !!api.applyRunning || (resetTab !== 'adjust' && resetTab !== 'crop' && resetTab !== 'inset' && resetTab !== 'raw');
     }
   }
 
@@ -1211,17 +1224,6 @@
       writeInsetRect(rect.left, rect.top, rect.width, rect.height, { quiet: true });
     }
     api.scheduleSaveSettings();
-  }
-
-  function storedInsetFromFileRect(fileRect) {
-    var src = getCropSourceSize();
-    var layout = api.getPreviewLayoutSize();
-    var iw = (layout && layout.width) || (src && src.width) || 0;
-    var ih = (layout && layout.height) || (src && src.height) || 0;
-    if (cropNeedsDisplayBake() && api.Core.sourceRectToScreenAABB && src) {
-      return api.Core.sourceRectToScreenAABB(fileRect, src.width, src.height, linkedPreviewMatrix());
-    }
-    return sourceRectToOverlayRect(fileRect, iw, ih);
   }
 
   function currentInsetFileRect() {
@@ -1323,6 +1325,30 @@
     };
   }
 
+  function copyScaleBarStyleToInset() {
+    [['scaleLength', 'insetScaleLength'], ['scaleBarUnit', 'insetScaleUnit'],
+      ['scaleLine', 'insetScaleLine'], ['scaleFont', 'insetScaleFont'],
+      ['scaleMargin', 'insetScaleMargin'], ['scalePosition', 'insetScalePosition'],
+      ['scaleColor', 'insetScaleColor']].forEach(function (pair) {
+      var source = api.byId(pair[0]), target = api.byId(pair[1]);
+      if (source && target) { target.value = source.value; }
+    });
+    if (api.byId('scaleIncludeText') && api.byId('insetScaleIncludeText')) {
+      api.byId('insetScaleIncludeText').checked = api.byId('scaleIncludeText').checked;
+    }
+    if (window.PaperFigColorPicker && api.byId('insetScaleColor')) {
+      window.PaperFigColorPicker.sync(api.byId('insetScaleColor'));
+    }
+    syncInsetScaleTextUi();
+    api.scheduleSaveSettings();
+  }
+
+  function syncInsetScaleTextUi() {
+    var enabled = !!(api.byId('insetScaleIncludeText') && api.byId('insetScaleIncludeText').checked);
+    var font = api.byId('insetScaleFont');
+    if (font) { font.disabled = !enabled; if (font.parentElement) { font.parentElement.classList.toggle('dimmed', !enabled); } }
+  }
+
   function buildInsetScaleSpec(pixelWidth) {
     var Sci = window.SciScientific;
     var cal;
@@ -1332,7 +1358,7 @@
     if (!api.byId('insetScaleOn') || !api.byId('insetScaleOn').checked) { return null; }
     cal = api.science && api.science.lookupCalibration ? api.science.lookupCalibration(api.lastSelectedItem) : null;
     if (!cal || !(Number(cal.umPerPixelX) > 0)) { return { skipped: 'uncalibrated' }; }
-    len = numOr('insetScaleLength', 10);
+    len = numOr('insetScaleLength', 20);
     unit = (api.byId('insetScaleUnit') && api.byId('insetScaleUnit').value) || 'um';
     try {
       fraction = Sci.scaleFraction(cal, len, unit, pixelWidth);
@@ -1341,11 +1367,12 @@
     }
     return {
       fraction: fraction,
-      lineWidth: Math.max(0.1, Math.min(20, numOr('insetFrameWeight', 1.5))),
-      fontSize: Math.max(4, Math.min(72, numOr('insetScaleFont', 8))),
-      margin: 4,
+      lineWidth: Math.max(0.1, Math.min(20, numOr('insetScaleLine', 1.5))),
+      fontSize: Math.max(4, Math.min(72, numOr('insetScaleFont', 9))),
+      margin: Math.max(0, Math.min(200, numOr('insetScaleMargin', 8))),
       position: (api.byId('insetScalePosition') && api.byId('insetScalePosition').value) || 'bottom-right',
-      color: (api.byId('insetFrameColor') && api.byId('insetFrameColor').value) || '#ffffff',
+      color: (api.byId('insetScaleColor') && api.byId('insetScaleColor').value) || '#ffffff',
+      includeText: !!(api.byId('insetScaleIncludeText') && api.byId('insetScaleIncludeText').checked),
       label: len + ' ' + (unit === 'um' ? 'µm' : unit),
       length: len,
       unit: unit,
@@ -1457,7 +1484,6 @@
         pixelHeight: processed.height,
         norm: region.norm,
         frameCorners: region.frameCorners,
-        magnification: api.settings.insetMag,
         gap: api.settings.insetGap,
         anchor: api.settings.insetAnchor,
         frame: frameStyle,
@@ -1469,7 +1495,7 @@
           return api.evalHost('sciBitmapInset(' + api.quoteExtendScript(JSON.stringify(lock)) + ',' + api.quoteExtendScript(JSON.stringify(spec)) + ')');
         });
       }).then(api.parseHostResult).then(function (placed) {
-        var msg = api.t('insetDone', { mag: api.settings.insetMag, w: processed.width, h: processed.height });
+        var msg = api.t('insetDone', { w: processed.width, h: processed.height });
         if (placed && placed.scaleBar) { msg += api.t('insetScaleAdded'); }
         else if (api.settings.insetScaleOn) { msg += api.t('insetScaleSkipped'); }
         api.notice(msg);
@@ -1481,31 +1507,6 @@
     });
   }
 
-  function readArtboardInset() {
-    var src;
-    if (api.applyRunning) { return; }
-    setMarqueeMode('inset', { quiet: true });
-    src = getCropSourceSize();
-    if (!src || !api.lastSelectedItem) { api.notice(api.t('errInsetNeedsPreview'), 'error'); return; }
-    api.setApplyRunning(true);
-    api.captureOperationLock().then(function (lock) {
-      return api.ensureHostScript().then(function () {
-        return api.evalHost('sciBitmapArtboardRegion(' + api.quoteExtendScript(JSON.stringify(lock)) + ',' +
-          api.quoteExtendScript(JSON.stringify({ sourceWidth: src.width, sourceHeight: src.height })) + ')');
-      });
-    }).then(api.parseHostResult).then(function (reg) {
-      var stored = storedInsetFromFileRect({ left: reg.left, top: reg.top, width: reg.width, height: reg.height });
-      var aspect = getActiveInsetAspect();
-      if (aspect > 0 && api.Core.syncSizeWithAspect) {
-        stored = api.Core.syncSizeWithAspect(stored.left, stored.top, stored.width, stored.height, 'width', aspect, src.width, src.height);
-      }
-      writeInsetRect(stored.left, stored.top, stored.width, stored.height);
-      api.notice(api.t('insetSet', { rect: Math.round(stored.left) + ',' + Math.round(stored.top) + ' ' + Math.round(stored.width) + '×' + Math.round(stored.height) }));
-    }).catch(function (err) {
-      api.notice(api.localizeMsg(err && err.message ? err.message : String(err)), 'error');
-    }).then(function () { api.setApplyRunning(false); });
-  }
-
   /* The active tab owns the preview marquee; leaving Inset clears its region. */
   function exitInsetMarqueeIfNeeded(tabName) {
     var tab = tabName;
@@ -1515,7 +1516,7 @@
       tab = active ? active.getAttribute('data-tab') : '';
     }
     if (tab && tab !== 'geometry' && api.straightenMode) { api.setStraightenMode(false); }
-    if (tab === 'inset') { setMarqueeMode('inset', { quiet: true }); }
+    if (tab === 'inset') { copyScaleBarStyleToInset(); setMarqueeMode('inset', { quiet: true }); }
     else if (tab === 'crop') { setMarqueeMode('crop', { quiet: true, armCrop: true }); }
     else if (tab && api.marqueeMode === 'inset') { setMarqueeMode('crop', { quiet: true }); }
     else if (tab) { api.cropDrawArmed = false; syncMarqueeModeUi(); }
@@ -1528,24 +1529,15 @@
     if (api.byId('marqueeModeInsetBtn')) {
       api.byId('marqueeModeInsetBtn').addEventListener('click', function () { setMarqueeMode('inset'); });
     }
-    if (api.byId('insetDrawBtn')) {
-      api.byId('insetDrawBtn').addEventListener('click', function () { setMarqueeMode('inset'); });
-    }
     document.addEventListener('paperfig-tab', function (ev) {
       var name = ev && ev.detail && ev.detail.tab;
       exitInsetMarqueeIfNeeded(name);
     });
     /* Boot / late api.bind: match the restored tab. */
     exitInsetMarqueeIfNeeded();
-    if (api.byId('insetApply')) {
-      api.byId('insetApply').addEventListener('click', applyInset);
+    if (api.byId('insetUpdateBtn')) {
+      api.byId('insetUpdateBtn').addEventListener('click', applyInset);
     }
-    api.byId('insetReadArtboard').addEventListener('click', readArtboardInset);
-    api.byId('insetClearBtn').addEventListener('click', function () {
-      setMarqueeMode('inset', { quiet: true, force: true });
-      clearInsetRegionQuiet();
-      api.notice(api.t('insetCleared'));
-    });
     ['insetLeft', 'insetTop', 'insetWidth', 'insetHeight'].forEach(function (id) {
       api.byId(id).addEventListener('change', function () { onInsetNumeric(id); });
     });
@@ -1561,10 +1553,11 @@
       if (!chosen && el) { chosen = el.value || ''; }
       applyInsetAspect(chosen);
     });
+    api.byId('insetScaleIncludeText').addEventListener('change', syncInsetScaleTextUi);
     commitInsetAspect(readInsetAspectMode() || insetAspectToken || (api.settings && api.settings.insetAspectMode) || '4:3');
-    ['insetMag', 'insetGap', 'insetAnchor', 'insetFrameWeight', 'insetFrameColor', 'insetFrameDash', 'insetFrameCorner', 'insetFrameRadius',
+    ['insetGap', 'insetAnchor', 'insetFrameWeight', 'insetFrameColor', 'insetFrameDash', 'insetFrameCorner', 'insetFrameRadius',
       'insetLeaderOn', 'insetLeaderWeight', 'insetLeaderColor', 'insetLeaderDash', 'insetScaleOn', 'insetScaleLength', 'insetScaleUnit',
-      'insetScaleFont', 'insetScalePosition'].forEach(function (id) {
+      'insetScaleFont', 'insetScalePosition', 'insetScaleLine', 'insetScaleMargin', 'insetScaleColor', 'insetScaleIncludeText'].forEach(function (id) {
       var el = api.byId(id);
       if (!el) { return; }
       el.addEventListener('change', function () { api.scheduleSaveSettings(); });
@@ -1902,7 +1895,6 @@
       pointerToImagePx: pointerToImagePx,
       populateInsetStyle: populateInsetStyle,
       previewNeedsArtboardOrient: previewNeedsArtboardOrient,
-      readArtboardInset: readArtboardInset,
       readCropRect: readCropRect,
       readInsetRect: readInsetRect,
       readInsetStyleSettings: readInsetStyleSettings,
@@ -1910,7 +1902,6 @@
       setMarqueeMode: setMarqueeMode,
       sourceRectToDisplayRect: sourceRectToDisplayRect,
       sourceRectToOverlayRect: sourceRectToOverlayRect,
-      storedInsetFromFileRect: storedInsetFromFileRect,
       syncCropAspectUi: syncCropAspectUi,
       syncInsetDrawButton: syncInsetDrawButton,
       syncMarqueeModeUi: syncMarqueeModeUi,

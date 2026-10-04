@@ -37,14 +37,6 @@ function calibration(input){var x,y,method=input.method;
  else throw new Error('Unknown calibration method');return {version:1,method:method,umPerPixelX:x,umPerPixelY:y,coordSpace:'full-source',input:clone(input),createdAt:new Date().toISOString()};
 }
 function scaleFraction(cal,length,unit,displayPixelsX){var fraction=um(length,unit)/(cal.umPerPixelX*finite(displayPixelsX,1,1e9,'Displayed pixel width'));if(!(fraction>0&&fraction<0.9))throw new Error('Scale bar must be shorter than 90% of displayed field');return fraction;}
-/* Compare µm/px across selected figures. Relative gap above 0.5% is a mismatch. */
-function scaleAudit(rows){
-  rows=Array.isArray(rows)?rows:[];
-  var rated=rows.filter(function(r){return r&&Number(r.umPerPixelX)>0;});
-  var ref=rated.length?Number(rated[0].umPerPixelX):0;
-  var mismatch=rated.length>1&&rated.some(function(r){return Math.abs(Number(r.umPerPixelX)-ref)/ref>0.005;});
-  return {count:rows.length,calibrated:rated.length,umPerPixelX:ref,mismatch:mismatch};
-}
 function attrs(text){var a={};text.replace(/([\w:]+)\s*=\s*(["'])(.*?)\2/g,function(_,k,q,v){a[k]=v.replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');return _;});return a;}
 function nativeTiff(b,request){request=request||{};if(b.length<8)throw new Error('Invalid TIFF');var le=b.toString('ascii',0,2)==='II';if(!le&&b.toString('ascii',0,2)!=='MM')throw new Error('Not TIFF');function u16(p){return le?b.readUInt16LE(p):b.readUInt16BE(p);}function u32(p){return le?b.readUInt32LE(p):b.readUInt32BE(p);}if(u16(2)!==42)throw new Error('BigTIFF requires Bio-Formats');var ifds=[],off=u32(4),seen={};
  while(off){if(seen[off]||ifds.length>=16384)throw new Error('Invalid/large directory chain');seen[off]=true;var n=u16(off),tags={};if(n>4096||off+2+n*12+4>b.length)throw new Error('Invalid TIFF directory');for(var i=0;i<n;i++){var e=off+2+i*12,id=u16(e),type=u16(e+2),cnt=u32(e+4),unit={1:1,2:1,3:2,4:4}[type];if(!unit||cnt>1048576)continue;var at=cnt*unit<=4?e+8:u32(e+8);if(at+cnt*unit>b.length)throw new Error('Invalid tag offset');if(type===2){tags[id]=b.toString('utf8',at,at+cnt).replace(/\0+$/,'');continue;}var vals=[];for(var j=0;j<cnt;j++)vals.push(type===3?u16(at+j*2):type===4?u32(at+j*4):b[at+j]);tags[id]=vals;}ifds.push(tags);off=u32(off+2+n*12);}
@@ -64,5 +56,5 @@ function keepChannels(d,r,mask){
  if(kept<1)throw new Error('Keep at least one channel');
  return r;
 }
-return {recipe:recipe,prepare:prepare,render:render,renderAsync:renderAsync,statistics:statistics,signature:signature,calibration:calibration,scaleFraction:scaleFraction,scaleAudit:scaleAudit,um:um,clone:clone,nativeTiff:nativeTiff,keepChannels:keepChannels};
+return {recipe:recipe,prepare:prepare,render:render,renderAsync:renderAsync,statistics:statistics,signature:signature,calibration:calibration,scaleFraction:scaleFraction,um:um,clone:clone,nativeTiff:nativeTiff,keepChannels:keepChannels};
 }));

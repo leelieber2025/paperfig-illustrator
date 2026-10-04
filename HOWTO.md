@@ -81,10 +81,13 @@ Choose series, Z, and T (starting at 0). Keep one or two channels if you need to
 
 ## 6. Scale / 标尺
 
+The panel reads the selected image’s original pixel dimensions automatically. Pixel dimensions alone do not provide µm/px.
+
+面板会自动读取所选图片的原始像素尺寸；仅凭像素尺寸无法得到 µm/px。
+
 Methods / 方式:
 
 - **Raw metadata · µm/px** / **原始元数据 · µm/px**
-- **Known full-source field width** / **已知全图视场宽** — the full image, not the crop width. 填的是全图视场，不是裁剪宽。
 - **Two points on a known-length line (any direction)** / **已知长度线段的两端（任意方向）**
 
 Pick / 拾取:
@@ -99,13 +102,13 @@ Each image keeps its own calibration. Selecting an uncalibrated image clears the
 
 每张图单独保存标定。选中未标定的图会清空字段，不会沿用上一张的 µm/px。**复用上次标定** 才把上次保存的标定抄到当前图。**清除** 只删这张图的标定。
 
-**Save** writes a JSON preset through the system dialog, starting in `~/paperfig/scales` (Windows: `%USERPROFILE%\paperfig\scales`). **Load** opens that folder and applies the calibration and bar style. **Compare selection** checks µm/px across the linked images you selected.
+**Save** writes a JSON preset through the system dialog, starting in `~/paperfig/scales` (Windows: `%USERPROFILE%\paperfig\scales`). **Load** opens that folder and applies the calibration and bar style.
 
-**保存** 用系统对话框把 JSON 预设写到 `~/paperfig/scales`（Windows 为 `%USERPROFILE%\paperfig\scales`）。**加载** 从同一文件夹读入标定和标尺样式。**核对选中图** 比较当前选中链接图的 µm/px。
+**保存** 用系统对话框把 JSON 预设写到 `~/paperfig/scales`（Windows 为 `%USERPROFILE%\paperfig\scales`）。**加载** 从同一文件夹读入标定和标尺样式。
 
-Crop, resize, and **Use full image** do not clear calibration. The bar uses display width times µm/px. A new bar joins the image in a group, so scaling the entire group scales both. If the image is inside a normal group, the bar joins that group. Select exactly one image; clipped groups are not changed. After cropping, replacing, or scaling only the image, update the bar. Do not use print DPI as spatial calibration.
+Crop, resize, and **Crop Reset** do not clear calibration. The bar uses display width times µm/px. A new bar joins the image in a group, so scaling the entire group scales both. If the image is inside a normal group, the bar joins that group. Select exactly one image; clipped groups are not changed. After cropping, replacing, or scaling only the image, update the bar. Do not use print DPI as spatial calibration.
 
-裁剪、改大小和 **使用全图** 不会清除标定。标尺按显示宽度乘以 µm/px 计算。新标尺与图片编组，缩放整个组时会一起变化；图片已在普通组内则标尺加入该组。须明确选中一张图片，剪切蒙版组不会自动改动。裁剪、替换或单独缩放图片后，仍需更新标尺。不要把打印 DPI 当作空间标定。
+裁剪、改大小和 **裁剪页的重置** 不会清除标定。标尺按显示宽度乘以 µm/px 计算。新标尺与图片编组，缩放整个组时会一起变化；图片已在普通组内则标尺加入该组。须明确选中一张图片，剪切蒙版组不会自动改动。裁剪、替换或单独缩放图片后，仍需更新标尺。不要把打印 DPI 当作空间标定。
 
 ## 7. Geom, Crop, Inset / 几何、裁剪、放大插图
 
@@ -117,23 +120,23 @@ Crop, resize, and **Use full image** do not clear calibration. The bar uses disp
 
 **裁剪** 和 **放大框** 不能同时使用。切换会清掉另一种选区。离开放大插图页会退出放大框，并清掉插图的左、上、宽、高。
 
-Crop left/top/width/height are file pixels. Width and height of 0, or **Use full image**, means no crop. **Original file px** locks width and height to the linked file’s pixel size. If Illustrator does not report that size, PaperFig reads PNG, JPEG, TIFF, GIF, or BMP on disk.
+Crop left/top/width/height are file pixels. Width and height of 0, or **Reset** on the Crop tab, means no crop. **Original file px** locks width and height to the linked file’s pixel size. If Illustrator does not report that size, PaperFig reads PNG, JPEG, TIFF, GIF, or BMP on disk.
 
-裁剪的左/上/宽/高是文件像素。宽和高为 0，或点 **使用全图**，表示不裁剪。**源文件像素** 把宽高锁到链接文件的像素尺寸。若 Illustrator 没有给出尺寸，PaperFig 会读磁盘上的 PNG、JPEG、TIFF、GIF 或 BMP。
+裁剪的左/上/宽/高是文件像素。宽和高为 0，或在裁剪页点 **重置**，表示不裁剪。**源文件像素** 把宽高锁到链接文件的像素尺寸。若 Illustrator 没有给出尺寸，PaperFig 会读磁盘上的 PNG、JPEG、TIFF、GIF 或 BMP。
 
 **Apply** with a crop writes an upright image. Its aspect ratio is the cropped pixel size. The panel then returns to crop mode and clears the inset rectangle.
 
 带裁剪的 **应用** 按直立方向写入。宽高比等于裁剪后的像素。完成后回到裁剪模式，并清掉插图区域。
 
-**Inset:** open the **Inset** tab and choose **Draw region**. Drag a box, type left/top/width/height, or select the image and a rectangle and click **Read artboard rectangle**. Ratios are free, 1:1, 4:3, and 16:9. The PNG is a 1:1 crop of the linked file. Left/right: the inset height matches the main image. Above/below: **Zoom** multiplies the region. **Apply** places the crop, a frame on the source, and leaders when **Draw leaders** is on. Frame and leaders have their own weight, color, and dash (solid, dashed, dotted, dash-dot). Corners are miter, round, or bevel. Round with a radius above 0 uses a rounded rectangle when the box is axis-aligned. **Add scale bar when calibrated** adds a vector bar on the inset when a calibration exists.
+**Inset:** open the **Inset** tab. Drag a box or type left/top/width/height. Choose the placement and gap next. Ratios are free, 1:1, 4:3, and 16:9. The PNG is a 1:1 crop of the linked file. Left/right: the inset height matches the main image. Above/below: the inset width matches the main image width, and its height follows the crop aspect ratio. **Apply** places the crop, a frame on the source, and leaders when **Draw leaders** is on. **Update inset** regenerates it from the current region and settings, replacing the previous inset for this image. The source frame defaults to red; frame and leaders have their own weight, color, and dash (solid, dashed, dotted, dash-dot). Corners are miter, round, or bevel. Round with a radius above 0 uses a rounded rectangle when the box is axis-aligned. **Add scale bar when calibrated** adds a vector bar on the inset when a calibration exists. Opening Inset copies the Scale bar length, unit, line width, font size, margin, position, color, and text choice; you can then adjust them for the inset.
 
-**放大插图：** 打开 **放大插图** 页，点 **框选区域**。拖选、填写左/上/宽/高，或同时选中图像和矩形后点 **读取画板矩形**。比例为自由、1:1、4:3、16:9。PNG 是链接文件的 1:1 裁切。放在左右时，高度与主图一致。放在上下时，**放大** 乘以区域尺寸。点顶部 **应用** 放置子图和原图框；勾选 **绘制引线** 时加上互不交叉的引线。框和引线各自有线宽、颜色和线型（实线、虚线、点线、点划线）。拐角为尖角、圆角或斜角。圆角且半径大于 0、框又与轴对齐时，用圆角矩形。已有标定且勾选 **已标定则添加标尺** 时，插图上会加矢量标尺。
+**放大插图：** 打开 **放大插图** 页。拖选或填写左/上/宽/高，然后选择放置位置和间距。比例为自由、1:1、4:3、16:9。PNG 是链接文件的 1:1 裁切。放在左右时，高度与主图一致。放在上下时，插图宽度与原图一致，高度由裁切区域的宽高比决定。点顶部 **应用** 放置子图和原图框；修改设置后点 **更新插图**，会按当前区域重新生成并替换本图原有插图。原图框线默认红色；勾选 **绘制引线** 时加上互不交叉的引线。框和引线各自有线宽、颜色和线型（实线、虚线、点线、点划线）。拐角为尖角、圆角或斜角。圆角且半径大于 0、框又与轴对齐时，用圆角矩形。已有标定且勾选 **已标定则添加标尺** 时，插图上会加矢量标尺。每次打开插图页都会同步标尺页的长度、单位、线宽、字号、边距、位置、颜色和文字开关，之后仍可单独调整插图标尺。
 
 ## 8. Label / 标签
 
-**Panel label:** type A, B, C, or another short label and click **Create / update label**. The default is outside the image at the top left. Use the font dropdown (Automatic works without choosing a font), regular/bold/italic style, size, color, and corner. Horizontal offset accepts negative values; positive moves inward from the chosen side. Vertical offset also accepts negative values; positive moves up and negative moves down. The text stays editable in Illustrator. Label text and settings stay in the panel until changed. Save named styles for later use; presets store appearance and position, not the letter.
+**Panel label:** type A, B, C, or another short label and click **Create / update label**. The default is outside the image at the top left. Use the font dropdown (Automatic works without choosing a font), regular/bold/italic style, size, color, and corner. Horizontal offset accepts negative values; positive moves inward from the chosen side. Vertical offset also accepts negative values; positive moves up and negative moves down. The text stays editable in Illustrator. Label text and settings stay in the panel until changed. Save named styles for later use; presets store appearance and position, not the letter. Add up to three staining labels with separate colors; blank slots are skipped. They default to the inside top left and follow slot order from left to right. The staining row has its own font, style, size, position, and signed horizontal and vertical offsets. Its text and settings are saved in label styles.
 
-**图版标签：** 输入 A、B、C 等文字后点 **创建/更新标签**。默认放在图外左上角，可从下拉框选已安装字体，也可保留自动字体；还可设常规/粗体/斜体、字号、颜色和位置。左右偏移允许负值，正值向图片内侧移动；上下偏移也允许负值，正值向上、负值向下。文字在 Illustrator 中仍可编辑。文字与设置会一直保留，直到你修改；可保存命名样式供以后调用，样式不包含字母。
+**图版标签：** 输入 A、B、C 等文字后点 **创建/更新标签**。默认放在图外左上角，可从下拉框选已安装字体，也可保留自动字体；还可设常规/粗体/斜体、字号、颜色和位置。左右偏移允许负值，正值向图片内侧移动；上下偏移也允许负值，正值向上、负值向下。文字在 Illustrator 中仍可编辑。文字与设置会一直保留，直到你修改；可保存命名样式供以后调用，样式不包含字母。还可添加最多三段染色说明，各自选颜色；空框不显示。默认在图内左上，按输入框顺序从左到右排。染色说明可单独选择字体、字形、字号、位置与正负左右/上下偏移；文字与设置会随标签样式保存。
 
 ## 9. Export / 导出
 

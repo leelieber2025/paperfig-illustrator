@@ -133,13 +133,57 @@ function sciBitmapFigureFont(name, style) {
     if (style === 'regular') { return first; }
     throw new Error('Selected font family does not have this style: ' + family);
 }
+function sciBitmapFigureStains(group, s, bounds) {
+    var positions = { 'top-left': 1, 'top-right': 1, 'bottom-left': 1, 'bottom-right': 1,
+        'outside-top-left': 1, 'outside-top-right': 1, 'outside-bottom-left': 1, 'outside-bottom-right': 1 };
+    var entries = s.stains || [], active = [], position = String(s.stainPosition || 'top-left');
+    var size = Number(s.stainSize == null ? s.size : s.stainSize), style = String(s.stainStyle || 'regular'), font = null;
+    var margin = Number(s.stainMargin == null ? 8 : s.stainMargin);
+    var vertical = Number(s.stainVerticalOffset == null ? 0 : s.stainVerticalOffset);
+    var gap = Math.max(6, size * 0.5), totalWidth = 0, maxHeight = 0, i, entry, text, frame, width, height, x, y;
+    if (!positions[position] || !(margin >= -200 && margin <= 200) || !(vertical >= -200 && vertical <= 200) ||
+        !(size >= 4 && size <= 72) || !/^(regular|bold|italic|bold-italic)$/.test(style) || entries.length > 3) {
+        throw new Error('Invalid staining label settings.');
+    }
+    for (i = 0; i < entries.length; i++) {
+        entry = entries[i] || {};
+        text = String(entry.text || '').replace(/^\s+|\s+$/g, '');
+        if (!text) { continue; }
+        if (text.length > 40 || /[\r\n]/.test(text) || !/^#[0-9a-f]{6}$/i.test(String(entry.color || ''))) {
+            throw new Error('Invalid staining label text or color.');
+        }
+        if (font === null) { font = sciBitmapFigureFont(s.stainFont, style) || false; }
+        frame = group.textFrames.add();
+        frame.contents = text;
+        frame.textRange.characterAttributes.size = size;
+        frame.textRange.characterAttributes.fillColor = sciBitmapHexColor(entry.color);
+        if (font) { frame.textRange.characterAttributes.textFont = font; }
+        width = Number(frame.width) || text.length * size * 0.7;
+        height = Number(frame.height) || size * 1.2;
+        active.push({ frame: frame, width: width });
+        totalWidth += width;
+        if (height > maxHeight) { maxHeight = height; }
+    }
+    if (!active.length) { return 0; }
+    totalWidth += gap * (active.length - 1);
+    x = /-right$/.test(position) ? Number(bounds[2]) - margin - totalWidth : Number(bounds[0]) + margin;
+    if (position.indexOf('outside-top-') === 0) { y = Number(bounds[1]) + 8 + maxHeight + vertical; }
+    else if (position.indexOf('outside-bottom-') === 0) { y = Number(bounds[3]) - 8 + vertical; }
+    else if (position.indexOf('bottom-') === 0) { y = Number(bounds[3]) + 8 + maxHeight + vertical; }
+    else { y = Number(bounds[1]) - 8 + vertical; }
+    for (i = 0; i < active.length; i++) {
+        active[i].frame.position = [x, y];
+        x += active[i].width + gap;
+    }
+    return active.length;
+}
 function sciBitmapFigureLabel(lockJson, specJson) {
     var group = null;
     try {
         var info = sciBitmapAssertLock(lockJson), entry = sciBitmapFirstBitmapEntry(app.activeDocument.selection);
         var item = entry && entry.item, s = eval('(' + specJson + ')'), text = String(s.text || '').replace(/^\s+|\s+$/g, '');
         var positions = { 'top-left': 1, 'top-right': 1, 'bottom-left': 1, 'bottom-right': 1, 'outside-top-left': 1, 'outside-top-right': 1 };
-        var size = Number(s.size), margin = Number(s.margin), verticalOffset = Number(s.verticalOffset == null ? 0 : s.verticalOffset), bounds, left, top, right, bottom, color, font, frame, width, height, x, y, old = [], i, g, note;
+        var size = Number(s.size), margin = Number(s.margin), verticalOffset = Number(s.verticalOffset == null ? 0 : s.verticalOffset), bounds, left, top, right, bottom, color, font, frame, width, height, x, y, stainCount, old = [], i, g, note;
         if (!item || (item.typename !== 'PlacedItem' && item.typename !== 'RasterItem')) { throw new Error('Figure label requires one image.'); }
         if (!text || text.length > 16 || /[\r\n]/.test(text)) { throw new Error('Enter a label of 1–16 characters.'); }
         if (!(size >= 4 && size <= 72) || !(margin >= -200 && margin <= 200) || !(verticalOffset >= -200 && verticalOffset <= 200) || !positions[s.position]) { throw new Error('Invalid figure label settings.'); }
@@ -163,7 +207,8 @@ function sciBitmapFigureLabel(lockJson, specJson) {
             throw new Error('Figure label does not fit inside this image.');
         }
         frame.position = [x, y];
-        group.note = 'SCI_FIGLABEL_V1:' + sciBitmapJSON({ objectKey: info.objectKey, sourcePath: info.sourcePath, text: text, font: s.font || '', style: s.style || 'regular', size: size, margin: margin, verticalOffset: verticalOffset, position: s.position, color: s.color });
+        stainCount = sciBitmapFigureStains(group, s, bounds);
+        group.note = 'SCI_FIGLABEL_V1:' + sciBitmapJSON({ objectKey: info.objectKey, sourcePath: info.sourcePath, text: text, font: s.font || '', style: s.style || 'regular', size: size, margin: margin, verticalOffset: verticalOffset, position: s.position, color: s.color, stains: s.stains || [], stainFont: s.stainFont || '', stainStyle: s.stainStyle || 'regular', stainSize: s.stainSize == null ? size : s.stainSize, stainPosition: s.stainPosition || 'top-left', stainMargin: s.stainMargin == null ? 8 : s.stainMargin, stainVerticalOffset: s.stainVerticalOffset == null ? 0 : s.stainVerticalOffset });
         for (i = 0; i < app.activeDocument.groupItems.length; i++) {
             g = app.activeDocument.groupItems[i];
             if (g === group) { continue; }
@@ -176,7 +221,7 @@ function sciBitmapFigureLabel(lockJson, specJson) {
         }
         for (i = 0; i < old.length; i++) { old[i].remove(); }
         app.redraw();
-        return sciBitmapResult({ ok: true, text: text, position: s.position });
+        return sciBitmapResult({ ok: true, text: text, position: s.position, stainCount: stainCount });
     } catch (e) { if (group) { try { group.remove(); } catch (ignoreRemove) {} } return sciBitmapFailure(e); }
 }
 /*
@@ -297,55 +342,6 @@ function sciBitmapInsetNoteList() {
     }
     return out;
 }
-function sciBitmapArtboardRegion(lockJson, specJson) {
-    try {
-        var info = sciBitmapAssertLock(lockJson);
-        var spec = eval('(' + specJson + ')');
-        var sw = Number(spec.sourceWidth), sh = Number(spec.sourceHeight);
-        var entry = sciBitmapFirstBitmapEntry(app.activeDocument.selection);
-        var item = entry.item;
-        var corners = sciBitmapCorners(item);
-        var sel = app.activeDocument.selection;
-        var path = null, i, pts = [], b, n, minX, minY, maxX, maxY, ux, uy, vx, vy, dx, dy, det, nx, ny, left, top, width, height;
-        if (!(sw > 1 && sh > 1)) { throw new Error('Inset region is empty'); }
-        for (i = 0; i < sel.length; i++) {
-            if (!sel[i] || sel[i] === item) { continue; }
-            if (sel[i].typename === 'PathItem' || sel[i].typename === 'CompoundPathItem') { path = sel[i]; break; }
-        }
-        if (!path) { throw new Error('Select the image and a rectangle to read an artboard region'); }
-        if (path.pathPoints && path.pathPoints.length >= 2) {
-            for (i = 0; i < path.pathPoints.length; i++) { pts.push(path.pathPoints[i].anchor); }
-        } else if (path.geometricBounds) {
-            b = path.geometricBounds;
-            pts = [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]];
-        }
-        if (pts.length < 2) { throw new Error('Select the image and a rectangle to read an artboard region'); }
-        ux = corners[1][0] - corners[0][0]; uy = corners[1][1] - corners[0][1];
-        vx = corners[3][0] - corners[0][0]; vy = corners[3][1] - corners[0][1];
-        det = ux * vy - uy * vx;
-        if (Math.abs(det) < 1e-8) { throw new Error('Singular artwork transform'); }
-        minX = 1e9; minY = 1e9; maxX = -1e9; maxY = -1e9;
-        for (i = 0; i < pts.length; i++) {
-            dx = pts[i][0] - corners[0][0]; dy = pts[i][1] - corners[0][1];
-            nx = (dx * vy - vx * dy) / det; ny = (ux * dy - uy * dx) / det;
-            if (nx < minX) { minX = nx; } if (ny < minY) { minY = ny; }
-            if (nx > maxX) { maxX = nx; } if (ny > maxY) { maxY = ny; }
-        }
-        if (minX < 0) { minX = 0; } if (minY < 0) { minY = 0; }
-        if (maxX > 1) { maxX = 1; } if (maxY > 1) { maxY = 1; }
-        /* Corner UV → file Y (no-op when corner[0] is visual top). */
-        var fileY0 = sciBitmapFileNyToCornerNy(corners, minY);
-        var fileY1 = sciBitmapFileNyToCornerNy(corners, maxY);
-        var fileMinY = Math.min(fileY0, fileY1), fileMaxY = Math.max(fileY0, fileY1);
-        left = Math.round(minX * sw); top = Math.round(fileMinY * sh);
-        width = Math.round((maxX - minX) * sw); height = Math.round((fileMaxY - fileMinY) * sh);
-        if (left + width > sw) { width = sw - left; }
-        if (top + height > sh) { height = sh - top; }
-        if (!(width > 1 && height > 1)) { throw new Error('Inset region is empty'); }
-        return sciBitmapResult({ ok: true, left: left, top: top, width: width, height: height, objectKey: info.objectKey });
-    } catch (e) { return sciBitmapFailure(e); }
-}
-
 function sciBitmapPlacedBoxMatches(placed, sizeW, sizeH) {
     var b, w, h, want;
     try {
@@ -421,20 +417,18 @@ function sciBitmapInset(lockJson, specJson) {
         var entry = sciBitmapFirstBitmapEntry(app.activeDocument.selection);
         var item = entry.item;
         var s = eval('(' + specJson + ')');
-        var corners, norm, mag, gap, anchor, frameW, frameH, sizeW, sizeH, bounds, pos, file, quad, i;
+        var corners, norm, gap, anchor, frameW, frameH, sizeW, sizeH, bounds, pos, file, quad, i;
         var frameStyle, leaderStyle, ux, uy, vx, vy, x0, y0, x1, y1;
         var scaleSkipped = false, old, oldPaths, pi, placedPath, notePath;
         if (item.typename !== 'PlacedItem' || !item.file) { throw new Error('Inset requires a linked placed image'); }
         if (!s || !s.norm || !s.file) { throw new Error('Invalid inset settings'); }
         norm = s.norm;
-        mag = Number(s.magnification);
-        if (!(mag >= 1 && mag <= 20)) { throw new Error('Invalid inset settings'); }
         if (!(Number(norm.w) > 0.002 && Number(norm.h) > 0.002)) { throw new Error('Inset region is empty'); }
         if (Number(norm.x) < 0) { norm.w = Number(norm.w) + Number(norm.x); norm.x = 0; }
         if (Number(norm.y) < 0) { norm.h = Number(norm.h) + Number(norm.y); norm.y = 0; }
         if (Number(norm.x) + Number(norm.w) > 1) { norm.w = 1 - Number(norm.x); }
         if (Number(norm.y) + Number(norm.h) > 1) { norm.h = 1 - Number(norm.y); }
-        frameStyle = s.frame || { weight: 1.5, color: '#ffffff', dashes: [], corner: 'miter', radius: 0 };
+        frameStyle = s.frame || { weight: 1.5, color: '#ff0000', dashes: [], corner: 'miter', radius: 0 };
         if (!(frameStyle.weight > 0 && frameStyle.weight <= 20)) { throw new Error('Invalid inset settings'); }
         leaderStyle = s.leaders && s.leaders.enabled ? s.leaders : null;
         if (leaderStyle && !(leaderStyle.weight > 0 && leaderStyle.weight <= 20)) { throw new Error('Invalid inset settings'); }
@@ -455,12 +449,9 @@ function sciBitmapInset(lockJson, specJson) {
         if (anchor === 'left' || anchor === 'right') {
             sizeH = frameH;
             sizeW = sizeH * cropAspect;
-        } else if (anchor === 'above' || anchor === 'below') {
+        } else {
             sizeW = frameW;
             sizeH = sizeW / cropAspect;
-        } else {
-            sizeW = Number(norm.w) * frameW * mag;
-            sizeH = Number(norm.h) * frameH * mag;
         }
         if (!(sizeW > 0.5 && sizeH > 0.5)) { throw new Error('Inset region is empty'); }
         bounds = item.geometricBounds;
@@ -483,8 +474,8 @@ function sciBitmapInset(lockJson, specJson) {
         if (!file.exists) { throw new Error('Replacement file does not exist: ' + s.file); }
         group = app.activeDocument.groupItems.add();
         var effectiveMag = (anchor === 'above' || anchor === 'below')
-            ? ((Number(norm.w) > 0 && frameW > 0) ? (sizeW / (Number(norm.w) * frameW)) : mag)
-            : ((Number(norm.h) > 0 && frameH > 0) ? (sizeH / (Number(norm.h) * frameH)) : mag);
+            ? sizeW / (Number(norm.w) * frameW)
+            : sizeH / (Number(norm.h) * frameH);
         group.name = 'SCI inset · ' + (Math.round(effectiveMag * 100) / 100) + '×';
         try { item.__sciPlaceTarget = false; } catch (ignoreMark) {}
         placed = app.activeDocument.placedItems.add();
@@ -531,7 +522,7 @@ function sciBitmapInset(lockJson, specJson) {
             parentKey: info.objectKey,
             placedPath: file.fsName,
             norm: { x: Number(norm.x), y: Number(norm.y), w: Number(norm.w), h: Number(norm.h) },
-            magnification: mag,
+            effectiveMagnification: effectiveMag,
             anchor: anchor,
             createdAt: (new Date()).toUTCString()
         });
@@ -561,7 +552,7 @@ function sciBitmapInset(lockJson, specJson) {
         }
         try { app.activeDocument.selection = [item]; } catch (ignoreSel) {}
         try { app.redraw(); } catch (ignoreRedraw) {}
-        return sciBitmapResult({ ok: true, magnification: mag, effectiveMagnification: effectiveMag, anchor: anchor, placedPath: file.fsName, scaleBar: s.scaleBar && !scaleSkipped, scaleSkipped: scaleSkipped, widthPt: sizeW, heightPt: sizeH });
+        return sciBitmapResult({ ok: true, effectiveMagnification: effectiveMag, anchor: anchor, placedPath: file.fsName, scaleBar: s.scaleBar && !scaleSkipped, scaleSkipped: scaleSkipped, widthPt: sizeW, heightPt: sizeH });
     } catch (e) {
         if (placed) { try { placed.remove(); } catch (ignoreP2) {} }
         if (group) { try { group.remove(); } catch (ignoreG) {} }
@@ -636,10 +627,13 @@ function sciBitmapInsetLeaderSegs(frameQuad, pos, sizeW, sizeH) {
     return pairB;
 }
 function sciBitmapInsetScale(group, placed, s) {
-    if (!(s.fraction > 0 && s.fraction < 0.9) || !(s.lineWidth > 0 && s.lineWidth <= 20) || !(s.fontSize >= 4 && s.fontSize <= 72)) {
+    var includeText = s.includeText !== false;
+    if (!(s.fraction > 0 && s.fraction < 0.9) || !(s.lineWidth > 0 && s.lineWidth <= 20) ||
+        (includeText && !(s.fontSize >= 4 && s.fontSize <= 72))) {
         throw new Error('Invalid scale bar settings');
     }
     var margin = s.margin >= 0 ? Number(s.margin) : 4;
+    var textPad = includeText ? Number(s.fontSize) + 4 : Math.max(Number(s.lineWidth), 2);
     var start, end, color, line, label, b, left, top, right, bottom, frameW, frameH, barW, x0, lineY;
     var p, ux, uy, vx, vy, w, h, x, y, topEdge, botEdge, yBottom;
     /* Fresh linked PlacedItems often expose BL-first sciBitmapCorners (V toward
@@ -653,7 +647,7 @@ function sciBitmapInsetScale(group, placed, s) {
             if (frameW > 0.5 && frameH > 0.5) {
                 barW = frameW * s.fraction;
                 x0 = s.position === 'bottom-left' ? left + margin : right - margin - barW;
-                lineY = bottom + margin + s.fontSize + 4;
+                lineY = bottom + margin + textPad;
                 if (!(x0 >= left - 0.01 && x0 + barW <= right + 0.01 && lineY >= bottom - 0.01 && lineY <= top + 0.01)) {
                     throw new Error('Scale bar/margins do not fit inside this frame');
                 }
@@ -664,11 +658,13 @@ function sciBitmapInsetScale(group, placed, s) {
                 line.setEntirePath([start, end]);
                 line.filled = false; line.stroked = true; line.strokeWidth = s.lineWidth; line.strokeColor = color;
                 try { line.strokeDashes = []; } catch (ignoreD) {}
-                label = group.textFrames.add();
-                label.contents = String(s.label || '');
-                label.textRange.characterAttributes.size = s.fontSize;
-                label.textRange.characterAttributes.fillColor = color;
-                label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
+                if (includeText) {
+                    label = group.textFrames.add();
+                    label.contents = String(s.label || '');
+                    label.textRange.characterAttributes.size = s.fontSize;
+                    label.textRange.characterAttributes.fillColor = color;
+                    label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
+                }
                 return;
             }
         }
@@ -681,7 +677,7 @@ function sciBitmapInsetScale(group, placed, s) {
     x = s.position === 'bottom-left' ? margin / w : 1 - margin / w - s.fraction;
     topEdge = (p[0][1] + p[1][1]) * 0.5; botEdge = (p[2][1] + p[3][1]) * 0.5;
     yBottom = topEdge >= botEdge ? 1 : 0;
-    y = yBottom === 1 ? 1 - (margin + s.fontSize + 4) / h : (margin + s.fontSize + 4) / h;
+    y = yBottom === 1 ? 1 - (margin + textPad) / h : (margin + textPad) / h;
     if (x < 0 || x + s.fraction > 1 || y < 0 || y > 1) { throw new Error('Scale bar/margins do not fit inside this frame'); }
     start = [p[0][0] + x * ux + y * vx, p[0][1] + x * uy + y * vy];
     end = [start[0] + s.fraction * ux, start[1] + s.fraction * uy];
@@ -690,9 +686,11 @@ function sciBitmapInsetScale(group, placed, s) {
     line.setEntirePath([start, end]);
     line.filled = false; line.stroked = true; line.strokeWidth = s.lineWidth; line.strokeColor = color;
     try { line.strokeDashes = []; } catch (ignoreD2) {}
-    label = group.textFrames.add();
-    label.contents = String(s.label || '');
-    label.textRange.characterAttributes.size = s.fontSize;
-    label.textRange.characterAttributes.fillColor = color;
-    label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
+    if (includeText) {
+        label = group.textFrames.add();
+        label.contents = String(s.label || '');
+        label.textRange.characterAttributes.size = s.fontSize;
+        label.textRange.characterAttributes.fillColor = color;
+        label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
+    }
 }

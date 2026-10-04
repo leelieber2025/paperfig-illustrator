@@ -17,16 +17,16 @@ Copyright © 2026 Zhao Li. Licensed under **[GPL-3.0](https://www.gnu.org/licens
 | **Geom** | Rotate, flip, and straighten on the artboard. |
 | **Crop** | Crop in file pixels. |
 | **Inset** | Make an enlarged inset (free, 1:1, 4:3, 16:9). |
-| **Label** | Editable A/B/C panel labels with saved font and placement styles. |
+| **Label** | Editable A/B/C panel labels and up to three colored staining labels, with saved font and placement styles. |
 | **Raw** | uint8/uint16 planes from TIFF/OME, or from Fiji + Bio-Formats. Histograms, per-channel range and gamma. |
 | **Export** | Optional batch apply and PNG/JPEG/TIFF format options. |
 | **⚙ Settings** | Fixed at the right of the tab bar; show advanced tabs and configure Fiji when needed. |
 
 Sliders change the panel preview. **Apply** writes the display file and relinks the artboard. Undo with Illustrator Ctrl/Cmd+Z.
 
-Crop ratios: free, 1:1, 4:3, 3:4, 16:9, 3:2, custom W:H, fixed pixels, or **Original file px**. Inset ratios: free, 1:1, 4:3, 16:9. Left or right placement matches the main image height. Above or below, **Zoom** sets the placed size. The inset PNG is an unresampled crop, so µm/px stays the calibration value.
+Crop ratios: free, 1:1, 4:3, 3:4, 16:9, 3:2, custom W:H, fixed pixels, or **Original file px**. Inset ratios: free, 1:1, 4:3, 16:9. Left or right placement matches the main image height. Above or below, the inset width matches the main image width; its height follows the crop aspect ratio. The inset PNG is an unresampled crop, so µm/px stays the calibration value.
 
-Calibration is stored per image. Crop does not clear it. **Reuse last** is the only copy from one image to another. **Save** and **Load** use `~/paperfig/scales` (`%USERPROFILE%\paperfig\scales` on Windows). **Compare selection** lists µm/px for the current selection.
+Calibration is stored per image. Crop does not clear it. **Reuse last** is the only copy from one image to another. **Save** and **Load** use `~/paperfig/scales` (`%USERPROFILE%\paperfig\scales` on Windows).
 
 Each RGB Apply writes `<output>.json`. A separate `<output>.baseline.json` marks that file as the new baseline. Raw Apply writes `<output>.json` with schema `sci-raw-display` and does not write a baseline file. The raw file is not modified.
 
@@ -64,16 +64,16 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 | **几何** | 在画板上旋转、翻转、拉平。 |
 | **裁剪** | 按文件像素裁剪。 |
 | **放大插图** | 放大插图（自由、1:1、4:3、16:9）。 |
-| **标签** | 生成可编辑的 A/B/C 图版标签，并保存字体与位置样式。 |
+| **标签** | 生成可编辑的 A/B/C 图版标签和最多三段彩色染色说明，并保存字体与位置样式。 |
 | **原始** | 从 TIFF/OME 或 Fiji + Bio-Formats 读 uint8/uint16。直方图、逐通道范围与 gamma。 |
 | **导出** | 可选的批量应用与 PNG/JPEG/TIFF 格式设置。 |
 | **设置** | 显示高级页，需要时配置 Fiji。 |
 
 滑块只改面板预览。**应用** 才写出展示图并重新链接。撤销用 Illustrator 的 Ctrl/Cmd+Z。
 
-裁剪比例：自由、1:1、4:3、3:4、16:9、3:2、自定义 W:H、固定像素、**源文件像素**。插图比例：自由、1:1、4:3、16:9。放在左右时，高度与主图一致。放在上下时，**放大** 决定放置尺寸。插图 PNG 不重采样，µm/px 与标定相同。
+裁剪比例：自由、1:1、4:3、3:4、16:9、3:2、自定义 W:H、固定像素、**源文件像素**。插图比例：自由、1:1、4:3、16:9。放在左右时，高度与主图一致。放在上下时，插图宽度与原图一致，高度由裁切区域的宽高比决定。插图 PNG 不重采样，µm/px 与标定相同。
 
-标定按图保存。裁剪不会清掉标定。只有 **复用上次标定** 会把一张图的标定抄到另一张。**保存** 和 **加载** 使用 `~/paperfig/scales`（Windows 为 `%USERPROFILE%\paperfig\scales`）。**核对选中图** 列出当前选区的 µm/px。
+标定按图保存。裁剪不会清掉标定。只有 **复用上次标定** 会把一张图的标定抄到另一张。**保存** 和 **加载** 使用 `~/paperfig/scales`（Windows 为 `%USERPROFILE%\paperfig\scales`）。
 
 每次 RGB **应用** 写 `<输出>.json`。`<输出>.baseline.json` 单独标记该文件已成为新基线。原始 **应用** 写 schema 为 `sci-raw-display` 的 `<输出>.json`，不写 baseline 文件，也不改原始文件。
 

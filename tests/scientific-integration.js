@@ -2,7 +2,7 @@
 const fs=require('fs'),path=require('path'),os=require('os'),vm=require('vm'),assert=require('assert');
 const {createCanvas,Image,loadImage}=require('@napi-rs/canvas');
 const root=path.resolve(__dirname,'..'),out=fs.mkdtempSync(path.join(os.tmpdir(),'paperfig-integration-'));
-function makeImage(name,color){const c=createCanvas(1600,800),x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,1600,800);const p=path.join(out,name);fs.writeFileSync(p,c.toBuffer('image/png'));return p;}
+function makeImage(name,color,width=1600,height=800){const c=createCanvas(width,height),x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,width,height);const p=path.join(out,name);fs.writeFileSync(p,c.toBuffer('image/png'));return p;}
 const blobs=new Map();let blobId=0;
 class BlobImage extends Image {
   set src(v){if(blobs.has(v)){blobs.get(v).arrayBuffer().then(b=>{super.src=Buffer.from(b);});}else{super.src=v;}}
@@ -49,7 +49,7 @@ let init,errors=[];const nodeRequire=m=>m==='fs'?fsMock:m==='os'?{tmpdir:()=>out
 const ctx={console,Image:BlobImage,Blob,FileReader:TestFileReader,Uint8ClampedArray,Float32Array,Buffer,Promise,Date,Math,Number,String,Object,Array,JSON,isFinite,parseFloat,parseInt,setTimeout,clearTimeout,setInterval,clearInterval,localStorage:{getItem:k=>storage[k]==null?null:storage[k],setItem:(k,v)=>{storage[k]=v;},removeItem:k=>{delete storage[k];}},SystemPath:{EXTENSION:'ext'},CSInterface:function(){this.getSystemPath=()=>root;this.evalScript=(s,cb)=>{setTimeout(()=>{try{cb(String(vm.runInContext(s,host)));}catch(e){errors.push(e.message);cb('EvalScript error.');}},0);}},document:{getElementById:element,querySelector(sel){if(String(sel).indexOf('[data-tab].active')>=0)return {getAttribute(){return 'adjust';}};return null;},createElement(t){return t==='canvas'?createCanvas(1,1):element('new-'+Math.random());},querySelectorAll(){return Object.values(els).filter(x=>x.type||x.id==='format'||x.id==='lut');},addEventListener(n,f){if(n==='DOMContentLoaded')init=f;}},window:{URL:{createObjectURL(blob){const id='blob:test-'+(++blobId);blobs.set(id,blob);return id;},revokeObjectURL(id){blobs.delete(id);}},require:nodeRequire,SciBitmapCore:Core,SciBitmapWorkflow:require(path.join(root,'client/bitmap-workflow.js')),SciBitmapFiji:{},requestAnimationFrame:f=>setTimeout(f,0),addEventListener(){},removeEventListener(){},confirm(){return true;}}};
 vm.createContext(ctx);ctx.window.SciScientific=require(path.join(root,'client/scientific-core.js'));['file-stamp.js','i18n.js','raw-bridge.js','histogram-view.js','interaction-policy.js','scientific-panel.js','bitmap-output.js','bitmap-panel-marquee.js'].forEach(f=>vm.runInContext((f==='scientific-panel.js'?fs.readFileSync(path.join(root,'client',f),'utf8').replace('init();return {active:active','init();return {revealScalePresetsFolder:revealScalePresetsFolder,active:active'):fs.readFileSync(path.join(root,'client',f),'utf8')),ctx));ctx.PaperFigI18n=ctx.window.PaperFigI18n;if(ctx.PaperFigI18n){ctx.PaperFigI18n.setVersion(require(path.join(root,'package.json')).version);ctx.PaperFigI18n.setLang('en');}
 let source=fs.readFileSync(path.join(root,'client/bitmap-panel.js'),'utf8');
-source=source.replace("  document.addEventListener('DOMContentLoaded', init);",`  window.__test={science:function(){return science;},writeCrop:writeCropRect,crop:readCropRect,prepareBatch:prepareBatch,runBatch:runBatch,stopBatch:function(){batchStop=true;},batch:function(){return batchReview;},currentRecipe:currentRecipe,loadWorkflowImage:loadWorkflowImage,inspectSelection:inspectSelection,applyPipeline:applyPipeline,runArtboardPreview:runArtboardPreview,cancelArtboardPreview:cancelArtboardPreview,renderPreviewCanvas:renderPreviewCanvas,samplePreviewNeighborhood:samplePreviewNeighborhood,stop:function(){clearInterval(pollTimer);},state:function(){return {previewBase:previewBase,previewBaseDrag:previewBaseDrag,lastObjectKey:lastObjectKey,applyRunning:applyRunning,artboardPreviewRunning:artboardPreviewRunning,artboardPreviewActive:artboardPreviewActive,original:artboardPreviewOriginalPath,file:artboardPreviewFile,cache:panelPreviewCacheBytes,sourceImageSize:sourceImageSize};}};\n  document.addEventListener('DOMContentLoaded', init);`);
+source=source.replace("  document.addEventListener('DOMContentLoaded', init);",`  window.__test={science:function(){return science;},insetScaleSpec:function(w){return installMarquee().buildInsetScaleSpec(w);},writeCrop:writeCropRect,crop:readCropRect,prepareBatch:prepareBatch,runBatch:runBatch,stopBatch:function(){batchStop=true;},batch:function(){return batchReview;},currentRecipe:currentRecipe,loadWorkflowImage:loadWorkflowImage,inspectSelection:inspectSelection,applyPipeline:applyPipeline,runArtboardPreview:runArtboardPreview,cancelArtboardPreview:cancelArtboardPreview,renderPreviewCanvas:renderPreviewCanvas,samplePreviewNeighborhood:samplePreviewNeighborhood,stop:function(){clearInterval(pollTimer);},state:function(){return {previewBase:previewBase,previewBaseDrag:previewBaseDrag,lastObjectKey:lastObjectKey,applyRunning:applyRunning,artboardPreviewRunning:artboardPreviewRunning,artboardPreviewActive:artboardPreviewActive,original:artboardPreviewOriginalPath,file:artboardPreviewFile,cache:panelPreviewCacheBytes,sourceImageSize:sourceImageSize};}};\n  document.addEventListener('DOMContentLoaded', init);`);
 vm.runInContext(source,ctx);const api=ctx.window.__test;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function waitFor(fn){for(let i=0;i<300;i++){if(fn())return;await sleep(10);}throw new Error('Timed out; notice='+element('notice').textContent+'; preview='+element('previewStatus').textContent+'; message='+element('previewMessage').textContent+'; errors='+JSON.stringify(errors)+'; state='+JSON.stringify(api.state(),(k,v)=>k==='data'?'pixels':v));}
@@ -97,7 +97,7 @@ await test('Per-image calibration persists, restores UI on re-select, and does n
  doc.selection=[b];await api.inspectSelection({quiet:true});
  api.science().onSelection(JSON.parse(host.inspectSelectedBitmaps()).items[0]);
  assert(!/Calibrated · two-point|已标定 · two-point/.test(element('scaleStatus').textContent)||!storage.sci_calibrations_v1.includes('"'+api.state().lastObjectKey+'"'));
- assert.equal(element('scaleMethod').value,'field'); // cleared for uncalibrated image
+ assert.equal(element('scaleMethod').value,'two-point'); // default for uncalibrated image
  // migrate old→new key (Apply place-replace)
  const migrated=api.science().migrateCalibration(keyA,'doc|uuid:NEW');
  assert(migrated);assert.equal(JSON.parse(storage.sci_calibrations_v1)['doc|uuid:NEW'].umPerPixelX,0.2);
@@ -129,7 +129,7 @@ await test('Named scale file preset saves calibration+style and applies to anoth
  const keyA=api.state().lastObjectKey;
  const cal={version:1,method:'field',umPerPixelX:0.5,umPerPixelY:null,coordSpace:'full-source',input:{method:'field',unit:'um',width:100,pixelsX:200,pixelsY:100,coordSpace:'full-source'},source:rawPath,sourceStamp:require('fs').statSync(rawPath).size+':'+require('fs').statSync(rawPath).mtimeMs,sourcePixels:{width:4,height:2},objectKey:keyA,createdAt:new Date().toISOString()};
  const map=JSON.parse(storage.sci_calibrations_v1||'{}');map[keyA]=cal;storage.sci_calibrations_v1=JSON.stringify(map);
- element('scaleLength').value='25';element('scaleUnit').value='um';element('scaleLine').value='2';element('scaleFont').value='11';element('scaleMargin').value='6';element('scalePosition').value='bottom-left';element('scaleColor').value='#00ff00';if(element('scaleIncludeText'))element('scaleIncludeText').checked=false;
+ element('scaleLength').value='25';element('scaleUnit').value='um';element('scaleBarUnit').value='nm';element('scaleLine').value='2';element('scaleFont').value='11';element('scaleMargin').value='6';element('scalePosition').value='bottom-left';element('scaleColor').value='#00ff00';if(element('scaleIncludeText'))element('scaleIncludeText').checked=false;
  api.science().onSelection(JSON.parse(host.inspectSelectedBitmaps()).items[0]);
  api.science().saveNamedScalePreset('MicroscopeX-40x');
  const dir=api.science().scalePresetsDir();
@@ -138,14 +138,14 @@ await test('Named scale file preset saves calibration+style and applies to anoth
  const saved=JSON.parse(require('fs').readFileSync(presetPath,'utf8'));
  assert.equal(saved.schema,'sci-scale-preset');
  assert.equal(saved.name,'MicroscopeX-40x');
- assert.equal(saved.calibration.umPerPixelX,0.5);assert.equal(saved.style.length,25);assert.equal(saved.style.position,'bottom-left');assert.equal(saved.style.includeText,false);
+ assert.equal(saved.calibration.umPerPixelX,0.5);assert.equal(saved.style.length,25);assert.equal(saved.style.unit,'nm');assert.equal(saved.style.position,'bottom-left');assert.equal(saved.style.includeText,false);
  // other image: load saved file (programmatic path = same as file picker Load)
  doc.selection=[b];await api.inspectSelection({quiet:true});
  api.science().onSelection(JSON.parse(host.inspectSelectedBitmaps()).items[0]);
  element('scaleLength').value='99';element('scalePosition').value='bottom-right';
  api.science().loadScalePresetFile(presetPath);
  assert.equal(JSON.parse(storage.sci_calibrations_v1)[api.state().lastObjectKey].umPerPixelX,0.5);
- assert.equal(Number(element('scaleLength').value),25);
+ assert.equal(Number(element('scaleLength').value),25);assert.equal(element('scaleBarUnit').value,'nm');
  assert.equal(element('scalePosition').value,'bottom-left');
  assert.equal(element('scaleColor').value,'#00ff00');
  if(element('scaleIncludeText'))assert.equal(element('scaleIncludeText').checked,false);
@@ -161,6 +161,26 @@ await test('Raw batch record failure after relink remains applied and is recover
  ctx.window.PaperFigOutput.writeJsonAtomic=(p,rec)=>{if(rec.schema==='sci-raw-display'&&rec.status==='applied')throw new Error('raw final record failure');return writer(p,rec);};
  try{await api.runBatch();assert.notEqual(target.file.fsName,rawPath);assert(/1\/1 applied/.test(element('footerStatus').textContent));const pending=JSON.parse(storage.paperfig_raw_record_recovery_v1);assert(pending.some(x=>x.output===target.file.fsName&&x.rec.status==='applied'));}
  finally{ctx.window.PaperFigOutput.writeJsonAtomic=writer;}
+});
+await test('Scale shows each selected file’s detected pixel size',async()=>{
+ const small=placed('SIZE-SMALL',makeImage('size-small.png','#112233',320,240));
+ const large=placed('SIZE-LARGE',makeImage('size-large.png','#445566',640,360));
+ element('scaleBarUnit').value='nm';doc.selection=[small];await api.inspectSelection({quiet:true});assert.equal(element('scaleSourcePixels').textContent,'320 × 240 px');assert.equal(element('scaleMethod').value,'two-point');assert.equal(element('scaleBarUnit').value,'nm');
+ doc.selection=[large];await api.inspectSelection({quiet:true});assert.equal(element('scaleSourcePixels').textContent,'640 × 360 px');
+ assert(!/id=\"scaleFieldWidth\"/.test(html));
+});
+await test('Inset scale uses its own line, margin, color, and text setting',async()=>{
+ const item=doc.selection[0],key=api.state().lastObjectKey,map=JSON.parse(storage.sci_calibrations_v1||'{}');
+ map[key]={umPerPixelX:0.1,objectKey:key};storage.sci_calibrations_v1=JSON.stringify(map);
+ element('insetScaleOn').checked=true;element('insetScaleLength').value=10;element('insetScaleUnit').value='um';
+ element('insetScaleLine').value=2.5;element('insetScaleMargin').value=7;element('insetScaleColor').value='#000000';element('insetScaleIncludeText').checked=false;
+ const spec=api.insetScaleSpec(640);assert.equal(spec.lineWidth,2.5);assert.equal(spec.margin,7);assert.equal(spec.color,'#000000');assert.equal(spec.includeText,false);assert(Math.abs(spec.fraction-0.15625)<1e-8);
+});
+await test('Staining label fields persist and join label style presets',async()=>{
+ element('figureStainText1').value='TUBB3';element('figureStainColor1').value='#ff0000';element('figureStainText2').value='TX';element('figureStainColor2').value='#00ff00';element('figureStainText3').value='RUNX2';element('figureStainColor3').value='#ffffff';
+ element('figureStainFont').value='Arial';element('figureStainStyle').value='bold';element('figureStainSize').value=12;element('figureStainPosition').value='top-left';element('figureStainMargin').value=-4;element('figureStainVerticalOffset').value=6;emit('figureStainText1','change');
+ const prefs=JSON.parse(storage.paperfig_figure_label_prefs_v1);assert.deepEqual(prefs.stains.map(x=>x.text),['TUBB3','TX','RUNX2']);assert.equal(prefs.stainStyle,'bold');assert.equal(prefs.stainSize,12);assert.equal(prefs.stainMargin,-4);
+ element('figureLabelPresetName').value='Stains';emit('figureLabelPresetSave','click');const preset=JSON.parse(storage.paperfig_figure_label_presets_v1).Stains;assert.equal(preset.text,undefined);assert.equal(preset.stains[2].text,'RUNX2');assert.equal(preset.stainPosition,'top-left');
 });
 await test('Scale folder opener passes a special-character path as one argument',async()=>{
  const originalRequire=ctx.window.require,home=path.join(out,'home " ; $(touch ignored)');fs.mkdirSync(home,{recursive:true});let call;

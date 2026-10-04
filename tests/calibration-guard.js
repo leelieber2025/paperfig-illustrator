@@ -55,10 +55,8 @@ ctx.window.SciScientific = require(path.join(root, 'client/scientific-core.js'))
 });
 const info = { objectKey: 'obj-a', sourcePath: file, linked: true, typename: 'PlacedItem' };
 ctx.window._size = { width: 100, height: 50 };
-els.scaleMethod.value = 'field';
+els.scaleMethod.value = 'two-point';
 els.scaleUnit.value = 'um';
-els.scaleFieldWidth.value = '200';
-els.scaleFieldHeight.value = '';
 const api = ctx.window.SciScientificPanel.create({
   byId: function (id) { return els[id]; },
   info: function () { return info; },
@@ -72,12 +70,14 @@ const api = ctx.window.SciScientificPanel.create({
   extensionPath: root,
   fiji: function () { return ''; }
 });
-api.calibrate();
-if (!storage.sci_calibrations_v1) {
-  throw new Error('no calibration saved; notice=' + ctx.window._notice + ' status=' + els.scaleStatus.textContent);
-}
-const saved = JSON.parse(storage.sci_calibrations_v1)['obj-a'];
-assert(saved.umPerPixelX > 0, 'calibration saved');
+const saved = ctx.window.SciScientific.calibration({ method: 'field', width: 200, unit: 'um', pixelsX: 100, pixelsY: 50 });
+saved.source = file;
+saved.sourceStamp = ctx.window.PaperFigFileStamp.contentStamp(file);
+saved.sourcePixels = { width: 100, height: 50 };
+saved.objectKey = 'obj-a';
+storage.sci_calibrations_v1 = JSON.stringify({ 'obj-a': saved });
+storage.sci_calibration_last_v1 = JSON.stringify(saved);
+assert(saved.umPerPixelX > 0, 'legacy field calibration remains readable');
 const sidecar = file + '.json';
 fs.writeFileSync(sidecar, JSON.stringify({ calibration: saved }));
 api.clearCalibration();

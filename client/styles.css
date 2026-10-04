@@ -113,6 +113,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .crop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .crop-grid label { display: grid; grid-template-columns: minmax(52px, max-content) 1fr; gap: 6px; align-items: center; }
 .crop-grid input { width: 100%; }
+.stain-label-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.stain-label-row label:first-child { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.stain-label-row label:first-child input { width: 100px; min-width: 60px; max-width: 100%; box-sizing: border-box; }
+.stain-label-row label:last-child { display: flex; gap: 5px; align-items: center; }
+.stain-label-row input[type=color] { width: 28px; height: 22px; padding: 0; }
+
 #tab-geometry input[type=color] {
   width: 28px;
   height: 16px;
@@ -124,8 +130,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   justify-self: start;
   box-sizing: border-box;
 }
-#scaleAuditStatus { white-space: pre-wrap; }
-#scaleAuditStatus.audit-bad { color: #fb5e65; }
 .hint-line { margin: 6px 0 0; color: var(--muted); font-size: 11px; }
 .secondary-full { width: 100%; margin-top: 7px; }
 label { color: #ddd; }

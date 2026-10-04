@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.0</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.1</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -222,22 +222,21 @@
       <div id="tab-scale" class="tab-pane active" role="tabpanel" data-pane="scale">
         <section class="group" id="scaleGroup">
           <h2 data-i18n="scaleHeading">矢量标尺</h2>
-          <label><span data-i18n="calibration">标定</span><select id="scaleMethod"><option value="metadata" data-i18n="calMeta">原始元数据 · µm/px</option><option value="field" data-i18n="calField">已知全图视场宽</option><option value="two-point" data-i18n="calTwoPoint">已有水平标尺两端</option></select></label>
-          <div class="crop-grid"><label><span data-i18n="fullWidth">全图宽度</span><input id="scaleFieldWidth" type="number" min="0" value="200"></label><label><span data-i18n="heightOpt">高度(可选)</span><input id="scaleFieldHeight" type="number" min="0" data-i18n-placeholder="optionalPh" placeholder="可选"></label><label><span data-i18n="refBarLen">参考标尺长度</span><input id="scaleReference" type="number" min="0" value="20"></label><label><span data-i18n="units">单位</span><select id="scaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select></label></div>
-          <div class="button-row"><button id="scalePick" data-i18n="pickEndpoints">拾取参考端点</button><button id="scaleCalibrate" data-i18n="saveCal">保存标定</button><button type="button" id="scaleReuseLast" data-i18n="reuseLast" data-i18n-title="reuseLastTitle" title="可选：把上次标定复制到本图">复用上次标定</button><button type="button" id="scaleClearCal" data-i18n="clearCal" data-i18n-title="clearCalTitle" title="仅清除本图已存标定">清除本图标定</button></div>
-          <p id="scaleStatus" class="hint-line" data-i18n="scaleStatusDefault">按全图源标定（µm/px 与端点均为全图文件像素，与当前裁剪无关）；勿用打印 DPI。裁剪/「使用全图」不清除标定。</p>
-          <div class="crop-grid"><label><span data-i18n="barLength">标尺长度</span><input id="scaleLength" type="number" min="0" value="20"></label><label><span data-i18n="linePt">线宽(pt)</span><input id="scaleLine" type="number" min="0.1" max="20" step="0.1" value="1.5"></label><label><span data-i18n="textPt">字号(pt)</span><input id="scaleFont" type="number" min="4" max="72" value="9"></label><label><span data-i18n="marginPt">边距(pt)</span><input id="scaleMargin" type="number" min="0" max="200" value="8"></label></div>
-          <label><span data-i18n="position">位置</span><select id="scalePosition"><option value="bottom-right" data-i18n="bottomRight">右下</option><option value="bottom-left" data-i18n="bottomLeft">左下</option></select></label>
-          <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="scaleColor" type="color" value="#ffffff" title="#ffffff"></label>
-          <label class="scale-include-text"><input id="scaleIncludeText" type="checkbox" checked> <span data-i18n="scaleIncludeText">显示长度文字</span></label>
-          <button id="scaleCreate" data-i18n="createBar">创建/更新矢量标尺</button>
-          <button type="button" id="scaleAudit" data-i18n="auditScales">核对选中图</button>
-          <p id="scaleAuditStatus" class="hint-line" data-i18n="auditScalesHint">选中两张或更多链接图，比较 µm/px。等长标尺若 µm/px 不同，代表的距离就不同。</p>
           <div class="button-row scale-preset-row">
             <span class="scale-preset-label" data-i18n="scalePreset">标尺预设</span>
             <button type="button" id="scalePresetSave" data-i18n="scalePresetSave" data-i18n-title="scalePresetSaveTitle" title="选择保存标尺预设 JSON 的位置（默认从 Downloads 开始）">保存</button>
             <button type="button" id="scalePresetLoad" data-i18n="scalePresetLoad" data-i18n-title="scalePresetLoadTitle" title="打开标尺预设 JSON（默认从 Downloads 开始）">加载</button>
           </div>
+          <p class="hint-line"><span data-i18n="sourceImagePixels">原图像素尺寸</span>：<output id="scaleSourcePixels">—</output></p>
+          <label><span data-i18n="calibration">标定</span><select id="scaleMethod"><option value="two-point" data-i18n="calTwoPoint">已知长度线段的两端</option><option value="metadata" data-i18n="calMeta">原始元数据 · µm/px</option></select></label>
+          <div class="crop-grid"><label><span data-i18n="refBarLen">参考标尺长度</span><input id="scaleReference" type="number" min="0" value="20"></label><label><span data-i18n="units">单位</span><select id="scaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select></label></div>
+          <div class="button-row"><button id="scalePick" data-i18n="pickEndpoints">拾取参考端点</button><button id="scaleCalibrate" data-i18n="saveCal">保存标定</button><button type="button" id="scaleReuseLast" data-i18n="reuseLast" data-i18n-title="reuseLastTitle" title="可选：把上次标定复制到本图">复用上次标定</button><button type="button" id="scaleClearCal" data-i18n="clearCal" data-i18n-title="clearCalTitle" title="仅清除本图已存标定">清除本图标定</button></div>
+          <p id="scaleStatus" class="hint-line" data-i18n="scaleStatusDefault">按全图源标定（µm/px 与端点均为全图文件像素，与当前裁剪无关）；勿用打印 DPI。裁剪/重置裁剪不清除标定。</p>
+          <div class="crop-grid"><label><span data-i18n="barLength">标尺长度</span><input id="scaleLength" type="number" min="0" value="20"></label><label><span data-i18n="units">单位</span><select id="scaleBarUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select></label><label><span data-i18n="linePt">线宽(pt)</span><input id="scaleLine" type="number" min="0.1" max="20" step="0.1" value="1.5"></label><label><span data-i18n="textPt">字号(pt)</span><input id="scaleFont" type="number" min="4" max="72" value="9"></label><label><span data-i18n="marginPt">边距(pt)</span><input id="scaleMargin" type="number" min="0" max="200" value="8"></label></div>
+          <label><span data-i18n="position">位置</span><select id="scalePosition"><option value="bottom-right" data-i18n="bottomRight">右下</option><option value="bottom-left" data-i18n="bottomLeft">左下</option></select></label>
+          <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="scaleColor" type="color" value="#ffffff" title="#ffffff"></label>
+          <label class="scale-include-text"><input id="scaleIncludeText" type="checkbox" checked> <span data-i18n="scaleIncludeText">显示长度文字</span></label>
+          <button id="scaleCreate" data-i18n="createBar">创建/更新矢量标尺</button>
           <details class="compact-help"><summary><span data-i18n="helpScale">&#x6807;&#x5C3A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintScaleBar">标尺与单张图片自动编组；整体缩放一起变化。裁剪或单独修改图片后请更新。可选是否显示 µm 等长度文字。默认按图恢复标定；仅「复用上次」是跨图拷贝。</p></details>
         </section>
 
@@ -275,7 +274,7 @@
             <button type="button" id="marqueeModeCropBtn" class="primary" data-i18n="marqueeModeCrop" data-i18n-title="marqueeModeCropTitle" title="预览拖拽只编辑裁剪框（放大框隐藏）" aria-pressed="true">裁剪</button>
             <button type="button" id="marqueeModeInsetBtn" data-i18n="marqueeModeInset" data-i18n-title="marqueeModeInsetTitle" title="预览拖拽只编辑放大框（裁剪框隐藏）" aria-pressed="false">放大框</button>
           </div>
-          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintMarqueeMode">同时只能用一种框：裁剪或放大框。互相切换会清掉另一种选区。离开「放大插图」页也会退出放大框并清掉该区域。放大插图请点顶部「应用」，没有单独的生成按钮。</p></details>
+          <details class="compact-help"><summary><span data-i18n="helpGeometry">&#x51E0;&#x4F55;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintMarqueeMode">同时只能用一种框：裁剪或放大框。互相切换会清掉另一种选区。离开「放大插图」页也会退出放大框并清掉该区域。放大插图可点顶部「应用」，调整后点「更新插图」重新生成。</p></details>
         </section>
 
         <section class="group" aria-labelledby="cropHeading">
@@ -313,7 +312,6 @@
             <label for="cropHeight"><span data-i18n="height">高</span><input id="cropHeight" type="number" min="0" step="1" value="0"></label>
           </div>
           <details class="compact-help"><summary><span data-i18n="helpCrop">&#x88C1;&#x526A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintCrop">L/T/W/H 与固定/源文件 W×H 均为<strong>文件像素</strong>（非画板 pt）。「源文件像素」只用未缩放原图像素尺寸，忽略 Place 显示大小，便于同批图一致裁剪。固定=仅移动；W/H 为 0 表示全图。</p></details>
-          <button type="button" id="cropFullBtn" class="secondary-full" data-i18n="useFull">使用全图</button>
         </section>
 
 
@@ -322,12 +320,8 @@
       <div id="tab-inset" class="tab-pane" role="tabpanel" data-pane="inset" hidden>
         <section class="group" id="insetGroup" aria-labelledby="insetHeading">
           <h2 id="insetHeading" data-i18n="insetHeading">放大插图</h2>
-          <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintInset">在预览上框选区域（与裁剪同一套<strong>文件像素</strong>坐标）。也可在画板上画矩形，与图像一起选中后点「读取画板矩形」。框选完成后点上方「应用」放置不重采样的放大子图、原图矢量框，以及可选引线。已标定则按同一 µm/px 在插图上加标尺。</p></details>
-          <div class="button-row">
-            <button type="button" id="insetDrawBtn" data-i18n="insetDraw" data-i18n-title="marqueeModeInsetTitle" aria-pressed="false" title="预览拖拽只编辑放大框（裁剪框隐藏）">框选区域</button>
-            <button type="button" id="insetReadArtboard" data-i18n="insetReadArtboard">读取画板矩形</button>
-            <button type="button" id="insetClearBtn" data-i18n="insetClear">清除区域</button>
-          </div>
+          <details class="compact-help"><summary><span data-i18n="helpInset">&#x63D2;&#x56FE;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintInset">在预览上框选区域，或直接输入左、上、宽、高（文件像素）。设定放置位置与间距后，点顶部「应用」生成插图；修改设置后点「更新插图」重新生成。已有标定时可加插图标尺。</p></details>
+          <h3 class="inset-sub" data-i18n="insetRegionHeading">插图区域</h3>
           <div class="crop-aspect-row">
             <label for="insetAspectMode"><span data-i18n="ratio">比例</span>
               <select id="insetAspectMode">
@@ -337,12 +331,15 @@
                 <option value="16:9">16:9</option>
               </select>
             </label>
-            <label for="insetMag"><span data-i18n="insetMag">放大</span>
-              <input id="insetMag" type="number" min="1" max="20" step="0.5" value="3">
-            </label>
-            <label for="insetGap"><span data-i18n="insetGap">间距(pt)</span>
-              <input id="insetGap" type="number" min="0" max="400" step="1" value="12">
-            </label>
+          </div>
+          <div class="crop-grid">
+            <label for="insetLeft"><span data-i18n="left">左</span><input id="insetLeft" type="number" min="0" step="1" value="0"></label>
+            <label for="insetTop"><span data-i18n="top">上</span><input id="insetTop" type="number" min="0" step="1" value="0"></label>
+            <label for="insetWidth"><span data-i18n="width">宽</span><input id="insetWidth" type="number" min="0" step="1" value="0"></label>
+            <label for="insetHeight"><span data-i18n="height">高</span><input id="insetHeight" type="number" min="0" step="1" value="0"></label>
+          </div>
+          <h3 class="inset-sub" data-i18n="insetPlacementHeading">放置插图</h3>
+          <div class="crop-grid">
             <label for="insetAnchor"><span data-i18n="insetPlace">位置</span>
               <select id="insetAnchor">
                 <option value="right" data-i18n="insetRight">右侧</option>
@@ -351,17 +348,14 @@
                 <option value="below" data-i18n="insetBelow">下方</option>
               </select>
             </label>
-          </div>
-          <div class="crop-grid">
-            <label for="insetLeft"><span data-i18n="left">左</span><input id="insetLeft" type="number" min="0" step="1" value="0"></label>
-            <label for="insetTop"><span data-i18n="top">上</span><input id="insetTop" type="number" min="0" step="1" value="0"></label>
-            <label for="insetWidth"><span data-i18n="width">宽</span><input id="insetWidth" type="number" min="0" step="1" value="0"></label>
-            <label for="insetHeight"><span data-i18n="height">高</span><input id="insetHeight" type="number" min="0" step="1" value="0"></label>
+            <label for="insetGap"><span data-i18n="insetGap">间距(pt)</span>
+              <input id="insetGap" type="number" min="0" max="400" step="1" value="12">
+            </label>
           </div>
           <h3 class="inset-sub" data-i18n="insetFrameHeading">原图框线</h3>
           <div class="crop-grid">
             <label for="insetFrameWeight"><span data-i18n="linePt">线宽(pt)</span><input id="insetFrameWeight" type="number" min="0.1" max="20" step="0.1" value="1.5"></label>
-            <label for="insetFrameColor"><span data-i18n="color">颜色</span><input id="insetFrameColor" type="color" value="#ffffff"></label>
+            <label for="insetFrameColor"><span data-i18n="color">颜色</span><input id="insetFrameColor" type="color" value="#ff0000"></label>
             <label for="insetFrameDash"><span data-i18n="insetDash">线型</span>
               <select id="insetFrameDash">
                 <option value="solid" data-i18n="dashSolid">实线</option>
@@ -397,18 +391,16 @@
           <h3 class="inset-sub" data-i18n="insetScaleHeading">插图标尺</h3>
           <label><input id="insetScaleOn" type="checkbox" checked> <span data-i18n="insetScaleOn">已标定则添加标尺</span></label>
           <div class="crop-grid">
-            <label for="insetScaleLength"><span data-i18n="barLength">标尺长度</span><input id="insetScaleLength" type="number" min="0" step="0.1" value="10"></label>
-            <label for="insetScaleUnit"><span data-i18n="units">单位</span>
-              <select id="insetScaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select>
-            </label>
-            <label for="insetScaleFont"><span data-i18n="textPt">字号(pt)</span><input id="insetScaleFont" type="number" min="4" max="72" step="1" value="8"></label>
-            <label for="insetScalePosition"><span data-i18n="position">位置</span>
-              <select id="insetScalePosition">
-                <option value="bottom-right" data-i18n="bottomRight">右下</option>
-                <option value="bottom-left" data-i18n="bottomLeft">左下</option>
-              </select>
-            </label>
+            <label for="insetScaleLength"><span data-i18n="barLength">标尺长度</span><input id="insetScaleLength" type="number" min="0" step="0.1" value="20"></label>
+            <label for="insetScaleUnit"><span data-i18n="units">单位</span><select id="insetScaleUnit"><option value="um">µm</option><option value="nm">nm</option><option value="mm">mm</option></select></label>
+            <label for="insetScaleLine"><span data-i18n="linePt">线宽(pt)</span><input id="insetScaleLine" type="number" min="0.1" max="20" step="0.1" value="1.5"></label>
+            <label for="insetScaleFont"><span data-i18n="textPt">字号(pt)</span><input id="insetScaleFont" type="number" min="4" max="72" step="1" value="9"></label>
+            <label for="insetScaleMargin"><span data-i18n="marginPt">边距(pt)</span><input id="insetScaleMargin" type="number" min="0" max="200" step="1" value="8"></label>
+            <label for="insetScalePosition"><span data-i18n="position">位置</span><select id="insetScalePosition"><option value="bottom-right" data-i18n="bottomRight">右下</option><option value="bottom-left" data-i18n="bottomLeft">左下</option></select></label>
           </div>
+          <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="insetScaleColor" type="color" value="#ffffff"></label>
+          <label class="scale-include-text"><input id="insetScaleIncludeText" type="checkbox" checked> <span data-i18n="scaleIncludeText">显示长度文字</span></label>
+          <div class="button-row"><button type="button" id="insetUpdateBtn" data-i18n="insetUpdate" data-i18n-title="insetUpdateTitle" title="用当前区域和设置重新生成插图">更新插图</button></div>
 </section>
 
       </div>
@@ -426,6 +418,21 @@
             <label for="figureLabelPosition"><span data-i18n="position">位置</span><select id="figureLabelPosition"><option value="outside-top-left" data-i18n="outsideTopLeft" selected>图外左上</option><option value="outside-top-right" data-i18n="outsideTopRight">图外右上</option><option value="top-left" data-i18n="topLeft">左上</option><option value="top-right" data-i18n="topRight">右上</option><option value="bottom-left" data-i18n="bottomLeft">左下</option><option value="bottom-right" data-i18n="bottomRight">右下</option></select></label>
           </div>
           <label class="scale-color-row"><span data-i18n="color">颜色</span><input id="figureLabelColor" type="color" value="#000000" title="#000000"></label>
+          <h3 class="inset-sub" data-i18n="figureStainHeading">染色说明（可选）</h3>
+          <p class="hint-line" data-i18n="figureStainHint">填写的文字按 1、2、3 从左到右排列；空框不显示。</p>
+          <div class="crop-grid">
+            <label for="figureStainFont"><span data-i18n="figureLabelFont">字体</span><select id="figureStainFont"><option value="" data-i18n="figureLabelFontAuto">自动字体</option></select></label>
+            <label for="figureStainStyle"><span data-i18n="figureLabelStyle">字形</span><select id="figureStainStyle"><option value="regular" data-i18n="figureLabelRegular">常规</option><option value="bold" data-i18n="figureLabelBold">粗体</option><option value="italic" data-i18n="figureLabelItalic">斜体</option><option value="bold-italic" data-i18n="figureLabelBoldItalic">粗斜体</option></select></label>
+            <label for="figureStainSize"><span data-i18n="textPt">字号(pt)</span><input id="figureStainSize" type="number" min="4" max="72" step="1" value="12"></label>
+          </div>
+          <div class="stain-label-row"><label for="figureStainText1"><span data-i18n="figureStainOne">染色 1</span><input id="figureStainText1" type="text" maxlength="40" placeholder="TUBB3"></label><label for="figureStainColor1"><span data-i18n="color">颜色</span><input id="figureStainColor1" type="color" value="#ff0000"></label></div>
+          <div class="stain-label-row"><label for="figureStainText2"><span data-i18n="figureStainTwo">染色 2</span><input id="figureStainText2" type="text" maxlength="40" placeholder="TX"></label><label for="figureStainColor2"><span data-i18n="color">颜色</span><input id="figureStainColor2" type="color" value="#00ff00"></label></div>
+          <div class="stain-label-row"><label for="figureStainText3"><span data-i18n="figureStainThree">染色 3</span><input id="figureStainText3" type="text" maxlength="40" placeholder="RUNX2"></label><label for="figureStainColor3"><span data-i18n="color">颜色</span><input id="figureStainColor3" type="color" value="#ffffff"></label></div>
+          <div class="crop-grid">
+            <label for="figureStainPosition"><span data-i18n="position">位置</span><select id="figureStainPosition"><option value="outside-bottom-left" data-i18n="outsideBottomLeft">图外左下</option><option value="outside-bottom-right" data-i18n="outsideBottomRight">图外右下</option><option value="outside-top-left" data-i18n="outsideTopLeft">图外左上</option><option value="outside-top-right" data-i18n="outsideTopRight">图外右上</option><option value="bottom-left" data-i18n="insideBottomLeft">图内左下</option><option value="bottom-right" data-i18n="insideBottomRight">图内右下</option><option value="top-left" data-i18n="insideTopLeft" selected>图内左上</option><option value="top-right" data-i18n="insideTopRight">图内右上</option></select></label>
+            <label for="figureStainMargin"><span data-i18n="figureLabelHorizontalPt">左右偏移(pt)</span><input id="figureStainMargin" type="number" min="-200" max="200" step="1" value="8"></label>
+            <label for="figureStainVerticalOffset"><span data-i18n="figureLabelVerticalPt">上下偏移(pt)</span><input id="figureStainVerticalOffset" type="number" min="-200" max="200" step="1" value="0"></label>
+          </div>
           <button type="button" id="figureLabelCreate" data-i18n="figureLabelCreate">创建/更新标签</button>
           <div class="crop-grid">
             <label for="figureLabelPresetName"><span data-i18n="figureLabelPresetName">方案名</span><input id="figureLabelPresetName" type="text" maxlength="40" data-i18n-placeholder="figureLabelPresetNamePh" placeholder="例如 深色图"></label>
@@ -594,7 +601,7 @@
   <script src="histogram-view.js"></script>
   <script src="interaction-policy.js"></script>
   <script src="scientific-panel.js"></script>
-  <script src="bitmap-panel-marquee.js?v=20261002-inset16"></script>
+  <script src="bitmap-panel-marquee.js?v=20261004-inset-update"></script>
   <script src="bitmap-panel.js"></script>
 </body>
 </html>

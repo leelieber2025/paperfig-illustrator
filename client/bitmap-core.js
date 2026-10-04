@@ -581,19 +581,18 @@
     return [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)];
   }
 
-  function insetPointSize(corners, norm, magnification, anchor, pixelSize) {
-    var mag = Number(magnification);
+  function insetPointSize(corners, norm, anchor, pixelSize) {
     var frameW;
     var frameH;
     var sizeW;
     var sizeH;
-    var name = String(anchor || '');
+    var name = String(anchor || 'right');
     var nw;
     var nh;
     var pw = pixelSize && Number(pixelSize.width) || 0;
     var ph = pixelSize && Number(pixelSize.height) || 0;
     var cropAspect;
-    if (!(mag >= 1 && mag <= 20)) { throw new Error('Invalid inset settings'); }
+    if (name !== 'left' && name !== 'right' && name !== 'above' && name !== 'below') { throw new Error('Invalid inset settings'); }
     frameW = Math.sqrt(Math.pow(corners[1][0] - corners[0][0], 2) + Math.pow(corners[1][1] - corners[0][1], 2));
     frameH = Math.sqrt(Math.pow(corners[3][0] - corners[0][0], 2) + Math.pow(corners[3][1] - corners[0][1], 2));
     /* Left/right: match main height, width from crop/pixel aspect.
@@ -612,18 +611,15 @@
       if (!(cropAspect > 0)) { throw new Error('Inset region is empty'); }
       sizeH = frameH;
       sizeW = sizeH * cropAspect;
-      return { width: sizeW, height: sizeH, magnification: mag, effectiveMagnification: (nh > 0 && frameH > 0) ? (sizeH / (nh * frameH)) : mag };
+      return { width: sizeW, height: sizeH, effectiveMagnification: (nh > 0 && frameH > 0) ? (sizeH / (nh * frameH)) : null };
     }
     if (name === 'above' || name === 'below') {
       if (!(nw > 0) && !(pw > 0 && ph > 0)) { throw new Error('Inset region is empty'); }
       if (!(cropAspect > 0)) { throw new Error('Inset region is empty'); }
       sizeW = frameW;
       sizeH = sizeW / cropAspect;
-      return { width: sizeW, height: sizeH, magnification: mag, effectiveMagnification: (nw > 0 && frameW > 0) ? (sizeW / (nw * frameW)) : mag };
+      return { width: sizeW, height: sizeH, effectiveMagnification: (nw > 0 && frameW > 0) ? (sizeW / (nw * frameW)) : null };
     }
-    sizeW = nw * frameW * mag;
-    sizeH = nh * frameH * mag;
-    return { width: sizeW, height: sizeH, magnification: mag, effectiveMagnification: mag };
   }
 
   /* bounds: Illustrator geometricBounds [left, top, right, bottom], top > bottom. position is top-left. */
@@ -746,40 +742,6 @@
     return out;
   }
 
-  function sourceNormAtPoint(corners, x, y) {
-    var ux = corners[1][0] - corners[0][0];
-    var uy = corners[1][1] - corners[0][1];
-    var vx = corners[3][0] - corners[0][0];
-    var vy = corners[3][1] - corners[0][1];
-    var dx = x - corners[0][0];
-    var dy = y - corners[0][1];
-    var det = ux * vy - uy * vx;
-    if (!isFinite(det) || Math.abs(det) < 1e-12) { throw new Error('Singular artwork transform'); }
-    return { x: (dx * vy - vx * dy) / det, y: (ux * dy - uy * dx) / det };
-  }
-
-  /* Map artboard points (on or over the placed image) into source-file pixels. */
-  function regionFromDocPoints(corners, points, sourceW, sourceH) {
-    var i;
-    var n;
-    var minX = Infinity;
-    var minY = Infinity;
-    var maxX = -Infinity;
-    var maxY = -Infinity;
-    var sw = Number(sourceW);
-    var sh = Number(sourceH);
-    if (!(sw > 0 && sh > 0)) { throw new Error('Inset region is empty'); }
-    if (!points || points.length < 2) { throw new Error('Select the image and a rectangle to read an artboard region'); }
-    for (i = 0; i < points.length; i += 1) {
-      n = sourceNormAtPoint(corners, Number(points[i][0]), Number(points[i][1]));
-      if (n.x < minX) { minX = n.x; }
-      if (n.y < minY) { minY = n.y; }
-      if (n.x > maxX) { maxX = n.x; }
-      if (n.y > maxY) { maxY = n.y; }
-    }
-    return clampCropBox(minX * sw, minY * sh, (maxX - minX) * sw, (maxY - minY) * sh, sw, sh);
-  }
-
   return {readMetadata:readMetadata, exifOrientationTransform:exifOrientationTransform, cropRect:cropRect, boxBlur3:boxBlur3,
     cropAspectRatio:cropAspectRatio, clampCropBox:clampCropBox, moveCropBox:moveCropBox, constrainDrawRect:constrainDrawRect,
     constrainResizeRect:constrainResizeRect, syncSizeWithAspect:syncSizeWithAspect, fitAspectRect:fitAspectRect, placeFixedRect:placeFixedRect,
@@ -788,6 +750,6 @@
     screenRectToSourceAABB:screenRectToSourceAABB,
     strokeDashArray:strokeDashArray, insetStrokeStyle:insetStrokeStyle, insetNormFromRect:insetNormFromRect,
     insetFrameQuad:insetFrameQuad, insetPointSize:insetPointSize, insetAnchorPosition:insetAnchorPosition,
-    insetLeaders:insetLeaders, sourceNormAtPoint:sourceNormAtPoint, regionFromDocPoints:regionFromDocPoints,
+    insetLeaders:insetLeaders,
     insetFileNyToCornerNy:insetFileNyToCornerNy, insetFileNormQuad:insetFileNormQuad};
 }));
