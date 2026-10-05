@@ -1,6 +1,6 @@
 # PaperFig for Illustrator
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23073417.svg)](https://doi.org/10.5281/zenodo.23073417) [![License: GPL-3.0](https://img.shields.io/github/license/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/blob/main/LICENSE) [![Release](https://img.shields.io/github/v/release/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/releases/latest) [![Issues](https://img.shields.io/github/issues/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/issues) [![Stars](https://img.shields.io/github/stars/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/stargazers) [![Downloads](https://img.shields.io/github/downloads/leelieber2025/paperfig-illustrator/total?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/releases)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23073417.svg)](https://doi.org/10.5281/zenodo.23073417) [![License: GPL-3.0](https://img.shields.io/github/license/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/blob/main/LICENSE) [![Release](https://img.shields.io/github/v/release/leelieber2025/paperfig-illustrator?style=plastic)](https://github.com/leelieber2025/paperfig-illustrator/releases/latest) 
 
 Adobe Illustrator CEP panel for scientific figure bitmaps.
 
