@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.2
+
+- Adjust has two subpages. Fluorescence is the default: per-channel Low/High plus an overall Low/High after the composite. Photo has brightness, contrast, black/white points, color balance, grayscale, invert, blur, and sharpen.
+- 调整页分为两个子页。默认是荧光照片：各通道低/高，另有一组作用在合成之后的整体低/高。普通照片有亮度、对比、黑白点、色彩平衡、灰度、反相、模糊和锐化。
+
 ## 1.2.1
 
 - Inset source frames default to red. The color picker shows saved colors correctly. Update inset regenerates the current region.

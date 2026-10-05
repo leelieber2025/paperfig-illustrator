@@ -540,6 +540,19 @@ html, body {
   background: linear-gradient(#3a5a7a, #2a4060);
   font-weight: 600;
 }
+.adjust-kind-row { margin: 8px 0 4px; }
+.adjust-kind-row button {
+  flex: 1 1 0;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+.adjust-kind-row button[aria-pressed="true"] {
+  color: var(--text);
+  border-color: #318adf;
+  background: linear-gradient(#3a5a7a, #2a4060);
+  font-weight: 600;
+}
 
 .tab-panes {
   flex: 1 1 auto;

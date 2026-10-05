@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.1</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.2</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -116,6 +116,11 @@
             <div class="button-row"><button id="repeatLastBtn" data-i18n="repeatLast">重用上次</button><button id="importPresetBtn" data-i18n="importJson">导入 JSON</button><button id="exportPresetBtn" data-i18n="exportJson">导出 JSON</button></div>
             <input id="presetFile" type="file" accept=".json" class="hidden">
             <details class="compact-help"><summary><span data-i18n="helpDisplay">&#x663E;&#x793A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintPresets">预设含强度与 RGB 颜色；不含裁剪、旋转、输出路径与预览模式。</p></details>
+            <div class="button-row adjust-kind-row" role="group" data-i18n-aria="adjustKindAria" aria-label="调整类型">
+              <button type="button" id="adjustKindFluor" class="active" aria-pressed="true" data-i18n="adjustKindFluor">荧光照片</button>
+              <button type="button" id="adjustKindPhoto" aria-pressed="false" data-i18n="adjustKindPhoto">普通照片</button>
+            </div>
+            <div id="adjustPhoto" hidden>
             <label class="slider-row" for="brightness">
               <span data-i18n="brightness">亮度</span><input id="brightness" type="range" min="-100" max="100" value="0"><input id="brightnessValue" class="slider-number" type="number" min="-100" max="100" step="1" value="0" aria-label="brightness numeric value">
             </label>
@@ -158,9 +163,10 @@
               <label title="3 × 3 box blur"><input id="softBlur" type="checkbox"> <span data-i18n="softBlur">柔化模糊</span></label>
               <label title="Light Unsharp Mask (r=1, amount=0.4)"><input id="sharpen" type="checkbox"> <span data-i18n="sharpen">锐化</span></label>
             </div>
+            </div>
           </section>
 
-          <section aria-labelledby="channelHeading">
+          <section id="adjustFluor" aria-labelledby="channelHeading">
             <h2 id="channelHeading" data-i18n="fluorescence">荧光通道</h2>
             <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintFluor">RGB 合成面最多 3 通道（R/G/B）。每通道独立<strong>低/高</strong>（黑/白点，0–255），预览与 Apply 在合成前按平面拉伸。勾选<strong>保留</strong>；取消则该平面置零。真正的采集通道 C1/C2/C3 请用「原始」页。</p></details>
             <label><input id="channelsEnabled" type="checkbox"> <span data-i18n="enableRecolor">启用换色</span></label>
@@ -175,7 +181,14 @@
               <button type="button" id="keepGBtn" data-i18n="keepG" title="Keep G only">仅 G</button>
               <button type="button" id="keepBBtn" data-i18n="keepB" title="Keep B only">仅 B</button>
             </div>
-            <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="channelLevelsHint">各通道 Low/High 按该通道的黑点和白点拉伸（对照 Photoshop 色阶 / ImageJ B&C）。上方「低/高」作用于合成之后的亮度。</p></details>
+            <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="channelLevelsHint">各通道低/高按该通道的黑点和白点拉伸。整体低/高作用于合成之后的亮度。</p></details>
+            <p class="hint-line" data-i18n="fluorOverallHint">整体低/高。作用于合成后的亮度，与各通道分开。</p>
+            <label class="slider-row" for="fluorToneLow">
+              <span data-i18n="toneLow" data-i18n-title="blackPointTitle" title="黑点">低</span><input id="fluorToneLow" type="range" min="0" max="255" value="0" aria-label="overall low"><input id="fluorToneLowValue" class="slider-number" type="number" min="0" max="255" step="1" value="0" aria-label="overall low value">
+            </label>
+            <label class="slider-row" for="fluorToneHigh">
+              <span data-i18n="toneHigh" data-i18n-title="whitePointTitle" title="白点">高</span><input id="fluorToneHigh" type="range" min="0" max="255" value="255" aria-label="overall high"><input id="fluorToneHighValue" class="slider-number" type="number" min="0" max="255" step="1" value="255" aria-label="overall high value">
+            </label>
             <div class="button-row"><button type="button" id="autoChannelLevelsBtn" data-i18n="autoChannelLevels" data-i18n-title="autoChannelLevelsTitle" title="按各平面约 0.5%/99.5% 百分位设置 Low/High">自动色阶 · 分通道</button></div>
             <div class="channel-row channel-head channel-meta-head"><span data-i18n="colKeep">保留</span><span data-i18n="colLabel">标签</span><span data-i18n="colColor">颜色</span></div>
             <p class="hint-line" data-i18n="hintColorPresets">Open a channel Color control for the RGB picker; Fiji / ImageJ Merge Channels presets (red, green, blue, gray, cyan, magenta, yellow) are inside that popup.</p>

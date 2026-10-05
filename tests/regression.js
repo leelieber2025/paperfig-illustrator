@@ -231,6 +231,8 @@ assert(/exifOrientationTransform/.test(panel));
    const html=fs.readFileSync(path.join(root,'client/index.html'),'utf8');
    const wf=fs.readFileSync(path.join(root,'client/bitmap-workflow.js'),'utf8');
    assert(/id="ch0LowSlider"/.test(html));
+   assert(/id="fluorToneLow"/.test(html) && /id="fluorToneHigh"/.test(html));
+   assert(/id="adjustPhoto" hidden/.test(html) && /id="adjustKindFluor"/.test(html));
    assert(/id="ch1HighSlider"/.test(html));
    assert(/id="ch2LowSlider"/.test(html));
    assert(/id="autoChannelLevelsBtn"/.test(html));

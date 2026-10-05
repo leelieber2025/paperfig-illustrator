@@ -53,13 +53,13 @@ Sliders update the preview only. **Apply** writes a full-resolution 8-bit displa
 
 ## 4. Adjust / 调整
 
-Set brightness, contrast, and black/white points, or use **Pick black**, **Pick white**, or **Auto levels**. Optional: color balance, grayscale, invert, blur, sharpen.
+**Fluorescence** is the default. It has per-channel Low/High and an overall Low/High that runs after the composite. **Photograph** has brightness, contrast, black/white points, color balance, grayscale, invert, blur, and sharpen.
 
-设置亮度、对比和黑白点，或使用取黑点、取白点、自动色阶。可选色彩平衡、灰度、反相、模糊、锐化。
+默认是 **荧光照片**。各通道有低/高，另有一组整体低/高，作用在合成之后。**普通照片** 有亮度、对比、黑白点、色彩平衡、灰度、反相、模糊和锐化。
 
-Fluorescence is on this tab. Turn on recoloring, then **Keep** the planes you want (all, pairs, or one). Hidden planes are zero on preview and on Apply. Color swatches match Fiji / ImageJ Merge Channels. The RGB picker is still there.
+Turn on recoloring, then **Keep** the planes you want (all, pairs, or one). Hidden planes are zero on preview and on Apply. Color swatches match Fiji / ImageJ Merge Channels. The RGB picker is still there.
 
-荧光控件在本页。勾选 **启用换色**，再用 **保留** 留下要显示的平面。隐藏的平面在预览和应用时为零。色块与 Fiji / ImageJ 合并通道一致，仍可自选 RGB。
+勾选 **启用换色**，再用 **保留** 留下要显示的平面。隐藏的平面在预览和应用时为零。色块与 Fiji / ImageJ 合并通道一致，仍可自选 RGB。
 
 Presets store intensity and RGB colors. They do not store crop, rotation, or paths. **Apply** writes the display file.
 

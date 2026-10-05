@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.1';
+  var PANEL_VERSION = '1.2.2';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -842,6 +842,12 @@
     byId('contrastValue').value = contrast;
     byId('toneLowValue').value = tr.low;
     byId('toneHighValue').value = tr.high;
+    if (byId('fluorToneLow')) {
+      byId('fluorToneLow').value = tr.low;
+      byId('fluorToneHigh').value = tr.high;
+      byId('fluorToneLowValue').value = tr.low;
+      byId('fluorToneHighValue').value = tr.high;
+    }
     byId('cyanRedValue').value = cyanRed;
     byId('magentaGreenValue').value = magentaGreen;
     byId('yellowBlueValue').value = yellowBlue;
@@ -3583,7 +3589,13 @@
   function startSelectionPolling() {
     if (pollTimer) { return; }
     pollTimer = setInterval(pollSelection, POLL_MS);
-    pollSelection();
+    /* On panel open, inspect directly: the fingerprint round trip can wait. */
+    inspectQuietRunning = true;
+    inspectSelection({ quiet: true }).then(function () {
+      inspectQuietRunning = false;
+    }, function () {
+      inspectQuietRunning = false;
+    });
   }
 
   function resetTabName() {
@@ -4259,6 +4271,66 @@
 
   function loadAdjustmentPreset() { loadNamedPreset(); }
 
+  function savedAdjustKind() {
+    try {
+      return localStorage.getItem('paperfig_adjust_kind') === 'photo' ? 'photo' : 'fluor';
+    } catch (ignore) { return 'fluor'; }
+  }
+
+  function setAdjustKind(kind) {
+    var fluor = kind !== 'photo';
+    var photo = byId('adjustPhoto');
+    var fluorPane = byId('adjustFluor');
+    var fluorBtn = byId('adjustKindFluor');
+    var photoBtn = byId('adjustKindPhoto');
+    if (photo) { photo.hidden = fluor; }
+    if (fluorPane) { fluorPane.hidden = !fluor; }
+    if (fluorBtn) {
+      fluorBtn.setAttribute('aria-pressed', fluor ? 'true' : 'false');
+      fluorBtn.classList.toggle('active', fluor);
+    }
+    if (photoBtn) {
+      photoBtn.setAttribute('aria-pressed', fluor ? 'false' : 'true');
+      photoBtn.classList.toggle('active', !fluor);
+    }
+    try { localStorage.setItem('paperfig_adjust_kind', fluor ? 'fluor' : 'photo'); } catch (ignore) {}
+  }
+
+  function bindFluorTone(which) {
+    var slider = byId(which === 'low' ? 'fluorToneLow' : 'fluorToneHigh');
+    var num = byId(which === 'low' ? 'fluorToneLowValue' : 'fluorToneHighValue');
+    var target = byId(which === 'low' ? 'toneLow' : 'toneHigh');
+    if (!slider || !num || !target) { return; }
+    function copy(fromSlider) {
+      var value = Number(fromSlider ? slider.value : num.value);
+      if (!isFinite(value)) { return; }
+      target.value = String(Math.max(0, Math.min(255, Math.round(value))));
+    }
+    slider.addEventListener('mousedown', function () { sliderDragging = true; });
+    slider.addEventListener('input', function () {
+      sliderDragging = true;
+      copy(true);
+      updateAdjustmentDisplay();
+      scheduleSaveSettings();
+    });
+    slider.addEventListener('change', function () {
+      sliderDragging = false;
+      copy(true);
+      onAdjustmentSettle();
+    });
+    slider.addEventListener('mouseup', function () {
+      sliderDragging = false;
+      schedulePreviewRender();
+      scheduleSaveSettings();
+      if (artboardPreviewActive) { onAdjustmentSettle(); }
+    });
+    num.addEventListener('change', function () {
+      copy(false);
+      sliderDragging = false;
+      onAdjustmentSettle();
+    });
+  }
+
   function bind() {
     document.addEventListener('pointerdown', function (event) {
       var node = event.target;
@@ -4280,6 +4352,15 @@
     var cropIds = ['cropLeft', 'cropTop', 'cropWidth', 'cropHeight'];
     var settingIds = ['format', 'dpi', 'fijiPath', 'rotateAngle'];
     var i;
+    setAdjustKind(savedAdjustKind());
+    if (byId('adjustKindFluor')) {
+      byId('adjustKindFluor').addEventListener('click', function () { setAdjustKind('fluor'); });
+    }
+    if (byId('adjustKindPhoto')) {
+      byId('adjustKindPhoto').addEventListener('click', function () { setAdjustKind('photo'); });
+    }
+    bindFluorTone('low');
+    bindFluorTone('high');
     for (i = 0; i < adjustmentIds.length; i += 1) {
       (function (id) {
         var el = byId(id);
@@ -4658,6 +4739,7 @@
   }
 
   function init() {
+    var hostReady;
     loadSettings();
     if (typeof CSInterface !== 'undefined') {
       cs = new CSInterface();
@@ -4666,6 +4748,8 @@
       try { extensionPath = cs.getSystemPath(SystemPath.EXTENSION).replace(/\\/g, '/'); } catch (ignore) {}
     }
     resolvePanelVersion();
+    /* Start loading the Illustrator helpers while the rest of the panel initializes. */
+    hostReady = ensureHostScript();
     populateSettings();
     initWorkflow();
     initScience();
@@ -4680,20 +4764,10 @@
     if (!window.SciBitmapFiji) { setFijiStatus('error', t('fijiBridgeFailed')); }
     else if (settings.fijiPath) { setFijiStatus('neutral', t('fijiConfiguredUntested')); }
     else { setFijiStatus('neutral', t('notConfigured')); }
-    /* Paint and bind first. Loading jsx plus the first inspect used to block the first clicks. */
-    var bootHost = function () {
-      ensureHostScript()
-        .then(function () { startSelectionPolling(); })
-        .catch(function (error) {
-          notice(error.message || String(error), 'error');
-          startSelectionPolling();
-        });
-    };
-    if (window.requestAnimationFrame) {
-      window.requestAnimationFrame(function () { setTimeout(bootHost, 60); });
-    } else {
-      setTimeout(bootHost, 60);
-    }
+    hostReady.then(function () { startSelectionPolling(); }).catch(function (error) {
+      notice(error.message || String(error), 'error');
+      startSelectionPolling();
+    });
   }
 
   var W=window.SciBitmapWorkflow;
