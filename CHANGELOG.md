@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.3
+
+- Long tabs show a real scrollbar in Illustrator on macOS. The wheel scrolls the tab, batch list, and dropdown under the pointer. Dropdowns stay inside the panel.
+- macOS 上的 Illustrator 里，长标签页显示固定滚动条。滚轮滚动指针下的标签页、批量列表和下拉菜单。下拉菜单保持在面板内。
+
 ## 1.2.2
 
 - Adjust has two subpages. Fluorescence is the default: per-channel Low/High plus an overall Low/High after the composite. Photo has brightness, contrast, black/white points, color balance, grayscale, invert, blur, and sharpen.

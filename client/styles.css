@@ -11,6 +11,11 @@
   --ok: #83cf86;
 }
 * { box-sizing: border-box; }
+/* CEP on macOS uses overlay scrollbars with no width, so long panes clip. A styled bar is always visible. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #1e1e1e; }
+::-webkit-scrollbar-thumb { background: #6a6a6a; border-radius: 5px; border: 2px solid #1e1e1e; }
+::-webkit-scrollbar-thumb:hover { background: #8a8a8a; }
 html, body { margin: 0; min-width: 260px; min-height: 100%; background: var(--bg); color: var(--text); font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 body { overflow-y: auto; }
 .panel { padding: 10px; display: grid; gap: 9px; }
@@ -175,7 +180,7 @@ select option:focus {
   z-index: 10000;
   max-height: min(280px, 50vh);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
   margin: 0;
   padding: 3px 0;
   border: 1px solid #555;
@@ -380,7 +385,7 @@ label.dimmed, .dimmed { opacity: 0.45; }
 .channel-block { padding:6px 0 8px; border-bottom:1px solid #555; margin-bottom:4px; }
 .channel-block .channel-level { margin:3px 0; }
 .channel-block .channel-level span { font-size:11px; color:#bbb; }
-.batch-list { max-height:260px; overflow:auto; }
+.batch-list { max-height:260px; overflow:scroll; }
 .batch-item { display:grid; grid-template-columns:20px 48px minmax(0,1fr); gap:7px; align-items:center; padding:7px 0; border-bottom:1px solid #555; }
 .batch-item canvas { max-width:48px; max-height:42px; }
 .batch-item span { overflow-wrap:anywhere; font-size:11px; }
@@ -563,11 +568,18 @@ html, body {
 .tab-pane {
   display: none;
   height: 100%;
+  min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding-right: 2px;
   gap: 8px;
+  -webkit-overflow-scrolling: touch;
 }
+.tab-pane::-webkit-scrollbar:horizontal,
+.batch-list::-webkit-scrollbar:horizontal,
+.fiji-gate::-webkit-scrollbar:horizontal,
+.pf-dd-menu::-webkit-scrollbar:horizontal { height: 0; }
+.tab-tools::-webkit-scrollbar:vertical { width: 0; }
 .tab-pane.active {
   display: grid;
   align-content: start;
@@ -657,7 +669,7 @@ html, body {
   justify-content: center;
   padding: 16px 10px;
   background: rgba(0, 0, 0, 0.72);
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 .fiji-gate.hidden,
 .fiji-gate[hidden] { display: none !important; }

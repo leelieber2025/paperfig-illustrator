@@ -41,7 +41,8 @@ function boot(saved) {
       return match ? panes.find(p => p.name === match[1]) || null : null;
     },
     getElementById(id) { return inputs[id] || null; },
-    dispatchEvent(event) { events.push(event); }
+    dispatchEvent(event) { events.push(event); },
+    addEventListener() {}
   };
   const localStorage = {
     getItem(key) { return storage[key] == null ? null : storage[key]; },

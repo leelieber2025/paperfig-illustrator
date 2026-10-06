@@ -28,15 +28,16 @@
     var pad = 4;
     var width = Math.max(rect.width, 120);
     var left = rect.left;
-    var top = rect.bottom + 2;
+    var below = window.innerHeight - rect.bottom - pad - 2;
+    var above = rect.top - pad - 2;
+    var openUp = below < 120 && above > below;
+    var maxH = Math.max(72, Math.min(280, openUp ? above : below));
+    var top;
     menu.style.minWidth = width + 'px';
     menu.style.maxWidth = Math.max(width, 240) + 'px';
-    /* Prefer opening below; flip above if near bottom. */
+    menu.style.maxHeight = Math.round(maxH) + 'px';
     document.body.appendChild(menu);
-    var mh = menu.offsetHeight || 160;
-    if (top + mh > window.innerHeight - pad && rect.top > mh + pad) {
-      top = rect.top - mh - 2;
-    }
+    top = openUp ? Math.max(pad, rect.top - (menu.offsetHeight || maxH) - 2) : rect.bottom + 2;
     if (left + width > window.innerWidth - pad) {
       left = Math.max(pad, window.innerWidth - width - pad);
     }

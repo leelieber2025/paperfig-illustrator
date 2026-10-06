@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.2</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.3</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -533,6 +533,58 @@
   </main>
   <script>
   (function () {
+    /* CEP on macOS delivers wheel events but does not scroll overflow boxes. */
+    function wheelPixels(event) {
+      var dy = Number(event.deltaY) || 0;
+      var dx = Number(event.deltaX) || 0;
+      if (event.deltaMode === 1) { dy *= 16; dx *= 16; }
+      else if (event.deltaMode === 2) {
+        dy *= window.innerHeight || 280;
+        dx *= window.innerWidth || 280;
+      }
+      return { dx: dx, dy: dy };
+    }
+    function onPanelWheel(event) {
+      var node = event.target;
+      var stage = document.getElementById('previewStage');
+      var style, canY, canX, delta, beforeY, beforeX;
+      if (node && node.nodeType !== 1) { node = node.parentElement; }
+      if (stage && node && stage.contains(node)) { return; }
+      if (event.ctrlKey) {
+        if (event.preventDefault) { event.preventDefault(); }
+        return;
+      }
+      while (node && node !== document.body && node !== document.documentElement) {
+        style = window.getComputedStyle(node);
+        canY = (style.overflowY === 'auto' || style.overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1;
+        canX = (style.overflowX === 'auto' || style.overflowX === 'scroll') && node.scrollWidth > node.clientWidth + 1;
+        if (canY || canX) {
+          delta = wheelPixels(event);
+          if (canY && delta.dy) {
+            beforeY = node.scrollTop;
+            node.scrollTop += delta.dy;
+            if (node.scrollTop !== beforeY) {
+              if (event.preventDefault) { event.preventDefault(); }
+              return;
+            }
+          }
+          if (canX && delta.dx) {
+            beforeX = node.scrollLeft;
+            node.scrollLeft += delta.dx;
+            if (node.scrollLeft !== beforeX) {
+              if (event.preventDefault) { event.preventDefault(); }
+              return;
+            }
+          }
+        }
+        node = node.parentElement;
+      }
+    }
+    try {
+      document.addEventListener('wheel', onPanelWheel, { capture: true, passive: false });
+    } catch (ignoreWheel) {
+      document.addEventListener('wheel', onPanelWheel, true);
+    }
     var FEATURES = { raw: { key: 'paperfig_show_raw_v1', input: 'showRawFeature' }, export: { key: 'paperfig_show_export_v1', input: 'showExportFeature' } };
     function featureEnabled(name) {
       try { return localStorage.getItem(FEATURES[name].key) === '1'; } catch (ignore) { return false; }
