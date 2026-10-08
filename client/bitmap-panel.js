@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.4';
+  var PANEL_VERSION = '1.2.5';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -4229,7 +4229,7 @@
     });
   }
 
-  function applyPipeline() { if (marqueeMode === 'inset') { return applyInset(); } if(science && science.active())return science.apply();return workflowApply(false); }
+  function applyPipeline() { var tab = resetTabName(); if (tab === 'scale' && science && science.scaleBar) { return science.scaleBar(); } if (tab === 'label' && science && science.figureLabel) { return science.figureLabel(); } if (marqueeMode === 'inset') { return applyInset(); } if(science && science.active())return science.apply();return workflowApply(false); }
 
   function detectFiji() {
     var found;

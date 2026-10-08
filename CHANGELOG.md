@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.5
+
+- The Scale page keeps the loaded preset name at the top until you recalibrate or load another preset. Scale bars use the original µm/px and the current file’s pixel width. Apply on the Scale page creates or updates the scale bar. Apply on the Label page creates or updates the figure label.
+- 标尺页顶部会一直显示已加载的预设名，直到重新标定或加载另一个预设。标尺用原标定的 µm/px 和当前文件的像素宽度。标尺页的「应用」创建或更新标尺。标签页的「应用」创建或更新图版标签。
+
 ## 1.2.4
 
 - Labels list each installed font face. The default font is Arial, including scale-bar text. A missing bold or italic face uses faux bold or faux italic instead of failing. Empty dropdown choices keep an empty value.

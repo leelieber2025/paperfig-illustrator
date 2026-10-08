@@ -1123,7 +1123,9 @@
     }
     var applyEl = api.byId('applyBtn');
     if (applyEl && !api.applyRunning) {
-      applyEl.title = insetOn ? api.t('applyTitleInset') : api.t('applyTitle');
+      var tabBtn = document.querySelector('.tab-bar [data-tab].active');
+      var tabName = tabBtn ? tabBtn.getAttribute('data-tab') : '';
+      applyEl.title = tabName === 'label' ? api.t('applyTitleLabel') : (tabName === 'scale' ? api.t('applyTitleScale') : (insetOn ? api.t('applyTitleInset') : api.t('applyTitle')));
       if (applyEl.dataset) { applyEl.dataset.label = api.t('apply'); }
       applyEl.textContent = api.t('apply');
     }

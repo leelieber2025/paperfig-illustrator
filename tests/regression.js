@@ -342,6 +342,8 @@ assert(/exifOrientationTransform/.test(panel));
    assert(/clearCropMarqueeQuiet|clearInsetRegionQuiet/.test(panel));
    assert(/setMarqueeMode\('crop'/.test(panel));
   assert(/paperfig-tab/.test(panel) && /exitInsetMarqueeIfNeeded/.test(panel), 'leaving non-geometry tabs must exit inset marquee');
+  assert(/tab === 'label' && science && science\.figureLabel/.test(panel), 'Apply on the label tab creates the figure label');
+  assert(/tab === 'scale' && science && science\.scaleBar/.test(panel), 'Apply on the scale tab creates the scale bar');
   assert(/paperfig-tab/.test(require('fs').readFileSync(require('path').join(__dirname,'../client/index.html'),'utf8')), 'tab activate dispatches paperfig-tab');
   assert(/Enable remapping without requiring/.test(panel), '启用换色 must not require a live selection');
   assert(/adjustTabActive && previewBase/.test(panel), 'Adjust remapping uses associated previewBase while Raw may still be loaded');

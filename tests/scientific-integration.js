@@ -149,6 +149,11 @@ await test('Named scale file preset saves calibration+style and applies to anoth
  assert.equal(element('scalePosition').value,'bottom-left');
  assert.equal(element('scaleColor').value,'#00ff00');
  if(element('scaleIncludeText'))assert.equal(element('scaleIncludeText').checked,false);
+ assert.equal(element('scaleLoadedPreset').hidden,false);
+ assert(/MicroscopeX-40x/.test(element('scaleLoadedPreset').textContent));
+ assert.equal(JSON.parse(storage.sci_calibrations_v1)[api.state().lastObjectKey].presetName,'MicroscopeX-40x');
+ api.science().clearCalibration();
+ assert.equal(element('scaleLoadedPreset').hidden,true);
  api.science().deleteNamedScalePreset('MicroscopeX-40x');
  assert(!require('fs').existsSync(presetPath));
 });
