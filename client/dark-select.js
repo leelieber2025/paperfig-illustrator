@@ -68,14 +68,20 @@
           e.preventDefault();
           e.stopPropagation();
           var chosen = select.options[i];
-          var val = chosen ? String((chosen.getAttribute && chosen.getAttribute('value')) || chosen.value || chosen.text || chosen.textContent || '') : '';
+          var val = '';
+          if (chosen) {
+            if (chosen.hasAttribute && chosen.hasAttribute('value')) { val = String(chosen.getAttribute('value')); }
+            else { val = String(chosen.value || chosen.text || chosen.textContent || ''); }
+          }
           select.selectedIndex = i;
-          try { if (val) { select.value = val; } } catch (ignoreVal) {}
-          try { if (val) { select.setAttribute('data-pf-aspect', val); } } catch (ignoreAttr) {}
-          try { if (val) { select.setAttribute('data-pf-user-aspect', val); } } catch (ignoreUser) {}
-          if (window.__pfAspectChosen) {
+          try { select.value = val; } catch (ignoreVal) {}
+          if (select.id === 'insetAspectMode') {
+            try { select.setAttribute('data-pf-aspect', val); } catch (ignoreAttr) {}
+            try { select.setAttribute('data-pf-user-aspect', val); } catch (ignoreUser) {}
             try { select.setAttribute('data-pf-skip-change', '1'); } catch (ignoreSkip) {}
-            try { window.__pfAspectChosen(select.id, val); } catch (ignoreAspect) {}
+            if (window.__pfAspectChosen) {
+              try { window.__pfAspectChosen(select.id, val); } catch (ignoreAspect) {}
+            }
           }
           fireChange(select);
           closeMenu();

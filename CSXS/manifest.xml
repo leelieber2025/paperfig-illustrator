@@ -2,12 +2,12 @@
 <ExtensionManifest Version="7.0"
   ExtensionBundleId="com.zhaoli.paperfig"
   ExtensionBundleName="PaperFig for Illustrator"
-  ExtensionBundleVersion="1.2.3"
+  ExtensionBundleVersion="1.2.4"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Author>Zhao Li</Author>
   <Abstract>Scientific display derivatives: RGB8 adjustments, uint8/uint16 channel mapping, calibration and vector scale bars</Abstract>
   <ExtensionList>
-    <Extension Id="com.zhaoli.paperfig.panel" Version="1.2.3" />
+    <Extension Id="com.zhaoli.paperfig.panel" Version="1.2.4" />
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>

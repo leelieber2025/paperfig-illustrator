@@ -77,7 +77,7 @@ function sciBitmapScaleBar(lockJson,specJson) {
         group=app.activeDocument.groupItems.add();group.name='SCI scale \u00b7 '+nameSuffix;
         var line=group.pathItems.add();line.setEntirePath([start,end]);line.filled=false;line.stroked=true;line.strokeWidth=s.lineWidth;line.strokeColor=color;
         if(includeText){
-            var label=group.textFrames.add();label.contents=String(s.label);label.textRange.characterAttributes.size=s.fontSize;label.textRange.characterAttributes.fillColor=color;
+            var label=group.textFrames.add();label.contents=String(s.label);label.textRange.characterAttributes.size=s.fontSize;sciBitmapApplyFigureType(label.textRange.characterAttributes,'','regular');label.textRange.characterAttributes.fillColor=color;
             label.position=[start[0]+(end[0]-start[0])/2-label.width/2,start[1]-(s.fontSize+2)];
         }
         // The text stays upright for readability; the line follows source-X, including rotation/shear.
@@ -105,39 +105,76 @@ function sciBitmapScaleBar(lockJson,specJson) {
         return sciBitmapFailure(e);
     }
 }
+function sciBitmapFontFaceFlags(fontStyle) {
+    var style = String(fontStyle || '');
+    return {
+        bold: /bold|demi|semi|black|heavy/i.test(style),
+        italic: /italic|oblique/i.test(style)
+    };
+}
 function sciBitmapFigureFontFamilies() {
     try {
-        var names = [], seen = {}, fonts = app.textFonts, i, family;
+        var items = [], seen = {}, fonts = app.textFonts, i, font, family, style, name, key;
         for (i = 0; fonts && i < fonts.length; i++) {
-            family = String(fonts[i].family || fonts[i].name || '');
-            if (family && !seen[family]) { seen[family] = true; names.push(family); }
+            try {
+                font = fonts[i];
+                family = String(font.family || '');
+                style = String(font.style || '');
+                name = String(font.name || '');
+            } catch (ignoreFont) { continue; }
+            if (!family && !name) { continue; }
+            key = name || (family + '\t' + style);
+            if (seen[key]) { continue; }
+            seen[key] = true;
+            items.push({ name: name, family: family || name, style: style });
         }
-        names.sort();
-        return sciBitmapResult({ ok: true, fonts: names });
+        items.sort(function (a, b) {
+            var af = String(a.family).toLowerCase(), bf = String(b.family).toLowerCase();
+            if (af < bf) { return -1; }
+            if (af > bf) { return 1; }
+            af = String(a.style).toLowerCase(); bf = String(b.style).toLowerCase();
+            if (af < bf) { return -1; }
+            if (af > bf) { return 1; }
+            return 0;
+        });
+        return sciBitmapResult({ ok: true, fonts: items });
     } catch (e) { return sciBitmapFailure(e); }
 }
 function sciBitmapFigureFont(name, style) {
-    var fonts = app.textFonts, family = String(name || ''), bold = style === 'bold' || style === 'bold-italic', italic = style === 'italic' || style === 'bold-italic';
-    var i, font, fontStyle, isBold, isItalic, first = null;
-    if (!family) { if (style === 'regular') { return null; } throw new Error('Choose a font family for this style.'); }
+    var fonts = app.textFonts, wanted = String(name || ''), bold = style === 'bold' || style === 'bold-italic', italic = style === 'italic' || style === 'bold-italic';
+    var i, font, exact = null, family = '', matches = [], flags, fontStyle, styled = null;
+    if (!wanted) { wanted = 'Arial'; }
     for (i = 0; fonts && i < fonts.length; i++) {
-        font = fonts[i];
-        if (family && font.family !== family && font.name !== family) { continue; }
-        if (!first) { first = font; }
-        fontStyle = String(font.style || '');
-        isBold = /bold|demi|semi/i.test(fontStyle);
-        isItalic = /italic|oblique/i.test(fontStyle);
-        if (isBold === bold && isItalic === italic) { return font; }
+        try { font = fonts[i]; } catch (ignoreFont) { continue; }
+        if (String(font.name || '') === wanted) { exact = font; family = String(font.family || ''); break; }
     }
-    if (!first) { throw new Error('Font is not installed: ' + family); }
-    if (style === 'regular') { return first; }
-    throw new Error('Selected font family does not have this style: ' + family);
+    for (i = 0; fonts && i < fonts.length; i++) {
+        try { font = fonts[i]; fontStyle = String(font.style || ''); } catch (ignoreFont) { continue; }
+        if (String(font.family || '') !== wanted && String(font.name || '') !== wanted && !(family && String(font.family || '') === family)) { continue; }
+        matches.push(font);
+        flags = sciBitmapFontFaceFlags(fontStyle);
+        if (!styled && flags.bold === bold && flags.italic === italic) { styled = font; }
+    }
+    if (!matches.length) { throw new Error('Font is not installed: ' + wanted); }
+    if (exact && !bold && !italic) { return exact; }
+    if (styled) { return styled; }
+    return exact || matches[0];
+}
+function sciBitmapApplyFigureType(attrs, name, style) {
+    var bold = style === 'bold' || style === 'bold-italic', italic = style === 'italic' || style === 'bold-italic';
+    var font = sciBitmapFigureFont(name, style), flags = { bold: false, italic: false };
+    if (font) {
+        attrs.textFont = font;
+        flags = sciBitmapFontFaceFlags(font.style);
+    }
+    if (bold && !flags.bold) { attrs.fauxBold = true; }
+    if (italic && !flags.italic) { attrs.fauxItalic = true; }
 }
 function sciBitmapFigureStains(group, s, bounds) {
     var positions = { 'top-left': 1, 'top-right': 1, 'bottom-left': 1, 'bottom-right': 1,
         'outside-top-left': 1, 'outside-top-right': 1, 'outside-bottom-left': 1, 'outside-bottom-right': 1 };
     var entries = s.stains || [], active = [], position = String(s.stainPosition || 'top-left');
-    var size = Number(s.stainSize == null ? s.size : s.stainSize), style = String(s.stainStyle || 'regular'), font = null;
+    var size = Number(s.stainSize == null ? s.size : s.stainSize), style = String(s.stainStyle || 'regular');
     var margin = Number(s.stainMargin == null ? 8 : s.stainMargin);
     var vertical = Number(s.stainVerticalOffset == null ? 0 : s.stainVerticalOffset);
     var gap = Math.max(6, size * 0.5), totalWidth = 0, maxHeight = 0, i, entry, text, frame, width, height, x, y;
@@ -152,12 +189,11 @@ function sciBitmapFigureStains(group, s, bounds) {
         if (text.length > 40 || /[\r\n]/.test(text) || !/^#[0-9a-f]{6}$/i.test(String(entry.color || ''))) {
             throw new Error('Invalid staining label text or color.');
         }
-        if (font === null) { font = sciBitmapFigureFont(s.stainFont, style) || false; }
         frame = group.textFrames.add();
         frame.contents = text;
         frame.textRange.characterAttributes.size = size;
         frame.textRange.characterAttributes.fillColor = sciBitmapHexColor(entry.color);
-        if (font) { frame.textRange.characterAttributes.textFont = font; }
+        sciBitmapApplyFigureType(frame.textRange.characterAttributes, s.stainFont, style);
         width = Number(frame.width) || text.length * size * 0.7;
         height = Number(frame.height) || size * 1.2;
         active.push({ frame: frame, width: width });
@@ -183,11 +219,11 @@ function sciBitmapFigureLabel(lockJson, specJson) {
         var info = sciBitmapAssertLock(lockJson), entry = sciBitmapFirstBitmapEntry(app.activeDocument.selection);
         var item = entry && entry.item, s = eval('(' + specJson + ')'), text = String(s.text || '').replace(/^\s+|\s+$/g, '');
         var positions = { 'top-left': 1, 'top-right': 1, 'bottom-left': 1, 'bottom-right': 1, 'outside-top-left': 1, 'outside-top-right': 1 };
-        var size = Number(s.size), margin = Number(s.margin), verticalOffset = Number(s.verticalOffset == null ? 0 : s.verticalOffset), bounds, left, top, right, bottom, color, font, frame, width, height, x, y, stainCount, old = [], i, g, note;
+        var size = Number(s.size), margin = Number(s.margin), verticalOffset = Number(s.verticalOffset == null ? 0 : s.verticalOffset), bounds, left, top, right, bottom, color, frame, width, height, x, y, stainCount, old = [], i, g, note;
         if (!item || (item.typename !== 'PlacedItem' && item.typename !== 'RasterItem')) { throw new Error('Figure label requires one image.'); }
         if (!text || text.length > 16 || /[\r\n]/.test(text)) { throw new Error('Enter a label of 1–16 characters.'); }
         if (!(size >= 4 && size <= 72) || !(margin >= -200 && margin <= 200) || !(verticalOffset >= -200 && verticalOffset <= 200) || !positions[s.position]) { throw new Error('Invalid figure label settings.'); }
-        font = sciBitmapFigureFont(s.font, String(s.style || 'regular'));
+        sciBitmapFigureFont(s.font, String(s.style || 'regular'));
         color = sciBitmapHexColor(s.color);
         bounds = item.geometricBounds;
         left = Number(bounds[0]); top = Number(bounds[1]); right = Number(bounds[2]); bottom = Number(bounds[3]);
@@ -198,7 +234,7 @@ function sciBitmapFigureLabel(lockJson, specJson) {
         frame.contents = text;
         frame.textRange.characterAttributes.size = size;
         frame.textRange.characterAttributes.fillColor = color;
-        if (font) { frame.textRange.characterAttributes.textFont = font; }
+        sciBitmapApplyFigureType(frame.textRange.characterAttributes, s.font, String(s.style || 'regular'));
         width = Number(frame.width) || text.length * size * 0.7;
         height = Number(frame.height) || size * 1.2;
         x = /-right$/.test(s.position) ? right - margin - width : left + margin;
@@ -662,6 +698,7 @@ function sciBitmapInsetScale(group, placed, s) {
                     label = group.textFrames.add();
                     label.contents = String(s.label || '');
                     label.textRange.characterAttributes.size = s.fontSize;
+                    sciBitmapApplyFigureType(label.textRange.characterAttributes, '', 'regular');
                     label.textRange.characterAttributes.fillColor = color;
                     label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
                 }
@@ -690,6 +727,7 @@ function sciBitmapInsetScale(group, placed, s) {
         label = group.textFrames.add();
         label.contents = String(s.label || '');
         label.textRange.characterAttributes.size = s.fontSize;
+        sciBitmapApplyFigureType(label.textRange.characterAttributes, '', 'regular');
         label.textRange.characterAttributes.fillColor = color;
         label.position = [start[0] + (end[0] - start[0]) / 2 - label.width / 2, start[1] - (s.fontSize + 2)];
     }

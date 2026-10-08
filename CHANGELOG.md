@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.4
+
+- Labels list each installed font face. The default font is Arial, including scale-bar text. A missing bold or italic face uses faux bold or faux italic instead of failing. Empty dropdown choices keep an empty value.
+- 标签列出每个已安装的字体。默认字体是 Arial，标尺文字也是。没有粗体或斜体时使用仿粗体或仿斜体，不再报错。下拉框的空选项会保持空值。
+
 ## 1.2.3
 
 - Long tabs show a real scrollbar in Illustrator on macOS. The wheel scrolls the tab, batch list, and dropdown under the pointer. Dropdowns stay inside the panel.

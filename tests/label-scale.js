@@ -25,7 +25,7 @@ groups.add = function () {
   const group = {
     typename: 'GroupItem', parent: layer, pageItems: [], name: '', note: '', removed: false,
     pathItems: { add() { return { setEntirePath(points) { this.points = points; } }; } },
-    textFrames: { add() { return { width: 20, height: 12, textRange: { characterAttributes: {} } }; } },
+    textFrames: { add() { const frame = { width: 20, height: 12, textRange: { characterAttributes: {} } }; (group.texts ||= []).push(frame); return frame; } },
     move(relative, placement) { this.parent = placement === 'end' ? relative : relative.parent; },
     zOrder() {},
     remove() { this.removed = true; const i = groups.indexOf(this); if (i >= 0) groups.splice(i, 1); }
@@ -36,7 +36,8 @@ groups.add = function () {
 image.move = function (relative, placement) { this.parent = placement === 'end' ? relative : relative.parent; };
 const fonts = [
   { family: 'Arial', name: 'ArialMT', style: 'Regular' },
-  { family: 'Arial', name: 'Arial-BoldMT', style: 'Bold' }
+  { family: 'Arial', name: 'Arial-BoldMT', style: 'Bold' },
+  { family: 'Song', name: 'Song', style: 'Regular' }
 ];
 const ctx = {
   app: { activeDocument: doc, textFonts: fonts, redraw() {} },
@@ -65,10 +66,13 @@ ctx.sciBitmapCorners = () => [[0, 100], [100, 100], [100, 0], [0, 0]];
 ctx.sciBitmapHexColor = hex => ({ hex });
 
 const available = JSON.parse(ctx.sciBitmapFigureFontFamilies());
-assert.deepEqual([...available.fonts], ['Arial']);
-assert.equal(ctx.sciBitmapFigureFont('', 'regular'), null);
+assert.deepEqual(available.fonts.map(font => font.name), ['Arial-BoldMT', 'ArialMT', 'Song']);
+assert.equal(ctx.sciBitmapFigureFont('', 'regular'), fonts[0]);
+assert.equal(ctx.sciBitmapFigureFont('', 'bold'), fonts[1]);
 assert.equal(ctx.sciBitmapFigureFont('Arial', 'bold'), fonts[1]);
 assert.equal(ctx.sciBitmapFigureFont('Arial', 'regular'), fonts[0]);
+assert.equal(ctx.sciBitmapFigureFont('Arial-BoldMT', 'regular'), fonts[1]);
+assert.equal(ctx.sciBitmapFigureFont('Song', 'bold'), fonts[2]);
 
 function label(overrides) {
   const spec = Object.assign({ text: 'A', font: '', style: 'regular', size: 14, margin: 8, verticalOffset: 0, position: 'outside-top-left', color: '#000000' }, overrides);
@@ -91,6 +95,15 @@ assert.equal(frame.textRange.characterAttributes.fillColor.hex, '#000000');
 frame = label({ margin: -12, verticalOffset: -15, font: 'Arial', style: 'bold' });
 assert.deepEqual([...frame.position], [-12, 105]);
 assert.equal(frame.textRange.characterAttributes.textFont, fonts[1]);
+frame = label({ font: '', style: 'bold' });
+assert.equal(frame.textRange.characterAttributes.textFont, fonts[1]);
+assert.equal(frame.textRange.characterAttributes.fauxBold, undefined);
+frame = label({ font: 'Song', style: 'bold' });
+assert.equal(frame.textRange.characterAttributes.textFont, fonts[2]);
+assert.equal(frame.textRange.characterAttributes.fauxBold, true);
+frame = label({ font: 'Arial-BoldMT', style: 'regular' });
+assert.equal(frame.textRange.characterAttributes.textFont, fonts[1]);
+assert.equal(frame.textRange.characterAttributes.fauxBold, undefined);
 assert.equal(groups.filter(g => g.note.indexOf('SCI_FIGLABEL_V1:') === 0).length, 1);
 frame = label({ stains: [
   { text: 'TUBB3', color: '#ff0000' },
@@ -117,6 +130,7 @@ assert.equal(bad.ok, false);
 const scale = { fraction: 0.2, lineWidth: 1, fontSize: 9, margin: 5, position: 'bottom-left', color: '#000000', label: '20 µm', includeText: true };
 let result = JSON.parse(ctx.sciBitmapScaleBar('{}', JSON.stringify(scale)));
 assert(result.ok, result.error);
+assert.equal(groups.filter(g => g.note.indexOf('SCI_SCALE_V1:') === 0)[0].texts[0].textRange.characterAttributes.textFont, fonts[0]);
 const wrapper = image.parent;
 assert.equal(wrapper.typename, 'GroupItem');
 assert.equal(groups.filter(g => g.note.indexOf('SCI_SCALE_V1:') === 0)[0].parent, wrapper);

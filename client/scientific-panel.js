@@ -101,7 +101,7 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
   updateCalibrationStatus();
  }
  function canvas(im){var c=document.createElement('canvas');c.width=im.width;c.height=im.height;var x=c.getContext('2d'),d=x.createImageData(im.width,im.height);d.data.set(im.data);x.putImageData(d,0,0);return c;}
- function record(d,r,raw,st,out,item,p,crop){return {schema:'sci-raw-display',version:1,software:'PaperFig for Illustrator '+((root.PaperFigI18n&&root.PaperFigI18n.getVersion&&root.PaperFigI18n.getVersion())||'1.2.3'),role:'display-derivative',createdAt:new Date().toISOString(),source:raw,sourceStamp:st,output:out,objectKey:item.objectKey,plane:p,width:d.width,height:d.height,bits:d.bits,channelNames:d.names,physicalMicrometers:d.physical,recipe:S.clone(r),crop:crop,compositeClipping:r.outputClipping||null,statistics:S.statistics(d,r),statisticsRegion:'entire selected source plane, before crop',calibration:lookupCalibration(item)||null,nonlinear:{gamma:r.gamma,formula:'pow(clip((I-low)/(high-low),0,1),1/gamma)',clahe:false,spatialFilters:false},status:'prepared'};}
+ function record(d,r,raw,st,out,item,p,crop){return {schema:'sci-raw-display',version:1,software:'PaperFig for Illustrator '+((root.PaperFigI18n&&root.PaperFigI18n.getVersion&&root.PaperFigI18n.getVersion())||'1.2.4'),role:'display-derivative',createdAt:new Date().toISOString(),source:raw,sourceStamp:st,output:out,objectKey:item.objectKey,plane:p,width:d.width,height:d.height,bits:d.bits,channelNames:d.names,physicalMicrometers:d.physical,recipe:S.clone(r),crop:crop,compositeClipping:r.outputClipping||null,statistics:S.statistics(d,r),statisticsRegion:'entire selected source plane, before crop',calibration:lookupCalibration(item)||null,nonlinear:{gamma:r.gamma,formula:'pow(clip((I-low)/(high-low),0,1),1/gamma)',clahe:false,spatialFilters:false},status:'prepared'};}
  function writeRecord(out,rec){var dest=out+'.json';if(root.PaperFigOutput&&root.PaperFigOutput.writeJsonAtomic){root.PaperFigOutput.writeJsonAtomic(dest,rec);return;}var partial=dest+'.partial';fs.writeFileSync(partial,JSON.stringify(rec,null,2),'utf8');fs.renameSync(partial,dest);}
  var RECORD_RECOVERY='paperfig_raw_record_recovery_v1';
  function recoveryList(){try{var raw=localStorage.getItem(RECORD_RECOVERY);var list=raw?JSON.parse(raw):[];return Array.isArray(list)?list:[];}catch(e){return [];}}
@@ -223,17 +223,18 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
  }
  function scaleBar(){if(a.busy())return;var cal=lookupCalibration(a.info()),spec,expectedItem=a.info();try{if(!cal)throw new Error(t('errSaveCalFirst'));var kept=keepCalibrationAfterCrop(cal,expectedItem);if(kept==='legacy'){if(!confirmCalReuse(t('confirmSourceStamp'))){a.notice(t('sourceNeedsConfirm'));return;}a.setBusy(true);return root.PaperFigFileStamp.contentStampAsync(cal.source,function(info){$('scaleStatus').textContent=t('progressRead',{pct:info.pct});}).then(function(upgraded){cal.sourceStamp=upgraded;saveCalibrationRecord(cal,expectedItem.objectKey);a.setBusy(false);return scaleBar();}).catch(function(err){a.setBusy(false);error(err);});}if(kept===false){a.notice(t('calReuseCancelled'));return;}if(!kept)throw new Error(t('errCalSourceChanged'));cal=kept;var width=a.displayWidth(cal,infoBinding(expectedItem));if(!width)throw new Error(t('errDisplayWidth'));var len=Number($('scaleLength').value),unit=$('scaleBarUnit').value;spec={calibration:cal,displayPixelsX:width,length:len,unit:unit,fraction:S.scaleFraction(cal,len,unit,width),label:len+' '+(unit==='um'?'µm':unit),position:$('scalePosition').value,lineWidth:Number($('scaleLine').value),fontSize:Number($('scaleFont').value),margin:Number($('scaleMargin').value),color:$('scaleColor').value,includeText:(!$('scaleIncludeText')||$('scaleIncludeText').checked)};}catch(e){error(e);return;}a.setBusy(true);return a.capture().then(function(lock){if(a.count()!==1)throw new Error(t('errSelectOneScale'));if(lock.objectKey!==expectedItem.objectKey)throw new Error(t('errSelectionChanged'));return a.host('sciBitmapScaleBar('+JSON.stringify(JSON.stringify(lock))+','+JSON.stringify(JSON.stringify(spec))+')');}).then(function(){a.notice(t('scaleBarDone'));}).catch(error).then(function(){a.setBusy(false);});}
  var FIGURE_LABEL_PREFS = 'paperfig_figure_label_prefs_v1', FIGURE_LABEL_PRESETS = 'paperfig_figure_label_presets_v1';
- var figureFontsLoaded = false, figureFontsLoading = false, pendingFigureFont = '', pendingStainFont = '';
+ var figureFontsLoaded = false, figureFontsLoading = false, pendingFigureFont = 'Arial', pendingStainFont = 'Arial';
+ function figureFontName(value){var name=String(value||'').replace(/^\s+|\s+$/g,'');if(!name||name==='自动字体'||name==='Automatic')return 'Arial';return name;}
  function figureLabelUi(){
   var stains=[],i;
   for(i=1;i<=3;i++){stains.push({text:String($('figureStainText'+i).value||''),color:$('figureStainColor'+i).value});}
-  return {text:String($('figureLabelText').value||''),font:String((figureFontsLoaded ? $('figureLabelFont').value : pendingFigureFont || $('figureLabelFont').value)||''),style:$('figureLabelStyle').value,size:Number($('figureLabelSize').value),margin:Number($('figureLabelMargin').value),verticalOffset:Number($('figureLabelVerticalOffset').value),position:$('figureLabelPosition').value,color:$('figureLabelColor').value,stains:stains,stainFont:String((figureFontsLoaded ? $('figureStainFont').value : pendingStainFont || $('figureStainFont').value)||''),stainStyle:$('figureStainStyle').value,stainSize:Number($('figureStainSize').value),stainPosition:$('figureStainPosition').value,stainMargin:Number($('figureStainMargin').value),stainVerticalOffset:Number($('figureStainVerticalOffset').value)};
+  return {text:String($('figureLabelText').value||''),font:figureFontName(figureFontsLoaded ? $('figureLabelFont').value : pendingFigureFont || $('figureLabelFont').value),style:$('figureLabelStyle').value,size:Number($('figureLabelSize').value),margin:Number($('figureLabelMargin').value),verticalOffset:Number($('figureLabelVerticalOffset').value),position:$('figureLabelPosition').value,color:$('figureLabelColor').value,stains:stains,stainFont:figureFontName(figureFontsLoaded ? $('figureStainFont').value : pendingStainFont || $('figureStainFont').value),stainStyle:$('figureStainStyle').value,stainSize:Number($('figureStainSize').value),stainPosition:$('figureStainPosition').value,stainMargin:Number($('figureStainMargin').value),stainVerticalOffset:Number($('figureStainVerticalOffset').value)};
  }
  function figureLabelStyleUi(){var s=figureLabelUi();delete s.text;return s;}
  function applyFigureLabelUi(s){
   if(!s||typeof s!=='object')return;
   if(s.text!=null)$('figureLabelText').value=String(s.text).slice(0,16);
-  if(s.font!=null){pendingFigureFont=String(s.font);if(figureFontsLoaded)$('figureLabelFont').value=pendingFigureFont;}
+  if(s.font!=null){pendingFigureFont=figureFontName(s.font);if(figureFontsLoaded)$('figureLabelFont').value=pendingFigureFont;}
   if(/^(regular|bold|italic|bold-italic)$/.test(s.style))$('figureLabelStyle').value=s.style;
   if(Number(s.size)>=4&&Number(s.size)<=72)$('figureLabelSize').value=Number(s.size);
   if(s.margin!=null&&Number(s.margin)>=-200&&Number(s.margin)<=200)$('figureLabelMargin').value=Number(s.margin);
@@ -242,7 +243,7 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
   if(/^(top-left|top-right|bottom-left|bottom-right|outside-top-left|outside-top-right)$/.test(s.position))$('figureLabelPosition').value=s.position;
   if(/^#[0-9a-f]{6}$/i.test(s.color)){$('figureLabelColor').value=s.color;if(root.PaperFigColorPicker)root.PaperFigColorPicker.sync($('figureLabelColor'));}
   if(Array.isArray(s.stains)){s.stains.slice(0,3).forEach(function(entry,i){var n=i+1;if(!entry)return;if(entry.text!=null)$('figureStainText'+n).value=String(entry.text).slice(0,40);if(/^#[0-9a-f]{6}$/i.test(entry.color)){$('figureStainColor'+n).value=entry.color;if(root.PaperFigColorPicker)root.PaperFigColorPicker.sync($('figureStainColor'+n));}});}
-  if(s.stainFont!=null){pendingStainFont=String(s.stainFont);if(figureFontsLoaded)$('figureStainFont').value=pendingStainFont;}
+  if(s.stainFont!=null){pendingStainFont=figureFontName(s.stainFont);if(figureFontsLoaded)$('figureStainFont').value=pendingStainFont;}
   if(/^(regular|bold|italic|bold-italic)$/.test(s.stainStyle))$('figureStainStyle').value=s.stainStyle;
   if(Number(s.stainSize)>=4&&Number(s.stainSize)<=72)$('figureStainSize').value=Number(s.stainSize);
   if(/^(outside-)?(top|bottom)-(left|right)$/.test(s.stainPosition))$('figureStainPosition').value=s.stainPosition;
@@ -272,11 +273,35 @@ var batchPromise=null;root.SciScientificPanel={create:function(a){
   a.host('sciBitmapFigureFontFamilies()').then(function(result){
    var names=result&&result.fonts||[];
    [['figureLabelFont',pendingFigureFont],['figureStainFont',pendingStainFont]].forEach(function(pair){
-    var list=$(pair[0]),wanted=pair[1]||(list&&list.value),i,opt;
+    var list=$(pair[0]),wanted=pair[1]||(list&&list.value),i,opt,entry,family,face,faceStyle;
     if(!list)return;
     while(list.options.length>1)list.remove(1);
-    for(i=0;i<names.length;i++){opt=document.createElement('option');opt.value=names[i];opt.textContent=names[i];list.appendChild(opt);}
-    list.value=wanted||'';
+    for(i=0;i<names.length;i++){
+     entry=names[i];
+     family=typeof entry==='string'?entry:String((entry&&(entry.family||entry.name))||'');
+     face=typeof entry==='string'?entry:String((entry&&entry.name)||family);
+     faceStyle=typeof entry==='string'?'':String((entry&&entry.style)||'');
+     if(!face)continue;
+     opt=document.createElement('option');
+     opt.value=face;
+     opt.textContent=faceStyle?family+' '+faceStyle:family;
+     opt.setAttribute('data-family',family);
+     opt.setAttribute('data-style',faceStyle);
+     list.appendChild(opt);
+    }
+    if(!wanted)wanted='Arial';
+    list.value=wanted;
+    if(list.value!==wanted){
+     var familyHit=-1,regularHit=-1;
+     for(i=0;i<list.options.length;i++){
+      if(list.options[i].value===wanted){list.selectedIndex=i;familyHit=-1;break;}
+      if(list.options[i].getAttribute('data-family')===wanted){
+       if(familyHit<0)familyHit=i;
+       if(/^regular$/i.test(list.options[i].getAttribute('data-style')||''))regularHit=i;
+      }
+     }
+     if(familyHit>=0)list.selectedIndex=regularHit>=0?regularHit:familyHit;
+    }
     if(list.selectedIndex<0)list.value='';
    });
    figureFontsLoaded=true;figureFontsLoading=false;
