@@ -28,7 +28,7 @@
 ::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
 ::-webkit-scrollbar-corner { background: #1a1a1a; }
 html, body { margin: 0; min-width: 260px; min-height: 100%; background: var(--bg); color: var(--text); font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-body { overflow-y: auto; }
+body { overflow: hidden; }
 .panel { padding: 10px; display: grid; gap: 9px; }
 .preview-card, .group { border: 1px solid var(--border); background: var(--surface); border-radius: 4px; }
 .preview-stage {
@@ -576,24 +576,52 @@ html, body {
   min-height: 0;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .tab-pane {
   display: none;
-  height: 100%;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: scroll;
-  padding-right: 2px;
+  padding-right: 16px;
   gap: 8px;
+  scrollbar-width: none;
 }
+.tab-pane::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
 .tab-pane::-webkit-scrollbar:horizontal,
 .batch-list::-webkit-scrollbar:horizontal,
 .fiji-gate::-webkit-scrollbar:horizontal,
 .pf-dd-menu::-webkit-scrollbar:horizontal { height: 0; }
 .tab-tools::-webkit-scrollbar:vertical { width: 0; }
 .tab-pane.active {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  align-items: stretch;
+}
+.pane-scroll-track {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  width: 11px;
+  border-radius: 6px;
+  background: #141414;
+  z-index: 6;
+  display: none;
+}
+.pane-scroll-track.is-on { display: block; }
+.pane-scroll-thumb {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 0;
+  min-height: 28px;
+  border-radius: 4px;
+  background: #8d8d8d;
 }
 .tab-pane .group { margin: 0; }
 .tab-pane #rgbControls {

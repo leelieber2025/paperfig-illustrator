@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.7
+
+- Long panes use a drawn scrollbar. Selection checks run only while the PaperFig panel is in front, and then when the selection changes, so the artboard does not flash behind another panel. `uninstall.command` and `uninstall.bat` remove only the PaperFig CEP folder.
+- 长页面使用面板自己画的滚动条。只有 PaperFig 面板在前台、并且选区变化时才检查选中的图，被其它面板挡住时画板不再闪。`uninstall.command` 和 `uninstall.bat` 只删除 PaperFig 的 CEP 文件夹。
+
 ## 1.2.6
 
 - The Adjust page puts fluorescence and photo controls above presets. macOS shows a scrollbar on long panes. Selection checks run only while the PaperFig panel is open and in front, so the artboard does not flash when another panel is active.

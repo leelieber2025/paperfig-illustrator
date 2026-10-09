@@ -17,7 +17,7 @@
  *   the bitmap item itself without dissolving the parent group.
  */
 
-var SCI_BITMAP_HOST_VERSION = "1.2.6";
+var SCI_BITMAP_HOST_VERSION = "1.2.7";
 if (typeof sciBitmapIdentityRegistry === "undefined") {
     var sciBitmapIdentityRegistry = { docs: [], items: [], epoch: String(new Date().getTime()) };
 }
@@ -342,6 +342,34 @@ function inspectSelectedBitmaps() {
  * Short fingerprint of the current selection for CEP polling.
  * Changes when count, first item type, bounds, or linked source path change.
  */
+/* One listener for the session. The panel polls only when this cannot be armed. */
+function sciBitmapArmSelectionWatch() {
+    try {
+        if ($.global.__paperfigSelWatch) {
+            return sciBitmapResult({ ok: true, armed: true });
+        }
+        if (!app || typeof app.addEventListener !== "function") {
+            return sciBitmapResult({ ok: true, armed: false });
+        }
+        app.addEventListener("afterSelectionChanged", function () {
+            var ev;
+            try {
+                if (!$.global.__paperfigPlug) {
+                    $.global.__paperfigPlug = new ExternalObject("lib:PlugPlugExternalObject");
+                }
+                ev = new CSXSEvent();
+                ev.type = "com.zhaoli.paperfig.selectionChanged";
+                ev.data = "1";
+                ev.dispatch();
+            } catch (ignoreDispatch) {}
+        });
+        $.global.__paperfigSelWatch = true;
+        return sciBitmapResult({ ok: true, armed: true });
+    } catch (ignoreArm) {
+        return sciBitmapResult({ ok: true, armed: false });
+    }
+}
+
 function selectionFingerprint() {
     var selection;
     var found;

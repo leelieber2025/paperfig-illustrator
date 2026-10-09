@@ -98,7 +98,7 @@ New-Item -ItemType Directory -Path $dest -Force | Out-Null
 
 # Copy extension payload; skip VCS / installer noise / fat release zip.
 $excludeDirNames = @('.git', '.github', '.tools', 'node_modules', '__pycache__', 'dist', 'install')
-$excludeFileNames = @('install.ps1', 'install.bat', 'install.sh', 'install.command')
+$excludeFileNames = @('install.ps1', 'install.bat', 'install.sh', 'install.command', 'uninstall.ps1', 'uninstall.bat', 'uninstall.sh', 'uninstall.command')
 
 if (-not $sameDir) {
   try {

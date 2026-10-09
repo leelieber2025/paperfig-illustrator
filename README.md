@@ -72,7 +72,7 @@ Install folder: `%APPDATA%\Adobe\CEP\extensions\paperfig` (Windows) · `~/Librar
 
 ### Install
 
-Download the ZIP from the [releases page](https://github.com/leelieber2025/paperfig-illustrator/releases). The zip’s top folder is `paperfig/`. Local builds are written to `dist/`. Double-click `install.bat` (Windows) or `install.command` (macOS) next to `CSXS/manifest.xml`. See [`INSTALL.md`](INSTALL.md).
+Download the ZIP from the [releases page](https://github.com/leelieber2025/paperfig-illustrator/releases). The zip’s top folder is `paperfig/`. Local builds are written to `dist/`. Double-click `install.bat` (Windows) or `install.command` (macOS) next to `CSXS/manifest.xml`. To remove it, double-click `uninstall.bat` or `uninstall.command` in that same folder. See [`INSTALL.md`](INSTALL.md).
 
 Restart Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperFig for Illustrator**. The footer shows the installed package version.
 
@@ -114,7 +114,7 @@ PaperFig 在面板里调节已置入的位图，并写出 **8 位展示图** 用
 
 每次 RGB **应用** 写 `<输出>.json`。`<输出>.baseline.json` 单独标记该文件已成为新基线。原始 **应用** 写 schema 为 `sci-raw-display` 的 `<输出>.json`，不写 baseline 文件，也不改原始文件。
 
-安装：从 [发布页](https://github.com/leelieber2025/paperfig-illustrator/releases) 下载 ZIP。压缩包顶层是 `paperfig/`。在含 `CSXS/manifest.xml` 的目录双击 `install.bat`（Windows）或 `install.command`（macOS）。详见 [`INSTALL.md`](INSTALL.md)。
+安装：从 [发布页](https://github.com/leelieber2025/paperfig-illustrator/releases) 下载 ZIP。压缩包顶层是 `paperfig/`。在含 `CSXS/manifest.xml` 的目录双击 `install.bat`（Windows）或 `install.command`（macOS）。卸载则双击同一目录的 `uninstall.bat` 或 `uninstall.command`。详见 [`INSTALL.md`](INSTALL.md)。
 
 重启 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚显示已安装包的版本。
 

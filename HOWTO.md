@@ -15,6 +15,10 @@ The installer is in the folder that contains `CSXS/manifest.xml`.
 | Windows | `install.bat` | `powershell -ExecutionPolicy Bypass -File install.ps1` |
 | macOS | `install.command` | `bash install.sh` |
 
+To remove it, quit Illustrator and double-click `uninstall.bat` or `uninstall.command` in the same folder. That deletes only the PaperFig CEP folder.
+
+要删除时，先退出 Illustrator，再在同一目录双击 `uninstall.bat` 或 `uninstall.command`。这只删除 PaperFig 的 CEP 文件夹。
+
 Manual copy and `PlayerDebugMode`: [`INSTALL.md`](INSTALL.md).
 
 手动复制和 `PlayerDebugMode` 见 [`INSTALL.md`](INSTALL.md)。

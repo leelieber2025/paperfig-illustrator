@@ -44,6 +44,10 @@ copy_payload() {
       --exclude 'install.bat' \
       --exclude 'install.sh' \
       --exclude 'install.command' \
+      --exclude 'uninstall.ps1' \
+      --exclude 'uninstall.bat' \
+      --exclude 'uninstall.sh' \
+      --exclude 'uninstall.command' \
       "${src}/" "${dst}/"
   else
     tar -C "${src}" \
@@ -58,6 +62,10 @@ copy_payload() {
       --exclude='install.bat' \
       --exclude='install.sh' \
       --exclude='install.command' \
+      --exclude='uninstall.ps1' \
+      --exclude='uninstall.bat' \
+      --exclude='uninstall.sh' \
+      --exclude='uninstall.command' \
       -cf - . | tar -C "${dst}" -xf -
   fi
 }

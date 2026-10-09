@@ -15,6 +15,10 @@ Run the installer in the folder that contains `CSXS/manifest.xml`. The release z
 | Windows | `install.bat` | `powershell -ExecutionPolicy Bypass -File install.ps1` |
 | macOS | `install.command` | `bash install.sh` |
 
+Uninstall the same way. Quit Illustrator, then double-click `uninstall.bat` (Windows) or `uninstall.command` (macOS) in that folder. The script removes only `extensions/paperfig` after the manifest id is `com.zhaoli.paperfig`. It does not change `PlayerDebugMode`.
+
+卸载用同样的方式。先退出 Illustrator，再在该目录双击 `uninstall.bat`（Windows）或 `uninstall.command`（macOS）。脚本确认清单 id 是 `com.zhaoli.paperfig` 后，只删除 `extensions/paperfig`。不修改 `PlayerDebugMode`。
+
 [`install/`](install/) repeats those entry points.
 
 The script copies the extension to `%APPDATA%\Adobe\CEP\extensions\paperfig` or `~/Library/Application Support/Adobe/CEP/extensions/paperfig`, and sets `PlayerDebugMode=1` for CSXS.9–15.

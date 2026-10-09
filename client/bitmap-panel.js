@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.6';
+  var PANEL_VERSION = '1.2.7';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -3561,10 +3561,37 @@
       });
   }
 
-  /* Host polling while this panel is closed or behind another panel flashes the artboard. */
+  /* CEP may return the string "false". A boolean compare never stopped the poll, so Illustrator kept flashing. */
+  var panelVisOverride = null;
+  var selectionWatchArmed = false;
+  var selectionWatchStarted = false;
+  function coercePanelVisible(value) {
+    if (value === true || value === 1) { return true; }
+    if (value === false || value === 0) { return false; }
+    var text = String(value == null ? '' : value).replace(/^\s+|\s+$/g, '').toLowerCase();
+    if (text === 'true' || text === '1') { return true; }
+    if (text === 'false' || text === '0') { return false; }
+    if (text.charAt(0) === '{') {
+      try {
+        var parsed = JSON.parse(text);
+        if (parsed && parsed.visible != null) { return coercePanelVisible(parsed.visible); }
+      } catch (ignoreJson) {}
+    }
+    return null;
+  }
   function paperfigPanelActive() {
+    if (panelVisOverride !== null) { return panelVisOverride; }
     if (!cs || typeof cs.isWindowVisible !== 'function') { return true; }
-    try { return cs.isWindowVisible() !== false; } catch (ignoreVis) { return true; }
+    try {
+      var parsed = coercePanelVisible(cs.isWindowVisible());
+      if (parsed !== null) { return parsed; }
+    } catch (ignoreVis) {}
+    return true;
+  }
+  function notePanelVisibility(value) {
+    var parsed = coercePanelVisible(value);
+    if (parsed === null) { return; }
+    panelVisOverride = parsed;
   }
 
   function pollSelection() {
@@ -3593,16 +3620,44 @@
       .then(function () { inspectQuietRunning = false; });
   }
 
-  function startSelectionPolling() {
-    if (pollTimer) { return; }
-    pollTimer = setInterval(pollSelection, POLL_MS);
+  function inspectOnceIfActive() {
     if (!paperfigPanelActive()) { return; }
-    /* On panel open, inspect directly: the fingerprint round trip can wait. */
     inspectQuietRunning = true;
     inspectSelection({ quiet: true }).then(function () {
       inspectQuietRunning = false;
     }, function () {
       inspectQuietRunning = false;
+    });
+  }
+  function startIntervalPolling() {
+    if (pollTimer || selectionWatchArmed) { return; }
+    pollTimer = setInterval(pollSelection, POLL_MS);
+    inspectOnceIfActive();
+  }
+  function startSelectionPolling() {
+    if (selectionWatchStarted) { return; }
+    selectionWatchStarted = true;
+    if (cs && typeof cs.addEventListener === 'function') {
+      try {
+        cs.addEventListener('com.zhaoli.paperfig.selectionChanged', function () {
+          if (!paperfigPanelActive()) { return; }
+          pollSelection();
+        });
+      } catch (ignoreSelEvt) {}
+    }
+    ensureHostScript().then(function () {
+      return evalHost('sciBitmapArmSelectionWatch()');
+    }).then(function (raw) {
+      var parsed;
+      try { parsed = JSON.parse(raw); } catch (ignoreParse) { parsed = null; }
+      if (parsed && parsed.armed) {
+        selectionWatchArmed = true;
+        inspectOnceIfActive();
+        return;
+      }
+      startIntervalPolling();
+    }, function () {
+      startIntervalPolling();
     });
   }
 
@@ -4765,9 +4820,8 @@
     if (cs && typeof cs.addEventListener === 'function') {
       try {
         cs.addEventListener('com.adobe.csxs.events.WindowVisibilityChanged', function (event) {
-          var data = event && event.data;
-          if (String(data) === 'false') { return; }
-          pollSelection();
+          notePanelVisibility(event && event.data);
+          if (paperfigPanelActive()) { pollSelection(); }
         });
       } catch (ignoreVisEvt) {}
     }
