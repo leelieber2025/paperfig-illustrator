@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.5</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.6</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -106,16 +106,6 @@
         <details class="compact-help"><summary><span data-i18n="helpEdit">&#x7F16;&#x8F91;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n-html="hintSourceOrient">面板编辑使用<strong>源文件朝向</strong>。画板预览保留 Illustrator 旋转/翻转。取消可恢复原链接；未完成的预览重开后可恢复。</p><p class="hint-line" data-i18n="hintEmbedded">嵌入图：单次 Apply 生成展示 PNG 并转为链接，无法恢复原始显微数据。</p><p id="undoHint" class="hint-line" data-i18n-html="hintUndo">滑块只改面板预览。点 <strong>Apply</strong> 才写出全分辨率文件并重新链接画板。撤销用 Illustrator <strong>Ctrl/Cmd+Z</strong>。</p></details><div class="group" id="rgbControls">
           <section aria-labelledby="adjustHeading">
             <h2 id="adjustHeading" data-i18n="adjustments">展示图调整</h2>
-            <label><span data-i18n="preset">预设</span><select id="presetSelect"><option value="" data-i18n="choosePreset">选择预设</option></select></label>
-            <div class="preset-save-row">
-              <label class="preset-name-label" for="presetName"><span data-i18n="presetNameLabel">名称</span></label>
-              <input id="presetName" type="text" maxlength="80" data-i18n-placeholder="presetNamePh" data-i18n-title="saveNewTitle" placeholder="新预设名称（当前调整）" title="输入名称后点「保存当前」：把当前调整页参数存为新预设">
-              <button type="button" id="savePresetBtn" data-i18n="saveNew" data-i18n-title="saveNewTitle" title="把当前调整页参数存为新预设">保存当前</button>
-            </div>
-            <div class="button-row preset-manage-row"><button type="button" id="loadPresetBtn" data-i18n="load" data-i18n-title="loadPresetTitle" title="加载所选预设到调整页">加载</button><button type="button" id="updatePresetBtn" data-i18n="overwrite" data-i18n-title="overwritePresetTitle" title="用当前调整参数覆盖所选预设">覆盖</button><button type="button" id="deletePresetBtn" data-i18n="delete" data-i18n-title="deletePresetTitle" title="删除所选预设">删除</button></div>
-            <div class="button-row"><button id="repeatLastBtn" data-i18n="repeatLast">重用上次</button><button id="importPresetBtn" data-i18n="importJson">导入 JSON</button><button id="exportPresetBtn" data-i18n="exportJson">导出 JSON</button></div>
-            <input id="presetFile" type="file" accept=".json" class="hidden">
-            <details class="compact-help"><summary><span data-i18n="helpDisplay">&#x663E;&#x793A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintPresets">预设含强度与 RGB 颜色；不含裁剪、旋转、输出路径与预览模式。</p></details>
             <div class="button-row adjust-kind-row" role="group" data-i18n-aria="adjustKindAria" aria-label="调整类型">
               <button type="button" id="adjustKindFluor" class="active" aria-pressed="true" data-i18n="adjustKindFluor">荧光照片</button>
               <button type="button" id="adjustKindPhoto" aria-pressed="false" data-i18n="adjustKindPhoto">普通照片</button>
@@ -209,6 +199,19 @@
             </div>
             <label><span data-i18n="previewMode">预览模式</span><select id="channelView"><option value="merged" data-i18n="merged">合成</option><option value="red" data-i18n="grayR">R · 灰度</option><option value="green" data-i18n="grayG">G · 灰度</option><option value="blue" data-i18n="grayB">B · 灰度</option></select></label>
             <details class="compact-help"><summary><span data-i18n="helpChannels">&#x901A;&#x9053;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintKeepPreview">保留勾选和分通道 Low/High 同时用于预览与 Apply。未勾选的平面置 0。只留一个通道时，再开灰度得到灰度图。「预览模式」里的灰度只影响预览。洋红/绿换色可以留下 B（例如 DAPI）。加色合成可能裁到 255。</p></details>
+          </section>
+          <section aria-labelledby="presetHeading">
+            <h2 id="presetHeading" data-i18n="preset">预设</h2>
+            <label><span data-i18n="preset">预设</span><select id="presetSelect"><option value="" data-i18n="choosePreset">选择预设</option></select></label>
+            <div class="preset-save-row">
+              <label class="preset-name-label" for="presetName"><span data-i18n="presetNameLabel">名称</span></label>
+              <input id="presetName" type="text" maxlength="80" data-i18n-placeholder="presetNamePh" data-i18n-title="saveNewTitle" placeholder="新预设名称（当前调整）" title="输入名称后点「保存当前」：把当前调整页参数存为新预设">
+              <button type="button" id="savePresetBtn" data-i18n="saveNew" data-i18n-title="saveNewTitle" title="把当前调整页参数存为新预设">保存当前</button>
+            </div>
+            <div class="button-row preset-manage-row"><button type="button" id="loadPresetBtn" data-i18n="load" data-i18n-title="loadPresetTitle" title="加载所选预设到调整页">加载</button><button type="button" id="updatePresetBtn" data-i18n="overwrite" data-i18n-title="overwritePresetTitle" title="用当前调整参数覆盖所选预设">覆盖</button><button type="button" id="deletePresetBtn" data-i18n="delete" data-i18n-title="deletePresetTitle" title="删除所选预设">删除</button></div>
+            <div class="button-row"><button id="repeatLastBtn" data-i18n="repeatLast">重用上次</button><button id="importPresetBtn" data-i18n="importJson">导入 JSON</button><button id="exportPresetBtn" data-i18n="exportJson">导出 JSON</button></div>
+            <input id="presetFile" type="file" accept=".json" class="hidden">
+            <details class="compact-help"><summary><span data-i18n="helpDisplay">&#x663E;&#x793A;&#x8BF4;&#x660E;</span><span class="help-mark" aria-hidden="true">?</span></summary><p class="hint-line" data-i18n="hintPresets">预设含强度与 RGB 颜色；不含裁剪、旋转、输出路径与预览模式。</p></details>
           </section>
         </div>
       </div>

@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.5';
+  var PANEL_VERSION = '1.2.6';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -3561,7 +3561,14 @@
       });
   }
 
+  /* Host polling while this panel is closed or behind another panel flashes the artboard. */
+  function paperfigPanelActive() {
+    if (!cs || typeof cs.isWindowVisible !== 'function') { return true; }
+    try { return cs.isWindowVisible() !== false; } catch (ignoreVis) { return true; }
+  }
+
   function pollSelection() {
+    if (!paperfigPanelActive()) { return; }
     if (cropDrag || applyRunning || artboardPreviewRunning || panelProxyRunning || liveGeomBusy || inspectQuietRunning || hostPumping || hostQueueHasUser() || !cs) { return; }
     inspectQuietRunning = true;
     return ensureHostScript()
@@ -3589,6 +3596,7 @@
   function startSelectionPolling() {
     if (pollTimer) { return; }
     pollTimer = setInterval(pollSelection, POLL_MS);
+    if (!paperfigPanelActive()) { return; }
     /* On panel open, inspect directly: the fingerprint round trip can wait. */
     inspectQuietRunning = true;
     inspectSelection({ quiet: true }).then(function () {
@@ -4754,6 +4762,15 @@
     initWorkflow();
     initScience();
     bind();
+    if (cs && typeof cs.addEventListener === 'function') {
+      try {
+        cs.addEventListener('com.adobe.csxs.events.WindowVisibilityChanged', function (event) {
+          var data = event && event.data;
+          if (String(data) === 'false') { return; }
+          pollSelection();
+        });
+      } catch (ignoreVisEvt) {}
+    }
     document.addEventListener('paperfig-feature-visibility', function (event) {
       if (!event.detail || event.detail.feature !== 'raw') { return; }
       updateArtboardPreviewButtons();

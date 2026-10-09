@@ -233,6 +233,7 @@ assert(/exifOrientationTransform/.test(panel));
    assert(/id="ch0LowSlider"/.test(html));
    assert(/id="fluorToneLow"/.test(html) && /id="fluorToneHigh"/.test(html));
    assert(/id="adjustPhoto" hidden/.test(html) && /id="adjustKindFluor"/.test(html));
+   assert(html.indexOf('id="adjustKindFluor"') < html.indexOf('id="presetSelect"'));
    assert(/id="ch1HighSlider"/.test(html));
    assert(/id="ch2LowSlider"/.test(html));
    assert(/id="autoChannelLevelsBtn"/.test(html));

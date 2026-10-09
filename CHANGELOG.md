@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.6
+
+- The Adjust page puts fluorescence and photo controls above presets. macOS shows a scrollbar on long panes. Selection checks run only while the PaperFig panel is open and in front, so the artboard does not flash when another panel is active.
+- 调整页把荧光和普通照片控件放在预设上面。macOS 上长页面显示滚动条。只有 PaperFig 面板打开并在前台时才检查选中的图，其它面板在前时画板不再闪。
+
 ## 1.2.5
 
 - The Scale page keeps the loaded preset name at the top until you recalibrate or load another preset. Scale bars use the original µm/px and the current file’s pixel width. Apply on the Scale page creates or updates the scale bar. Apply on the Label page creates or updates the figure label.
