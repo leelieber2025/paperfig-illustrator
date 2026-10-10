@@ -11,12 +11,13 @@
   --ok: #83cf86;
 }
 * { box-sizing: border-box; }
-/* macOS CEP paints overlay scrollbars only while scrolling, and ignores width
-   unless -webkit-appearance is none. Classic thumbs stay visible. */
+/* CEP on macOS hides overlay scrollbars unless the scrollbar itself is display:block.
+   Same rule used by Illustrator panels (Inventsable, 2020). */
 ::-webkit-scrollbar {
-  -webkit-appearance: none;
+  display: block;
   width: 12px;
   height: 12px;
+  background: #1a1a1a;
 }
 ::-webkit-scrollbar-track { background: #1a1a1a; }
 ::-webkit-scrollbar-thumb {
@@ -584,11 +585,11 @@ html, body {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: scroll;
-  padding-right: 16px;
+  padding-right: 2px;
   gap: 8px;
-  scrollbar-width: none;
 }
-.tab-pane::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; }
+.tab-pane::-webkit-scrollbar { display: block; width: 12px; }
+.tab-pane::-webkit-scrollbar-thumb { background: #8d8d8d; }
 .tab-pane::-webkit-scrollbar:horizontal,
 .batch-list::-webkit-scrollbar:horizontal,
 .fiji-gate::-webkit-scrollbar:horizontal,
@@ -601,27 +602,6 @@ html, body {
   min-height: 0;
   max-height: 100%;
   align-items: stretch;
-}
-.pane-scroll-track {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  bottom: 2px;
-  width: 11px;
-  border-radius: 6px;
-  background: #141414;
-  z-index: 6;
-  display: none;
-}
-.pane-scroll-track.is-on { display: block; }
-.pane-scroll-thumb {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  top: 0;
-  min-height: 28px;
-  border-radius: 4px;
-  background: #8d8d8d;
 }
 .tab-pane .group { margin: 0; }
 .tab-pane #rgbControls {

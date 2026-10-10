@@ -11,7 +11,7 @@
   <main class="panel">
     <div class="sticky-top">
       <div class="banner-row">
-        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.7</p>
+        <p class="capability-banner" data-i18n="banner">PaperFig 1.2.8</p>
         <p class="author-credit" data-i18n-html="authorCredit"><span class="author-name">Zhao Li (李钊)</span><span class="author-links"><a href="mailto:leelieber@gmail.com" class="ext-link credit-link" data-url="mailto:leelieber@gmail.com" aria-label="Email Zhao Li" title="Email Zhao Li"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.5 5.5h17v13h-17zM4 6l8 6 8-6"/></svg></a><a href="https://zhaoli.dpdns.org/" class="ext-link credit-link" data-url="https://zhaoli.dpdns.org/" aria-label="Website: zhaoli.dpdns.org" title="Website: zhaoli.dpdns.org"><svg class="credit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.3 5.1 3.3 8.5s-1.1 6.2-3.3 8.5c-2.2-2.3-3.3-5.1-3.3-8.5S9.8 5.8 12 3.5z"/></svg></a></span></p>
         <div class="lang-toggle" role="group" data-i18n-aria="langAria" aria-label="界面语言">
           <button type="button" id="langZh" class="lang-btn active" data-lang="zh" aria-pressed="true">中文</button>
@@ -569,7 +569,6 @@
             node.scrollTop += delta.dy;
             if (node.scrollTop !== beforeY) {
               if (event.preventDefault) { event.preventDefault(); }
-              syncPaneScroll();
               return;
             }
           }
@@ -629,65 +628,6 @@
       try {
         document.dispatchEvent(new CustomEvent('paperfig-tab', { detail: { tab: name } }));
       } catch (ignoreEvt) {}
-      syncPaneScroll();
-    }
-    function activePane() {
-      return document.querySelector('.tab-pane.active');
-    }
-    function syncPaneScroll() {
-      var host = document.querySelector('.tab-panes');
-      var track = document.getElementById('paneScrollTrack');
-      var thumb = document.getElementById('paneScrollThumb');
-      var pane = activePane();
-      var max, thumbH, travel;
-      if (!host || !track || !thumb || !pane) { return; }
-      max = pane.scrollHeight - pane.clientHeight;
-      if (max < 2) {
-        track.className = 'pane-scroll-track';
-        return;
-      }
-      track.className = 'pane-scroll-track is-on';
-      thumbH = Math.max(28, Math.round(pane.clientHeight * (pane.clientHeight / pane.scrollHeight)));
-      travel = Math.max(0, track.clientHeight - thumbH);
-      thumb.style.height = thumbH + 'px';
-      thumb.style.transform = 'translateY(' + Math.round((pane.scrollTop / max) * travel) + 'px)';
-    }
-    function bindPaneScroll() {
-      var host = document.querySelector('.tab-panes');
-      var track, thumb, drag;
-      if (!host || document.getElementById('paneScrollTrack')) { return; }
-      track = document.createElement('div');
-      track.id = 'paneScrollTrack';
-      track.className = 'pane-scroll-track';
-      thumb = document.createElement('div');
-      thumb.id = 'paneScrollThumb';
-      thumb.className = 'pane-scroll-thumb';
-      track.appendChild(thumb);
-      host.appendChild(track);
-      host.addEventListener('scroll', syncPaneScroll, true);
-      window.addEventListener('resize', syncPaneScroll);
-      drag = null;
-      thumb.addEventListener('mousedown', function (event) {
-        var pane = activePane();
-        if (!pane || !event || event.button) { return; }
-        drag = { y: event.clientY, top: pane.scrollTop };
-        if (event.preventDefault) { event.preventDefault(); }
-      });
-      document.addEventListener('mousemove', function (event) {
-        var pane, max, travel, thumbH, next;
-        if (!drag) { return; }
-        pane = activePane();
-        if (!pane) { return; }
-        max = pane.scrollHeight - pane.clientHeight;
-        thumbH = thumb.offsetHeight || 28;
-        travel = Math.max(1, track.clientHeight - thumbH);
-        next = drag.top + ((event.clientY - drag.y) * max / travel);
-        pane.scrollTop = next;
-        syncPaneScroll();
-      });
-      document.addEventListener('mouseup', function () { drag = null; });
-      setInterval(syncPaneScroll, 400);
-      syncPaneScroll();
     }
     function boot() {
       var tabs = document.querySelectorAll('.tab-bar [data-tab]');
@@ -708,7 +648,6 @@
         }
       });
       activate('scale');
-      bindPaneScroll();
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', boot);

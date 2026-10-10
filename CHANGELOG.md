@@ -1,5 +1,10 @@
 # Changelog / 变更记录
 
+## 1.2.8
+
+- Long panes use the system scrollbar with `display: block`, the form used by other Illustrator CEP panels. While this panel is in front, selection checks compare identity and position only and do not redraw. The check stops when the panel is closed or covered.
+- 长页面使用系统滚动条，并加上其它 Illustrator CEP 面板用过的 `display: block`。面板在前台时，选区检查只比较身份和位置，不重绘画板。面板关掉或被盖住后停止检查。
+
 ## 1.2.7
 
 - Long panes use a drawn scrollbar. Selection checks run only while the PaperFig panel is in front, and then when the selection changes, so the artboard does not flash behind another panel. `uninstall.command` and `uninstall.bat` remove only the PaperFig CEP folder.

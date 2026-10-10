@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.7';
+  var PANEL_VERSION = '1.2.8';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -3563,8 +3563,6 @@
 
   /* CEP may return the string "false". A boolean compare never stopped the poll, so Illustrator kept flashing. */
   var panelVisOverride = null;
-  var selectionWatchArmed = false;
-  var selectionWatchStarted = false;
   function coercePanelVisible(value) {
     if (value === true || value === 1) { return true; }
     if (value === false || value === 0) { return false; }
@@ -3620,44 +3618,15 @@
       .then(function () { inspectQuietRunning = false; });
   }
 
-  function inspectOnceIfActive() {
+  function startSelectionPolling() {
+    if (pollTimer) { return; }
+    pollTimer = setInterval(pollSelection, POLL_MS);
     if (!paperfigPanelActive()) { return; }
     inspectQuietRunning = true;
     inspectSelection({ quiet: true }).then(function () {
       inspectQuietRunning = false;
     }, function () {
       inspectQuietRunning = false;
-    });
-  }
-  function startIntervalPolling() {
-    if (pollTimer || selectionWatchArmed) { return; }
-    pollTimer = setInterval(pollSelection, POLL_MS);
-    inspectOnceIfActive();
-  }
-  function startSelectionPolling() {
-    if (selectionWatchStarted) { return; }
-    selectionWatchStarted = true;
-    if (cs && typeof cs.addEventListener === 'function') {
-      try {
-        cs.addEventListener('com.zhaoli.paperfig.selectionChanged', function () {
-          if (!paperfigPanelActive()) { return; }
-          pollSelection();
-        });
-      } catch (ignoreSelEvt) {}
-    }
-    ensureHostScript().then(function () {
-      return evalHost('sciBitmapArmSelectionWatch()');
-    }).then(function (raw) {
-      var parsed;
-      try { parsed = JSON.parse(raw); } catch (ignoreParse) { parsed = null; }
-      if (parsed && parsed.armed) {
-        selectionWatchArmed = true;
-        inspectOnceIfActive();
-        return;
-      }
-      startIntervalPolling();
-    }, function () {
-      startIntervalPolling();
     });
   }
 
