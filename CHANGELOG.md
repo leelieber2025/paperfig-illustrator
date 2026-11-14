@@ -1,5 +1,24 @@
 # Changelog / 变更记录
 
+## 1.2.9
+
+- Raw crop fix: after a cropped raw Apply, the scale bar uses the placed crop width, not the full raw width. Before, the bar was too short by crop width ÷ raw width.
+- Fiji's new launchers are found: `fiji-macos-arm64`, `fiji-macos-x64`, `fiji-windows-x64.exe`, `fiji-linux-x64`, and the nested macOS folder `/Applications/Fiji/Fiji.app`. They start without `--ij2` and `--console`, which they read as a macro name. `ImageJ-*` launchers work as before.
+- `install.command` and `install.sh` are executable in git too. INSTALL.md explains Control-click → Open for Gatekeeper.
+- Apply output does not land in a temporary folder when macOS reports it as `/private/var/...`. iCloud Drive and `Library/CloudStorage` folders use the durable output folder.
+- `install.ps1` copies into a staged folder, checks it, then swaps it in. A failed copy leaves the previous install in place.
+- The release zip contains only files tracked by git. Install also skips `_probe.js` and `.ipynb_checkpoints`.
+- An OME pixel size with an unknown unit skips metadata calibration with a warning instead of failing the load. `&#181;m` and `Å` are read.
+- File paths with `?` or `#` open in the preview. Without Arial, scale-bar text uses Helvetica or the current Illustrator font instead of failing.
+- 原始数据裁剪修复：裁剪后执行 Apply，标尺按置入的裁剪宽度计算，不再按原始全宽。此前标尺会短到“裁剪宽 ÷ 原始宽”。
+- 识别 Fiji 新启动器：`fiji-macos-arm64`、`fiji-macos-x64`、`fiji-windows-x64.exe`、`fiji-linux-x64`，以及 macOS 嵌套目录 `/Applications/Fiji/Fiji.app`。新启动器不再带 `--ij2` 和 `--console`（它们会被当成宏名）。`ImageJ-*` 启动器照旧可用。
+- git 里的 `install.command` 和 `install.sh` 也带可执行权限。INSTALL.md 说明了门禁提示时按住 Control 点按 → 打开。
+- macOS 把临时目录报成 `/private/var/...` 时，Apply 输出不再落进临时目录。iCloud 云盘和 `Library/CloudStorage` 下的文件改用持久输出目录。
+- `install.ps1` 先复制到暂存目录并校验，再替换。复制失败时旧安装保持不变。
+- 发布包只包含 git 跟踪的文件。安装时也会跳过 `_probe.js` 和 `.ipynb_checkpoints`。
+- OME 像素尺寸单位无法识别时，跳过元数据标定并提示，不再读取失败。可读取 `&#181;m` 和 `Å`。
+- 路径含 `?` 或 `#` 的文件可以预览。没有 Arial 时，标尺文字改用 Helvetica 或 Illustrator 当前字体，不再报错。
+
 ## 1.2.8
 
 - Long panes use the system scrollbar with `display: block`, the form used by other Illustrator CEP panels. While this panel is in front, selection checks compare identity and position only and do not redraw. The check stops when the panel is closed or covered.

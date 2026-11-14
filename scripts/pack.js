@@ -17,10 +17,11 @@ var zipName = require('./release-name').releaseZip(ver);
 var zipPath = path.join(distDir, zipName);
 
 var EXCLUDE_DIRS = {
-  '.git': 1, '.github': 1, '.tools': 1, node_modules: 1, dist: 1, '_pack_stage': 1
+  '.git': 1, '.github': 1, '.tools': 1, node_modules: 1, dist: 1, '_pack_stage': 1,
+  '.ipynb_checkpoints': 1
 };
 var EXCLUDE_FILES = {
-  'package-lock.json': 1, '.gitignore': 1
+  'package-lock.json': 1, '.gitignore': 1, '_probe.js': 1
 };
 
 var EXCLUDE_ROOT_FILES = {
@@ -65,7 +66,32 @@ cp.execFileSync(process.execPath, [path.join(root, 'tests/run-suite.js')], { std
 if (!fs.existsSync(distDir)) { fs.mkdirSync(distDir, { recursive: true }); }
 rmrf(stageRoot);
 fs.mkdirSync(stage, { recursive: true });
-copyTree(root, stage);
+/* 1.2.9: package only git-tracked files, so local scratch (_probe.js, .ipynb_checkpoints,
+ * editor checkpoints) never ships. Falls back to the folder walk outside a git checkout. */
+function trackedFiles() {
+  try {
+    var out = cp.execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return out.split('\0').filter(Boolean);
+  } catch (e) { return null; }
+}
+var tracked = trackedFiles();
+if (tracked) {
+  tracked.forEach(function (rel) {
+    var parts = rel.split('/'), parent = root, i;
+    for (i = 0; i < parts.length; i += 1) {
+      if (isExcludedName(parts[i], parent)) { return; }
+      parent = path.join(parent, parts[i]);
+    }
+    var src = path.join(root, rel);
+    if (!fs.existsSync(src) || !fs.lstatSync(src).isFile()) { return; }
+    var dst = path.join(stage, rel);
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.copyFileSync(src, dst);
+  });
+} else {
+  console.warn('WARN: git not available; packing the folder tree (untracked files may ship).');
+  copyTree(root, stage);
+}
 
 if (fs.existsSync(zipPath)) { fs.unlinkSync(zipPath); }
 

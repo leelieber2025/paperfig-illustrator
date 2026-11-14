@@ -13,7 +13,8 @@ const always = [
   'tests/interaction-policy.js',
   'tests/record-io.js',
   'tests/advanced-tabs.js',
-  'tests/label-scale.js'
+  'tests/label-scale.js',
+  'tests/fiji-launcher.js'
 ];
 const optional = [
   ['tests/workflow.js', 'sharp'],

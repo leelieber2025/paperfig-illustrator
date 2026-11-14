@@ -90,6 +90,30 @@ try {
    } finally { fs.rmSync(localDir,{recursive:true,force:true}); }
  });
 
+ test('1.2.9 durableOutputPath resolves symlinked TEMP (macOS /var → /private/var) and macOS cloud folders',()=>{
+   const path=require('path'), os=require('os'), fs=require('fs'), vm2=require('vm');
+   const real=path.join(dir,'private-var-T'), link=path.join(dir,'var-T'), home=path.join(dir,'home129');
+   fs.mkdirSync(real,{recursive:true});fs.mkdirSync(home,{recursive:true});
+   let linked=true;try{fs.symlinkSync(real,link,'dir');}catch(e){linked=false;}
+   const testOs={homedir:()=>home,tmpdir:()=>linked?link:real};
+   const ctx={window:{require:(n)=>{if(n==='fs')return fs;if(n==='path')return path;if(n==='os')return testOs;throw new Error(n);}},process:{env:{}},console};
+   vm2.createContext(ctx);vm2.runInContext(fs.readFileSync(path.join(root,'client/bitmap-output.js'),'utf8'),ctx);
+   const O=ctx.window.PaperFigOutput, fallback=path.join(home,'paperfig-out');
+   fs.mkdirSync(path.join(real,'TemporaryItems'),{recursive:true});
+   const out=O.durableOutputPath(path.join(real,'TemporaryItems','x.png'),'.png');
+   assert(out.indexOf(fallback)===0,'real temp path must use the durable fallback: '+out);
+   ['/Users/a/Library/Mobile Documents/com~apple~CloudDocs/fig','/Users/a/Library/CloudStorage/GoogleDrive-a@b.com/My Drive/fig','C:/Users/a/iCloudDrive/fig'].forEach(function(p){assert(O.isSlowRelinkDir(p),p);});
+   assert(!O.isSlowRelinkDir('/Users/a/Documents/lab'));
+ });
+
+ test('1.2.9 pathToFileUrl escapes ? and # in linked file paths',()=>{
+   const src=require('fs').readFileSync(require('path').join(root,'client/bitmap-panel.js'),'utf8');
+   const body=/function pathToFileUrl\(filePath\) \{[\s\S]*?\n  \}/.exec(src)[0];
+   const f=new Function(body+'; return pathToFileUrl;')();
+   assert.equal(f('/Users/a/图 1?#2.png'),'file:///Users/a/%E5%9B%BE%201%3F%232.png');
+   assert.equal(f('C:\\Data\\x y.tif'),'file:///C:/Data/x%20y.tif');
+ });
+
  test('0.5.7 crop aspect helpers keep FILE-px ratio and fixed size',()=>{
    assert.equal(Core.cropAspectRatio('free'),0);
    assert.equal(Core.cropAspectRatio('1:1'),1);

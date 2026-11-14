@@ -5,7 +5,7 @@
   var SETTINGS_KEY = 'sci_bitmap_settings';
   var PREVIEW_STATE_KEY = 'sci_bitmap_preview_by_object';
   /* Fallback only; real version is read once from extensionPath/package.json in resolvePanelVersion(). */
-  var PANEL_VERSION = '1.2.8';
+  var PANEL_VERSION = '1.2.9';
   var HOST_SCRIPT_VERSION = PANEL_VERSION;
   var POLL_MS = 1100;
   var Core = window.SciBitmapCore;
@@ -2534,7 +2534,8 @@
     var p = String(filePath || '').replace(/\\/g, '/');
     if (/^[A-Za-z]:\//.test(p)) { p = '/' + p; }
     if (p.charAt(0) !== '/') { p = '/' + p; }
-    return 'file://' + encodeURI(p).replace(/#/g, '%23');
+    /* 1.2.9: encodeURI keeps ? and # — both would cut the file path short. */
+    return 'file://' + encodeURI(p).replace(/\?/g, '%3F').replace(/#/g, '%23');
   }
 
   function decodedImageCacheKey(filePath) {

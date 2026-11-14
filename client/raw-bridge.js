@@ -43,8 +43,10 @@
        * instead of splicing a path literal into Groovy source (a GString
        * would interpolate "$" in the temp path). */
       fs.writeFileSync(script, code, 'utf8');
-      var proc = cp.spawn(root.SciBitmapFiji.resolveExecutable(getFiji()),
-        ['--ij2', '--headless', '--console', '--run', script],
+      var exe = root.SciBitmapFiji.resolveExecutable(getFiji());
+      /* 1.2.9: Jaunch (fiji-*) launchers need plain --headless --run; legacy ImageJ-* keep --ij2. */
+      var args = root.SciBitmapFiji.launcherArgs ? root.SciBitmapFiji.launcherArgs(exe, 'script', script) : ['--ij2', '--headless', '--console', '--run', script];
+      var proc = cp.spawn(exe, args,
         { windowsHide: true, cwd: dir, env: Object.assign({}, (typeof process !== 'undefined' && process.env) || {}, { PAPERFIG_INBOX: dir }) });
       service = { dir: dir, proc: proc, dead: false, log: '' };
       var own = service;

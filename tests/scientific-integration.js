@@ -69,6 +69,15 @@ await test('Raw Apply exports a display derivative with gamma/plane/statistics l
 await test('Metadata calibration uses physical µm/px and records the source identity',async()=>{
  element('scaleMethod').value='metadata';api.science().calibrate();const cal=JSON.parse(storage.sci_calibrations_v1)[api.state().lastObjectKey];assert.equal(cal.umPerPixelX,0.25);assert.equal(cal.umPerPixelY,0.5);assert.equal(cal.source,rawPath);
 });
+await test('Raw crop Apply: scale bar uses the placed crop width, not the full raw width',async()=>{
+ api.writeCrop(0,0,2,2);element('format').value='TIFF';await api.applyPipeline();
+ const rec=JSON.parse(fs.readFileSync(a.file.fsName+'.json','utf8'));assert.equal(rec.crop.width,2);
+ await api.inspectSelection({quiet:true});assert(api.science().active());assert.equal(api.science().state().dataset.width,4);
+ let captured=null;const orig=host.sciBitmapScaleBar;host.sciBitmapScaleBar=function(l,s){captured=JSON.parse(s);return orig(l,s);};
+ try{element('scaleLength').value='100';element('scaleBarUnit').value='nm';await api.science().scaleBar();}finally{host.sciBitmapScaleBar=orig;}
+ assert(captured,'scale bar host call expected');assert.equal(captured.displayPixelsX,2);assert(Math.abs(captured.fraction-0.2)<1e-9,String(captured.fraction));
+ api.writeCrop(0,0,0,0);
+});
 await test('Raw group batch fixes recipe, processes distinct linked objects and retains original source',async()=>{
  api.science().lock();const d=placed('RAW-D',rawPath),e=placed('RAW-E',rawPath);doc.selection=[a,d,e];await api.inspectSelection({quiet:true});await api.prepareBatch();assert(api.science().hasBatch());assert.equal(api.science().state().batch.rows.filter(r=>r.valid).length,3);await api.runBatch();assert.notEqual(d.file.fsName,rawPath);assert.notEqual(e.file.fsName,rawPath);assert(fs.existsSync(rawPath));const r1=JSON.parse(fs.readFileSync(d.file.fsName+'.json','utf8')),r2=JSON.parse(fs.readFileSync(e.file.fsName+'.json','utf8'));assert.deepEqual(r1.recipe,r2.recipe);assert.equal(r1.status,'applied');assert(/3\/3 applied/.test(element('footerStatus').textContent), element('footerStatus').textContent);
 });

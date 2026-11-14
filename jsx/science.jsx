@@ -142,7 +142,7 @@ function sciBitmapFigureFontFamilies() {
 }
 function sciBitmapFigureFont(name, style) {
     var fonts = app.textFonts, wanted = String(name || ''), bold = style === 'bold' || style === 'bold-italic', italic = style === 'italic' || style === 'bold-italic';
-    var i, font, exact = null, family = '', matches = [], flags, fontStyle, styled = null;
+    var i, font, exact = null, family = '', matches = [], flags, fontStyle, styled = null, fallback = !wanted;
     if (!wanted) { wanted = 'Arial'; }
     for (i = 0; fonts && i < fonts.length; i++) {
         try { font = fonts[i]; } catch (ignoreFont) { continue; }
@@ -155,7 +155,11 @@ function sciBitmapFigureFont(name, style) {
         flags = sciBitmapFontFaceFlags(fontStyle);
         if (!styled && flags.bold === bold && flags.italic === italic) { styled = font; }
     }
-    if (!matches.length) { throw new Error('Font is not installed: ' + wanted); }
+    if (!matches.length) {
+        /* 1.2.9: the default (scale-bar) font falls back to Helvetica, then Illustrator's current font. */
+        if (fallback) { try { return sciBitmapFigureFont('Helvetica', style); } catch (ignoreHelvetica) { return null; } }
+        throw new Error('Font is not installed: ' + wanted);
+    }
     if (exact && !bold && !italic) { return exact; }
     if (styled) { return styled; }
     return exact || matches[0];

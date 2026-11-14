@@ -78,44 +78,89 @@ if ($sameDir) {
     'Yellow'
 }
 
-# Idempotent overwrite of paperfig only (do not delete sibling extensions).
-if ((-not $sameDir) -and (Test-Path -LiteralPath $dest)) {
-  Write-Bi `
-    '已存在旧安装，正在覆盖更新（不影响其他扩展）…' `
-    'Existing install found — overwriting PaperFig only (other extensions untouched)…' `
-    'Yellow'
-  try {
-    Remove-Item -LiteralPath $dest -Recurse -Force -ErrorAction Stop
-  } catch {
-    Write-Bi `
-      "错误：无法覆盖旧安装。请先完全退出 Illustrator，再重新运行。`n$($_.Exception.Message)" `
-      "ERROR: Could not replace the existing install. Quit Illustrator completely, then run this again.`n$($_.Exception.Message)" `
-      'Red'
-    exit 1
+# 1.2.9: copy into a staged folder, check it, then swap. The previous install stays
+# in place until the new tree is complete (same order as install.sh on macOS).
+$excludeDirNames = @('.git', '.github', '.tools', 'node_modules', '__pycache__', 'dist', 'install', '.ipynb_checkpoints')
+$excludeFileNames = @('install.ps1', 'install.bat', 'install.sh', 'install.command', 'uninstall.ps1', 'uninstall.bat', 'uninstall.sh', 'uninstall.command', '_probe.js')
+
+function Test-StageValid {
+  param([string]$Dir)
+  return (Test-Path -LiteralPath (Join-Path $Dir 'CSXS\manifest.xml')) -and
+    (Test-Path -LiteralPath (Join-Path $Dir 'client\index.html')) -and
+    (Test-Path -LiteralPath (Join-Path $Dir 'jsx\bitmap.jsx'))
+}
+
+function Remove-Quiet {
+  param([string]$Dir)
+  if ($Dir -and (Test-Path -LiteralPath $Dir)) {
+    try { Remove-Item -LiteralPath $Dir -Recurse -Force -ErrorAction Stop } catch {}
   }
 }
-New-Item -ItemType Directory -Path $dest -Force | Out-Null
-
-# Copy extension payload; skip VCS / installer noise / fat release zip.
-$excludeDirNames = @('.git', '.github', '.tools', 'node_modules', '__pycache__', 'dist', 'install')
-$excludeFileNames = @('install.ps1', 'install.bat', 'install.sh', 'install.command', 'uninstall.ps1', 'uninstall.bat', 'uninstall.sh', 'uninstall.command')
 
 if (-not $sameDir) {
+  $stage = Join-Path $destRoot ('.paperfig-new.' + [System.Guid]::NewGuid().ToString('N').Substring(0, 8))
+  $backup = ''
+  Write-Bi `
+    '正在准备新目录并校验，旧安装先保留。' `
+    'Preparing and checking the new folder. The current install stays until that succeeds.' `
+    'Cyan'
   try {
+    New-Item -ItemType Directory -Path $stage -Force | Out-Null
     Get-ChildItem -LiteralPath $source -Force | ForEach-Object {
       $name = $_.Name
       if ($excludeDirNames -contains $name) { return }
       if ($excludeFileNames -contains $name) { return }
-      $target = Join-Path $dest $name
-      Copy-Item -LiteralPath $_.FullName -Destination $target -Recurse -Force -ErrorAction Stop
+      Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $stage $name) -Recurse -Force -ErrorAction Stop
     }
   } catch {
+    Remove-Quiet $stage
     Write-Bi `
-      "错误：复制扩展失败。请先完全退出 Illustrator，再重新运行。`n$($_.Exception.Message)" `
-      "ERROR: Could not copy the extension. Quit Illustrator completely, then run this again.`n$($_.Exception.Message)" `
+      "错误：复制扩展失败。旧安装未改动。请先完全退出 Illustrator，再重新运行。`n$($_.Exception.Message)" `
+      "ERROR: Could not copy the extension. The previous install was left in place. Quit Illustrator completely, then run this again.`n$($_.Exception.Message)" `
       'Red'
     exit 1
   }
+  if (-not (Test-StageValid $stage)) {
+    Remove-Quiet $stage
+    Write-Bi `
+      '错误：新目录缺少 CSXS\manifest.xml、client\index.html 或 jsx\bitmap.jsx。旧安装未改动。' `
+      'ERROR: The new folder is missing CSXS\manifest.xml, client\index.html, or jsx\bitmap.jsx. The previous install was left in place.' `
+      'Red'
+    exit 1
+  }
+  if (Test-Path -LiteralPath $dest) {
+    Write-Bi `
+      '已存在旧安装，正在替换（不影响其他扩展）…' `
+      'Existing install found — replacing PaperFig only (other extensions untouched)…' `
+      'Yellow'
+    $backup = Join-Path $destRoot ('.paperfig-prev.' + $PID)
+    Remove-Quiet $backup
+    try {
+      Move-Item -LiteralPath $dest -Destination $backup -ErrorAction Stop
+    } catch {
+      Remove-Quiet $stage
+      Write-Bi `
+        "错误：无法暂时移开旧安装。旧安装未改动。请先完全退出 Illustrator，再重新运行。`n$($_.Exception.Message)" `
+        "ERROR: Could not move the existing install aside. It was left in place. Quit Illustrator completely, then run this again.`n$($_.Exception.Message)" `
+        'Red'
+      exit 1
+    }
+  }
+  try {
+    Move-Item -LiteralPath $stage -Destination $dest -ErrorAction Stop
+  } catch {
+    $moveError = $_.Exception.Message
+    if ($backup -and (Test-Path -LiteralPath $backup) -and -not (Test-Path -LiteralPath $dest)) {
+      try { Move-Item -LiteralPath $backup -Destination $dest -ErrorAction Stop } catch {}
+    }
+    Remove-Quiet $stage
+    Write-Bi `
+      "错误：无法把新目录换到安装位置。已尝试恢复旧安装。`n$moveError" `
+      "ERROR: Could not move the new folder into place. The previous install was restored when possible.`n$moveError" `
+      'Red'
+    exit 1
+  }
+  Remove-Quiet $backup
 }
 
 $copiedManifest = Join-Path $dest 'CSXS\manifest.xml'

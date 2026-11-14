@@ -140,6 +140,11 @@ test('0.6.0 upright crop place resets aspect and clears diagonal FitCorners stre
   /* FitCorners path would keep beforeAspect (~sheared); upright must differ when crop aspect differs. */
   assert(Math.abs(aspect-beforeAspect)>0.05);
 });
+test('1.2.9 OME unknown length unit skips calibration with a warning; numeric entities and Å decode',()=>{const fx=require('./raw-fixture');const mk=(xu,yu)=>'<OME><Image ID="Image:0"><Pixels ID="Pixels:0" DimensionOrder="XYCZT" Type="uint16" SizeX="4" SizeY="2" SizeC="1" SizeZ="1" SizeT="1" PhysicalSizeX="0.25" PhysicalSizeXUnit="'+xu+'" PhysicalSizeY="0.5" PhysicalSizeYUnit="'+yu+'"><Channel ID="Channel:0:0" Name="C1" SamplesPerPixel="1"/><TiffData/></Pixels></Image></OME>';const one=[[0,100,1000,65535,2000,3000,4000,5000]];
+ let d=S.nativeTiff(fx({planes:one,xml:mk('reference frame','µm')}));assert.equal(d.physical.x,null);assert.equal(d.physical.y,null);assert(/reference frame/.test(d.physical.unitWarning));assert.equal(d.width,4);
+ d=S.nativeTiff(fx({planes:one,xml:mk('&#181;m','&#xB5;m')}));assert.equal(d.physical.x,0.25);assert.equal(d.physical.y,0.5);assert(!d.physical.unitWarning);
+ d=S.nativeTiff(fx({planes:one,xml:mk('Å','Å')}));assert(Math.abs(d.physical.x-0.000025)<1e-12);});
+test('1.2.9 default scale-bar font falls back to Helvetica, then to the current font; chosen fonts still report missing',()=>{const saved=host.app.textFonts;try{host.app.textFonts=[{name:'Helvetica',family:'Helvetica',style:'Regular'}];assert.equal(host.sciBitmapFigureFont('','regular').name,'Helvetica');host.app.textFonts=[];assert.equal(host.sciBitmapFigureFont('','regular'),null);const attrs={};host.sciBitmapApplyFigureType(attrs,'','regular');assert.equal(attrs.textFont,undefined);assert.throws(()=>host.sciBitmapFigureFont('Foo','regular'),/Font is not installed/);}finally{host.app.textFonts=saved;}});
 console.log('Total scientific checks: '+tests);
 
 test('0.8.6 inset matches side height, non-crossing leaders, styled frame, scale bar, and replaces its own group',()=>{

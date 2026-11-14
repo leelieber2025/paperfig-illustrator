@@ -63,15 +63,23 @@ Start Illustrator. **Window → Extensions** or **Extensions (Legacy) → PaperF
 
 启动 Illustrator。**窗口 → 扩展** 或 **扩展（旧版）→ PaperFig for Illustrator**。页脚显示已安装包的版本。默认进入 **标尺**；只有文件需要 Fiji 时才提示配置路径。
 
-Fiji + Bio-Formats is optional, for files the native TIFF reader cannot open. Set the executable or the app folder (for example `Fiji.app`) under **Settings → Fiji setup**.
+Fiji + Bio-Formats is optional, for files the native TIFF reader cannot open. Set the executable or the app folder (for example `Fiji.app`) under **Settings → Fiji setup**. The new launchers (`fiji-windows-x64.exe`, `fiji-macos-arm64`, `fiji-linux-x64`) and the nested macOS folder `/Applications/Fiji/Fiji.app` are found too; the older `ImageJ-*` launchers still work.
 
-Fiji + Bio-Formats 是可选的，用于原生 TIFF 读不开的文件。在 **设置 → Fiji 设置** 填写可执行文件或应用目录（例如 `Fiji.app`）。
+Fiji + Bio-Formats 是可选的，用于原生 TIFF 读不开的文件。在 **设置 → Fiji 设置** 填写可执行文件或应用目录（例如 `Fiji.app`）。新启动器（`fiji-windows-x64.exe`、`fiji-macos-arm64`、`fiji-linux-x64`）和 macOS 的嵌套目录 `/Applications/Fiji/Fiji.app` 也能识别；旧的 `ImageJ-*` 启动器照常可用。
 
 ## macOS
 
-`install.sh` and `install.command` use LF line endings. The release zip marks `*.sh` and `*.command` as executable. If Finder will not open `install.command`:
+`install.sh` and `install.command` use LF line endings. The release zip and the git repository mark `*.sh` and `*.command` as executable.
 
-`install.sh` 和 `install.command` 使用 LF 换行。发布包把 `*.sh` 和 `*.command` 标为可执行。若 Finder 打不开 `install.command`：
+`install.sh` 和 `install.command` 使用 LF 换行。发布包和 git 仓库都把 `*.sh` 和 `*.command` 标为可执行。
+
+The scripts are not signed. The first time, macOS Gatekeeper may say `install.command` "cannot be opened" or "Apple could not verify" it. Control-click (or right-click) `install.command`, choose **Open**, then **Open** again. On macOS 15 and later, if there is no Open button: **System Settings → Privacy & Security**, scroll down, click **Open Anyway** next to `install.command`, then double-click it again. Do the same for `uninstall.command`.
+
+脚本没有签名。第一次运行时，macOS 门禁（Gatekeeper）可能提示 `install.command`“无法打开”或“Apple 无法验证”。按住 Control 点按（或右键）`install.command`，选 **打开**，再点 **打开**。macOS 15 及以后若没有“打开”按钮：**系统设置 → 隐私与安全性**，滚到下方，在 `install.command` 旁点 **仍要打开**，再双击一次。`uninstall.command` 同理。
+
+If Finder still will not open `install.command`, use Terminal:
+
+若 Finder 仍打不开 `install.command`，用终端：
 
 ```bash
 cd /path/to/paperfig

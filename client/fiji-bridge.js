@@ -36,41 +36,71 @@
     return expandHome(result);
   }
 
-  function executableNames() {
-    if (process.platform === 'win32') {
-      return ['ImageJ-win64.exe', 'ImageJ-win32.exe', 'ImageJ.exe', 'Fiji.exe'];
+  /* 1.2.9: Fiji ships the Jaunch launcher (fiji-<os>-<arch>) since 2025; Fiji-Latest has no
+   * ImageJ-* launcher, and Apple silicon bundles only fiji-macos-arm64. Prefer the native arch. */
+  function archOrder(list) {
+    var arch = (typeof process !== 'undefined' && process.arch) || '';
+    return list.slice().sort(function (a, b) {
+      var ra = a.indexOf(arch) !== -1 ? 0 : 1, rb = b.indexOf(arch) !== -1 ? 0 : 1;
+      return ra - rb;
+    });
+  }
+
+  function executableNames(platform) {
+    platform = platform || process.platform;
+    if (platform === 'win32') {
+      return archOrder(['fiji-windows-x64.exe', 'fiji-windows-arm64.exe']).concat(['ImageJ-win64.exe', 'ImageJ-win32.exe', 'ImageJ.exe', 'Fiji.exe']);
     }
-    if (process.platform === 'darwin') {
-      return ['Contents/MacOS/ImageJ-macosx', 'ImageJ-macosx'];
+    if (platform === 'darwin') {
+      return archOrder(['Contents/MacOS/fiji-macos-arm64', 'Contents/MacOS/fiji-macos-x64']).concat([
+        'Contents/MacOS/fiji-macos-universal', 'Contents/MacOS/fiji-macos',
+        'Contents/MacOS/ImageJ-macosx', 'ImageJ-macosx'
+      ]);
     }
-    return ['ImageJ-linux64', 'ImageJ-linux32', 'ImageJ'];
+    return archOrder(['fiji-linux-x64', 'fiji-linux-arm64']).concat(['ImageJ-linux64', 'ImageJ-linux32', 'ImageJ']);
+  }
+
+  /* Jaunch launchers reject legacy flags: "--ij2" is read as a macro name. */
+  function isJaunchLauncher(executable) {
+    return /^fiji-(windows|macos|linux)/i.test(String(executable || '').split(/[\\/]/).pop());
+  }
+
+  function launcherArgs(executable, mode, file) {
+    var jaunch = isJaunchLauncher(executable);
+    if (mode === 'script') {
+      return jaunch ? ['--headless', '--run', file] : ['--ij2', '--headless', '--console', '--run', file];
+    }
+    return jaunch ? ['--headless', '-macro', file] : ['--headless', '--console', '-macro', file];
+  }
+
+  function findInDirectory(dir) {
+    var names = executableNames(), bases = [dir], i, j, nested, st;
+    /* New macOS layout: Fiji/Fiji.app (and an outer Fiji.app holding a nested Fiji.app). */
+    if (process.platform === 'darwin') { bases.push(path.join(dir, 'Fiji.app')); }
+    /* Launcher name first, folder second: a nested Jaunch fiji-* beats an outer legacy ImageJ-*. */
+    for (i = 0; i < names.length; i += 1) {
+      for (j = 0; j < bases.length; j += 1) {
+        nested = path.join(bases[j], names[i]);
+        st = exists(nested);
+        if (st && st.isFile()) { return path.resolve(nested); }
+      }
+    }
+    return '';
   }
 
   function resolveExecutable(inputPath) {
     requireNode();
     var candidate = cleanPath(inputPath);
     var stat;
-    var names;
-    var i;
-    var nested;
+    var found;
 
     if (!candidate) { throw new Error('Enter a Fiji path first.'); }
     stat = exists(candidate);
     if (stat && stat.isFile()) { return path.resolve(candidate); }
 
-    names = executableNames();
     if (stat && stat.isDirectory()) {
-      for (i = 0; i < names.length; i += 1) {
-        nested = path.join(candidate, names[i]);
-        if (exists(nested) && exists(nested).isFile()) { return path.resolve(nested); }
-      }
-      nested = path.join(candidate, 'Fiji.app', 'Contents', 'MacOS', 'ImageJ-macosx');
-      if (exists(nested) && exists(nested).isFile()) { return path.resolve(nested); }
-    }
-
-    if (/\.app[\\/]?$/i.test(candidate)) {
-      nested = path.join(candidate, 'Contents', 'MacOS', 'ImageJ-macosx');
-      if (exists(nested) && exists(nested).isFile()) { return path.resolve(nested); }
+      found = findInDirectory(candidate);
+      if (found) { return found; }
     }
     throw new Error('No Fiji/ImageJ executable found at: ' + candidate);
   }
@@ -81,18 +111,29 @@
     if (process.platform === 'win32') {
       return [
         env.FIJI_HOME,
+        env.LOCALAPPDATA && path.join(env.LOCALAPPDATA, 'Fiji'),
         env.LOCALAPPDATA && path.join(env.LOCALAPPDATA, 'Fiji.app'),
+        env.PROGRAMFILES && path.join(env.PROGRAMFILES, 'Fiji'),
         env.PROGRAMFILES && path.join(env.PROGRAMFILES, 'Fiji.app'),
         env['PROGRAMFILES(X86)'] && path.join(env['PROGRAMFILES(X86)'], 'Fiji.app'),
-        home && path.join(home, 'Fiji.app')
+        home && path.join(home, 'Fiji'),
+        home && path.join(home, 'Fiji.app'),
+        home && path.join(home, 'Desktop', 'Fiji'),
+        home && path.join(home, 'Desktop', 'Fiji.app')
       ];
     }
     if (process.platform === 'darwin') {
-      return [env.FIJI_HOME, '/Applications/Fiji.app', home && path.join(home, 'Applications', 'Fiji.app')];
+      return [
+        env.FIJI_HOME,
+        '/Applications/Fiji', '/Applications/Fiji.app',
+        home && path.join(home, 'Applications', 'Fiji'),
+        home && path.join(home, 'Applications', 'Fiji.app')
+      ];
     }
     return [
       env.FIJI_HOME,
-      '/opt/Fiji.app', '/opt/fiji/Fiji.app', '/usr/local/Fiji.app',
+      '/opt/Fiji', '/opt/Fiji.app', '/opt/fiji/Fiji.app', '/usr/local/Fiji.app',
+      home && path.join(home, 'Fiji'),
       home && path.join(home, 'Fiji.app'),
       home && path.join(home, 'Applications', 'Fiji.app')
     ];
@@ -122,7 +163,7 @@
     var resolvedMacro = path.resolve(cleanPath(macroPath));
     var macroStat = exists(resolvedMacro);
     var timeoutMs = Number(options.timeoutMs || 120000);
-    var args = options.script ? ['--ij2', '--headless', '--console', '--run', resolvedMacro] : ['--headless', '--console', '-macro', resolvedMacro];
+    var args = launcherArgs(resolvedExecutable, options.script ? 'script' : 'macro', resolvedMacro);
 
     if (!macroStat || !macroStat.isFile()) {
       return Promise.reject(new Error('Macro not found: ' + resolvedMacro));
@@ -207,6 +248,9 @@
   root.SciBitmapFiji = {
     detectCandidates: detectCandidates,
     resolveExecutable: resolveExecutable,
+    executableNames: executableNames,
+    isJaunchLauncher: isJaunchLauncher,
+    launcherArgs: launcherArgs,
     testConnection: testConnection,
     runMacro: runMacro,
     runScript: function(executable,script,options){options=options||{};options.script=true;return runMacro(executable,script,null,options);}

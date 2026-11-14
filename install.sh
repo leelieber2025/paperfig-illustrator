@@ -40,6 +40,8 @@ copy_payload() {
       --exclude '__pycache__' \
       --exclude 'dist' \
       --exclude 'install' \
+      --exclude '.ipynb_checkpoints' \
+      --exclude '_probe.js' \
       --exclude 'install.ps1' \
       --exclude 'install.bat' \
       --exclude 'install.sh' \
@@ -58,6 +60,8 @@ copy_payload() {
       --exclude='__pycache__' \
       --exclude='dist' \
       --exclude='install' \
+      --exclude='.ipynb_checkpoints' \
+      --exclude='_probe.js' \
       --exclude='install.ps1' \
       --exclude='install.bat' \
       --exclude='install.sh' \

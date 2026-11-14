@@ -14,6 +14,9 @@
     if (/(^|\/)downloads(\/|$)/.test(n)) { return true; }
     if (/(^|\/)desktop(\/|$)/.test(n)) { return true; }
     if (n.indexOf('/onedrive') >= 0 || n.indexOf('/dropbox') >= 0 || n.indexOf('/google drive') >= 0) { return true; }
+    /* 1.2.9: macOS iCloud Drive / File Provider cloud folders and Windows iCloudDrive. */
+    if (n.indexOf('/library/mobile documents/') >= 0 || /\/library\/mobile documents$/.test(n)) { return true; }
+    if (n.indexOf('/library/cloudstorage/') >= 0 || n.indexOf('/googledrive') >= 0 || n.indexOf('/icloud') >= 0) { return true; }
     if (n.indexOf('/下载') >= 0 || n.indexOf('/桌面') >= 0) { return true; }
     return false;
   }
@@ -39,6 +42,26 @@
     return base;
   }
 
+  /* 1.2.9: macOS os.tmpdir() is /var/folders/... while ExtendScript reports /private/var/...
+   * Resolve symlinks (nearest existing ancestor) before comparing paths. */
+  function realPathLoose(p) {
+    var fs = req('fs');
+    var path = req('path');
+    var abs = path.resolve(String(p || '')), tail = [], parent;
+    for (;;) {
+      try { return tail.length ? path.join.apply(path, [fs.realpathSync(abs)].concat(tail)) : fs.realpathSync(abs); }
+      catch (ignore) {}
+      parent = path.dirname(abs);
+      if (parent === abs) { return path.resolve(String(p || '')); }
+      tail.unshift(path.basename(abs));
+      abs = parent;
+    }
+  }
+
+  function isUnder(child, parent, sep) {
+    return child === parent || child.indexOf(parent.charAt(parent.length - 1) === sep ? parent : parent + sep) === 0;
+  }
+
   function durableOutputPath(sourcePath, ext) {
     var fs = req('fs');
     var path = req('path');
@@ -47,10 +70,12 @@
     var base = path.basename(sourcePath, path.extname(sourcePath));
     var temp = path.resolve(os.tmpdir());
     var resolved = path.resolve(dir);
+    var realTemp = realPathLoose(temp);
+    var realDir = realPathLoose(resolved);
     var fallback = durableFallbackDir();
-    var isEphemeral = resolved === temp || resolved.indexOf(temp + path.sep) === 0 ||
-      resolved.indexOf(path.join(temp, 'paperfig-out')) === 0;
-    var useFallback = isEphemeral || isSlowRelinkDir(resolved);
+    var isEphemeral = isUnder(resolved, temp, path.sep) || isUnder(realDir, realTemp, path.sep) ||
+      isUnder(realDir, temp, path.sep) || isUnder(resolved, realTemp, path.sep);
+    var useFallback = isEphemeral || isSlowRelinkDir(resolved) || isSlowRelinkDir(realDir);
     if (!useFallback) {
       try { fs.accessSync(dir, fs.constants ? fs.constants.W_OK : 2); }
       catch (ignore) { useFallback = true; }
@@ -78,6 +103,7 @@
     isSlowRelinkDir: isSlowRelinkDir,
     durableFallbackDir: durableFallbackDir,
     durableOutputPath: durableOutputPath,
+    realPathLoose: realPathLoose,
     writeJsonAtomic: writeJsonAtomic
   };
   if (typeof module === 'object' && module.exports) { module.exports = api; }
